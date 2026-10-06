@@ -3,6 +3,7 @@ __pycache__/
 *.pyc
 .ipynb_checkpoints/
 .pytest_cache/
+pytest-cache-files-*/
 .mypy_cache/
 .ruff_cache/
 dist/
@@ -12,4 +13,4 @@ bvmt_quality_report.txt
 .venv/
 venv/
 *.log
-bvmt-dashboard/
+bvmt-dashboard/
