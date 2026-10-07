@@ -24,7 +24,8 @@ def load_inputs() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     trading = pd.read_csv(DATA_PATH, parse_dates=["date"])
     flags = pd.read_csv(FLAGS_PATH, parse_dates=["date"])
     events = pd.read_csv(EVENTS_PATH)
-    events["event_date"] = pd.to_datetime(events["event_date"], errors="coerce")
+    for column in ("event_date", "original_label_date", "secondary_date"):
+        events[column] = pd.to_datetime(events[column], errors="coerce")
     events["include_headline"] = events["include_headline"].astype(str).str.lower().eq("true")
     return trading, flags, events
 
@@ -140,12 +141,19 @@ def negative_control_count(flags: pd.DataFrame, events: pd.DataFrame, before: in
 def write_summary_svg(metrics: pd.DataFrame, path: Path) -> None:
     values = metrics.set_index("metric")["value"]
     recall = float(values.get("recall_30d", 0) or 0)
+    event_count = int(values.get("eligible_positive_events_30d", 0) or 0)
+    hit_count = recall * event_count
+    hit_label = (
+        f"{int(round(hit_count))} of {event_count}"
+        if abs(hit_count - round(hit_count)) < 1e-9
+        else f"{hit_count:.3f} of {event_count}"
+    )
     false_flags = int(float(values.get("negative_control_flags_30d", 0) or 0))
     svg = f'''<svg xmlns="http://www.w3.org/2000/svg" width="760" height="260" viewBox="0 0 760 260">
 <rect width="760" height="260" fill="#f8fafc"/><text x="36" y="42" font-family="Arial" font-size="22" font-weight="700" fill="#0f172a">Reference detector evaluation</text>
 <text x="36" y="82" font-family="Arial" font-size="15" fill="#475569">Recall within 30 days before to 5 days after sourced positive events</text>
 <rect x="36" y="102" width="620" height="28" rx="6" fill="#e2e8f0"/><rect x="36" y="102" width="{620 * recall:.1f}" height="28" rx="6" fill="#0f766e"/>
-<text x="670" y="123" font-family="Arial" font-size="16" font-weight="700" fill="#0f172a">{recall:.1%}</text>
+<text x="670" y="123" font-family="Arial" font-size="16" font-weight="700" fill="#0f172a">{hit_label}</text>
 <text x="36" y="178" font-family="Arial" font-size="15" fill="#475569">Flags near the SOPAT negative control</text>
 <text x="36" y="218" font-family="Arial" font-size="36" font-weight="700" fill="#b45309">{false_flags}</text>
 <text x="72" y="216" font-family="Arial" font-size="14" fill="#64748b">false-alarm behaviour must be reviewed, not treated as proof</text></svg>'''
@@ -174,10 +182,14 @@ def main() -> int:
     event_results = events.merge(coverage, on=["event_id", "ticker"], how="left")
     event_results = event_results.merge(hits30.add_suffix("_30d"), left_on="event_id", right_on="event_id_30d", how="left").drop(columns=["event_id_30d"])
     event_results = event_results.merge(hits60.add_suffix("_60d"), left_on="event_id", right_on="event_id_60d", how="left").drop(columns=["event_id_60d"])
+    event_results["secondary_lead_time_days_30d"] = (
+        event_results["secondary_date"] - event_results["first_matching_flag_30d"]
+    ).dt.days.where(event_results["hit_30d"].eq(True))
 
     metrics = pd.DataFrame([
         {"metric": "sourced_positive_events", "value": int(events["include_headline"].mul(events["label_role"].eq("positive")).sum()), "detail": "before coverage exclusions"},
         {"metric": "eligible_positive_events_30d", "value": len(positives30), "detail": "source-backed and trading-window coverage"},
+        {"metric": "eligible_positive_events_60d", "value": len(positives60), "detail": "source-backed and trading-window coverage"},
         {"metric": "recall_30d", "value": hits30["hit"].mean() if len(hits30) else np.nan, "detail": f"window -{before}/+{after} calendar days"},
         {"metric": "recall_60d", "value": hits60["hit"].mean() if len(hits60) else np.nan, "detail": f"window -{secondary}/+{after} calendar days"},
         {"metric": "flag_count", "value": len(flags), "detail": "reference detector union"},
@@ -188,6 +200,7 @@ def main() -> int:
     event_results.to_csv(OUTPUT_DIR / "event_results.csv", index=False)
     events_table = event_results[[
         "event_id", "ticker", "event_name", "event_date", "event_date_type",
+        "original_label_date", "secondary_date",
         "source", "confidence", "label_role", "include_headline",
         f"has_{before}d_window_coverage", "days_from_last_trade_to_event",
     ]].copy()

@@ -127,3 +127,12 @@
 - Done: Confirmed the report, README, and evaluation summary contain no claim that the reference beats the return-only baseline and no prohibited output wording.
 - Next: None until the missing sourced event table or additional dashboard screenshots are supplied.
 - Blockers: No new event rows could be added because the referenced sourced table was absent.
+
+## Event-date rule and rerun
+
+- Done: Recorded the earliest-public-event rule before changing the event table; preserved `original_label_date` and added `secondary_date` for all 10 audited rows.
+- Done: Rechecked GIF, LSTR, SERVI, MIP, and SOPAT against the user-verified GIF facts and stored repository evidence. Primary dates are now GIF 2024-10-25, LSTR 2024-07-23, SERVI 2024-01-11, MIP 2024-08-05, and SOPAT 2023-09-19.
+- Done: Re-ran the reference evaluation without changing detector parameters. Primary recall remains 1 of 2 events; secondary recall is 1 of 3 events because SERVI has 60-day, but not 30-day, coverage.
+- Done: GIF's 2024-10-22 flag is 3 days before the suspension and 21 days before the later article date. Report and README numbers were synchronized.
+- Next: Audit the 25 symbols omitted from the 60-symbol combined file, validate all 85 individual files, and—if valid—build and evaluate the separate full-universe derived file.
+- Blockers: None.

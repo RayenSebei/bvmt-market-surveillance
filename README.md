@@ -101,14 +101,15 @@ docs/DEMO_SCRIPT.md          five-minute presentation guide
 
 ## Results summary
 
-The evaluation window was fixed before calculation: 30 calendar days before through 5 days after an event, with a secondary 60-day lookback.
+The evaluation window was fixed before calculation: 30 calendar days before through 5 days after an event, with a secondary 60-day lookback. The evaluation date is the earliest public suspension, court ruling, or first announcement in the stored evidence; original labels and later dates remain visible.
 
 - 3 source-backed positive events; 2 have trading data in the primary window.
-- Reference detector: 1 of 2 evaluable events in both event windows.
+- Reference detector: 1 of 2 evaluable events in the primary window and 1 of 3 events in the secondary window.
 - 1,027 flags, equal to 3.607 flags per observed ticker-year.
 - Precision at 10, 20, and 50: 0 of 10, 0 of 20, and 0 of 50 flags near a labeled event.
 - SOPAT negative control: 0 flags in the primary window.
-- Volume-only baseline: 0 of 2 events; return-only baseline: 1 of 2 events.
+- Volume-only baseline: 0 of 2 primary-window events; return-only baseline: 1 of 2 primary-window events.
+- GIF's first matching flag is 3 days before its 25 October 2024 suspension and 21 days before the later 12 November article.
 - The reference does not beat the return-only baseline on recall or precision and produces 124 more flags.
 
 These are case-study results, not a statistical performance estimate. See [outputs/evaluation/summary.md](outputs/evaluation/summary.md) and [docs/REPORT.md](docs/REPORT.md).

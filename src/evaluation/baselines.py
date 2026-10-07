@@ -114,15 +114,21 @@ def random_average(trading, reference, positives30, positives60, events, config)
     return averaged
 
 
-def write_baseline_svg(table: pd.DataFrame):
+def write_baseline_svg(table: pd.DataFrame, event_count: int):
     width, height = 820, 330
     bars = []
     colors = ["#0f766e", "#2563eb", "#7c3aed", "#94a3b8"]
     for i, row in table.reset_index(drop=True).iterrows():
         value = 0.0 if pd.isna(row["recall_30d"]) else float(row["recall_30d"])
+        hit_count = value * event_count
+        hit_label = (
+            f"{int(round(hit_count))} of {event_count}"
+            if abs(hit_count - round(hit_count)) < 1e-9
+            else f"{hit_count:.3f} of {event_count}"
+        )
         x = 70 + i * 180
         bar_height = 190 * value
-        bars.append(f'<rect x="{x}" y="{260-bar_height:.1f}" width="110" height="{bar_height:.1f}" rx="6" fill="{colors[i]}"/><text x="{x+55}" y="{285}" text-anchor="middle" font-family="Arial" font-size="12" fill="#334155">{row["method"][:18]}</text><text x="{x+55}" y="{245-bar_height:.1f}" text-anchor="middle" font-family="Arial" font-size="14" font-weight="700" fill="#0f172a">{value:.0%}</text>')
+        bars.append(f'<rect x="{x}" y="{260-bar_height:.1f}" width="110" height="{bar_height:.1f}" rx="6" fill="{colors[i]}"/><text x="{x+55}" y="{285}" text-anchor="middle" font-family="Arial" font-size="12" fill="#334155">{row["method"][:18]}</text><text x="{x+55}" y="{245-bar_height:.1f}" text-anchor="middle" font-family="Arial" font-size="14" font-weight="700" fill="#0f172a">{hit_label}</text>')
     svg = f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}"><rect width="100%" height="100%" fill="#f8fafc"/><text x="36" y="38" font-family="Arial" font-size="22" font-weight="700" fill="#0f172a">30-day recall by method</text><text x="36" y="62" font-family="Arial" font-size="13" fill="#64748b">Tiny source-backed set; comparisons are descriptive, not conclusive.</text><line x1="40" y1="260" x2="790" y2="260" stroke="#cbd5e1"/>{"".join(bars)}</svg>'
     (OUTPUT_DIR / "baseline_comparison.svg").write_text(svg, encoding="utf-8")
 
@@ -144,7 +150,7 @@ def main() -> int:
     table = pd.DataFrame(rows)
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     table.to_csv(OUTPUT_DIR / "baseline_comparison.csv", index=False)
-    write_baseline_svg(table)
+    write_baseline_svg(table, len(positives30))
     print(table.to_string(index=False))
     return 0
 

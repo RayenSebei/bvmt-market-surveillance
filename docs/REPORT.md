@@ -20,7 +20,7 @@ The system does not train a machine-learning model. The labeled sample is too sm
 
 The canonical local dataset is in `bvmt_data/`. The combined price file contains 44,531 observations for 60 symbols from 17 June 2021 to 17 June 2026. The combined news file contains 11,850 records. There are 85 valid individual ticker CSVs locally; Stock Search now merges those files with the combined list, so BIAT, BNA, and 23 other locally available symbols are no longer omitted. Individual ticker and news CSVs remain unchanged by this delivery work.
 
-The evaluation event table is separate at `data/evaluation/events.csv`. It keeps each event date, date type, source, confidence, role, coverage status, and exclusion reason. Missing evidence is written as `SOURCE_NEEDED`; dates are never guessed.
+The evaluation event table is separate at `data/evaluation/events.csv`. Its primary date is the earliest public suspension, court ruling, or first announcement found in repository evidence. It also preserves every original date from `labeled_events.csv` and a later public date where one exists. Missing evidence is written as `SOURCE_NEEDED`; dates are never guessed or moved to improve a result.
 
 ## 3. Methods
 
@@ -63,37 +63,37 @@ This definition of precision is conservative because many real events are not la
 
 ### 4.1 Event audit
 
-| Event | Date | Date type | Source/confidence | Evaluable | Reason |
-|---|---|---|---|---|---|
-| TINV | 2025-10-06 | Other | `SOURCE_NEEDED`, low | No | No supporting repository source |
-| UADH | 2026-03-24 | Suspension | `SOURCE_NEEDED`, low | No | No supporting repository source |
-| TSI | — | Other | `SOURCE_NEEDED`, not assessed | No | No event date or supporting source |
-| CGF | — | Other | `SOURCE_NEEDED`, not assessed | No | No event date or supporting source |
-| UBCI | — | Other | `SOURCE_NEEDED`, not assessed | No | No event date or supporting source |
-| GIF Filter | 2024-11-12 | Public announcement | [IlBoursa](https://www.ilboursa.com/marches/la-bourse-de-tunis-decide-la-radiation-de-la-societe-gif-filter_49247), high | Yes | Source and trading-window coverage available |
-| Electrostar (LSTR) | 2024-07-24 | Public announcement | [IlBoursa](https://www.ilboursa.com/marches/en-cessation-de-paiement-le-tribunal-declare-la-faillite-de-la-societe-electrostar_47391), high | Yes | Source and trading-window coverage available |
-| Servicom (SERVI) | 2024-03-27 | Public announcement | [IlBoursa](https://www.ilboursa.com/marches/le-tribunal-de-tunis-declare-la-faillite-de-la-societe-servicom_45451), high | No | Trading data ends before the window |
-| MIP | 2024-08-05 | Public announcement | [IlBoursa](https://www.ilboursa.com/marches/vers-la-mise-en-faillite-directe-de-la-societe-mip_47579), medium | No | Exploratory event excluded from headline metrics |
-| SOPAT | 2023-09-19 | Public announcement | [IlBoursa](https://www.ilboursa.com/marches/le-groupe-la-rose-blanche-retire-la-sopat-de-la-cote-de-la-bourse_42686), high | No | Negative control, not a positive event |
+| Event | Primary date/type | Original label | Secondary date | Source/confidence | Evaluable | Reason |
+|---|---|---|---|---|---|---|
+| TINV | 2025-10-06, other | 2025-10-06 | — | `SOURCE_NEEDED`, low | No | No supporting repository source |
+| UADH | 2026-03-24, suspension | 2026-03-24 | — | `SOURCE_NEEDED`, low | No | No supporting repository source |
+| TSI | —, other | — | — | `SOURCE_NEEDED`, not assessed | No | No event date or supporting source |
+| CGF | —, other | — | — | `SOURCE_NEEDED`, not assessed | No | No event date or supporting source |
+| UBCI | —, other | — | — | `SOURCE_NEEDED`, not assessed | No | No event date or supporting source |
+| GIF Filter | 2024-10-25, suspension | 2024-10-25 | 2024-11-12 | [IlBoursa](https://www.ilboursa.com/marches/la-bourse-de-tunis-decide-la-radiation-de-la-societe-gif-filter_49247), high | Yes | Source and primary-window coverage available |
+| Electrostar (LSTR) | 2024-07-23, suspension | 2024-07-23 | 2024-07-24 | [IlBoursa](https://www.ilboursa.com/marches/en-cessation-de-paiement-le-tribunal-declare-la-faillite-de-la-societe-electrostar_47391), high | Yes | Source and primary-window coverage available |
+| Servicom (SERVI) | 2024-01-11, suspension | 2024-01-11 | 2024-03-27 | [IlBoursa](https://www.ilboursa.com/marches/le-tribunal-de-tunis-declare-la-faillite-de-la-societe-servicom_45451), high | No | Trading data ends before the primary window |
+| MIP | 2024-08-05, public announcement | 2024-09-10 | 2024-09-10 | [IlBoursa](https://www.ilboursa.com/marches/vers-la-mise-en-faillite-directe-de-la-societe-mip_47579), medium | No | Exploratory event excluded from headline metrics |
+| SOPAT | 2023-09-19, public announcement | 2023-09-20 | 2023-09-20 | [IlBoursa](https://www.ilboursa.com/marches/le-groupe-la-rose-blanche-retire-la-sopat-de-la-cote-de-la-bourse_42686), high | No | Negative control, not a positive event |
 
 The TINV label remains 6 October 2025. Its stored date type is `other`, explicitly not `public_announcement`, and it has no supporting repository source. The detector flags on 13 October and 22 October 2025 are after the label. The date was not moved to improve the result.
 
 ## 5. Results
 
-There are 3 source-backed positive events, but only 2 have trading data in the primary window. The reference detector matched 1 of those 2 events in both the primary and secondary windows.
+There are 3 source-backed positive events. Two have trading data in the primary window and all 3 have trading data in the secondary window. The reference detector matched 1 of 2 events in the primary window and 1 of 3 events in the secondary window.
 
 | Method | Flags | Flags per ticker-year | Recall, -30/+5 | Recall, -60/+5 | Precision at 20 | SOPAT-window flags |
 |---|---:|---:|---:|---:|---:|---:|
-| Reference union | 1,027 | 3.607 | 1 of 2 events | 1 of 2 events | 0 of 20 flags | 0 |
-| Volume z-score only | 140 | 0.492 | 0 of 2 events | 0 of 2 events | 0 of 20 flags | 0 |
-| Absolute return only | 903 | 3.171 | 1 of 2 events | 1 of 2 events | 0 of 20 flags | 0 |
-| Random, same count, mean of 1,000 seeds | 1,027 | 3.607 | 0.363 of 2 events on average | 0.653 of 2 events on average | 0.007 of 20 flags on average | 0.600 on average |
+| Reference union | 1,027 | 3.607 | 1 of 2 events | 1 of 3 events | 0 of 20 flags | 0 |
+| Volume z-score only | 140 | 0.492 | 0 of 2 events | 0 of 3 events | 0 of 20 flags | 0 |
+| Absolute return only | 903 | 3.171 | 1 of 2 events | 1 of 3 events | 0 of 20 flags | 0 |
+| Random, same count, mean of 1,000 seeds | 1,027 | 3.607 | 0.492 of 2 events on average | 0.929 of 3 events on average | 0.008 of 20 flags on average | 0.600 on average |
 
 For the reference detector, precision at 10, 20, and 50 is 0 of 10, 0 of 20, and 0 of 50 ranked flags. This result looks weak, but it must not be read as proof that every other flag is irrelevant: the event list is known to be incomplete.
 
-GIF is the only reference hit. Its first matching flag is 22 October 2024, giving a lead time of 21 days before the 12 November 2024 event.
+GIF is the only reference hit. Its first matching flag is 22 October 2024: 3 days before the primary suspension date of 25 October and 21 days before the secondary article date of 12 November.
 
-The reference detector does not beat the absolute-return-only baseline on recall or precision. Both match 1 of 2 events in both windows and 0 of 20 top-ranked flags, while the reference produces 1,027 flags and the return-only baseline produces 903. The reference matches more events than the volume-only baseline, but with a much larger review load.
+The reference detector does not beat the absolute-return-only baseline on recall or precision. Both match 1 of 2 events in the primary window, 1 of 3 events in the secondary window, and 0 of 20 top-ranked flags, while the reference produces 1,027 flags and the return-only baseline produces 903. The reference matches more events than the volume-only baseline, but with a much larger review load.
 
 The sensitivity grid contains 16 parameter combinations. Primary recall remains 1 of 2 events in 14 cells. It becomes 0 of 2 events only for a 120-day window with z cutoffs of 3.5 and 4.0. Flag load ranges from 329 to 1,862. This grid was not used to choose a new reference setting.
 
@@ -111,7 +111,7 @@ The Overview image above is the only screenshot currently referenced. Additional
 
 ## 7. Limitations
 
-- The headline denominator is only 2 evaluable positive events; this is too small for a general performance estimate.
+- The headline denominator is only 2 evaluable positive events in the primary window and 3 in the secondary window; this is too small for a general performance estimate.
 - Exact binomial intervals would be extremely wide and would not solve the evidence problem.
 - Five positive cases remain `SOURCE_NEEDED`.
 - There is no independent test set.

@@ -16,3 +16,6 @@
 - Phase 5: Kept only the verified Overview screenshot after the browser sandbox blocked exporting five other successful in-browser captures; discarded four duplicate files rather than presenting them as different pages.
 - Phase 6: Reported only generated results, expressed event metrics as counts, kept every unresolved case as `SOURCE_NEEDED`, and described the Groq and refined-watchlist changes as operational fixes rather than performance improvements.
 - Evaluation follow-up: Did not add event rows because the request referred to a sourced table that was not present in its text or dashboard screenshot; preserving `SOURCE_NEEDED` is safer than reconstructing dates or sources.
+# Evaluation event-date rule
+
+The evaluation date is the earliest public event in an event chain: a trading suspension, court ruling, or first public announcement. A later public announcement is retained as `secondary_date`, while `original_label_date` preserves the date supplied by `bvmt_data/labeled_events.csv`; dates are never shifted to improve detector results. For GIF, the primary date is 2024-10-25 (trading suspension), the later article date 2024-11-12 is secondary, and the intervening board decision (2024-11-07) and effective delisting date (2024-11-11) remain documented in the event notes.
