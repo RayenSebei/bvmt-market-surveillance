@@ -53,3 +53,12 @@
 - Done: All 178 protected raw files still match `../bvmt_snapshot`.
 - Next: Phase 4 comprehensive offline tests.
 - Blockers: The evaluation is case-study-level only; five events remain `SOURCE_NEEDED`, and the evaluable positive denominator is two.
+
+## Phase 4 — Tests
+
+- Done: Added synthetic detector tests for spike detection, flat series, standard-deviation floors, gap-day exclusion, and no look-ahead.
+- Done: Added classification/cross-reference fixtures, toy evaluation metrics, runner argument/fail-fast checks, Groq mocks, and the 20-seed random-baseline equivalence check.
+- Done: Smoke-tested all 15 Flask routes (including the three dashboard aliases and mocked scrape trigger) against committed read-only fixtures.
+- Done: Full offline suite passes: 32 tests in 0.90 seconds, with network access blocked and no canonical data writes.
+- Next: Phase 5 professional dashboard, Evaluation page, chart review, and screenshots.
+- Blockers: None.

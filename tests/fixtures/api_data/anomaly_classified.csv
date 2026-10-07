@@ -1,0 +1,2 @@
+symbole,ticker_name,date,cloture,volume,volume_zscore,return_zscore,volume_anomaly,price_anomaly,combined_anomaly,status,matched_headline,category
+AAA,Alpha,2025-01-02,11.5,500,4.2,3.5,True,True,True,UNEXPLAINED,,earnings_results

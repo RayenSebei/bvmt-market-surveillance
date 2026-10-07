@@ -70,8 +70,8 @@ def random_average(trading, reference, positives30, positives60, events, config)
             event_date = pd.Timestamp(row.event_date)
             result.append((
                 row.ticker,
-                np.datetime64(event_date - pd.Timedelta(days=days_before)),
-                np.datetime64(event_date + pd.Timedelta(days=after)),
+                np.datetime64(event_date - pd.Timedelta(int(days_before), unit="D")),
+                np.datetime64(event_date + pd.Timedelta(int(after), unit="D")),
             ))
         return result
 

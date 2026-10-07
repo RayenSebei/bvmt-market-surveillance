@@ -34,10 +34,10 @@ def coverage_table(trading: pd.DataFrame, events: pd.DataFrame, lookback: int) -
     rows = []
     for event in events.itertuples(index=False):
         event_date = pd.Timestamp(event.event_date) if pd.notna(event.event_date) else pd.NaT
-        start = event_date - pd.Timedelta(days=lookback) if pd.notna(event_date) else pd.NaT
+        start = event_date - pd.Timedelta(int(lookback), unit="D") if pd.notna(event_date) else pd.NaT
         if event.ticker in bounds.index:
             first, last = bounds.loc[event.ticker, ["min", "max"]]
-            overlap = pd.notna(start) and last >= start and first <= event_date + pd.Timedelta(days=5)
+            overlap = pd.notna(start) and last >= start and first <= event_date + pd.Timedelta(5, unit="D")
             gap = (event_date - last).days if pd.notna(event_date) else np.nan
         else:
             first = last = pd.NaT
@@ -67,10 +67,11 @@ def eligible_positive_events(
 
 
 def flag_matches_event(flag_date: pd.Timestamp, ticker: str, event: pd.Series, before: int, after: int) -> bool:
+    event_date = pd.Timestamp(event["event_date"])
     return (
         ticker == event["ticker"]
-        and event["event_date"] - pd.Timedelta(days=before) <= flag_date
-        <= event["event_date"] + pd.Timedelta(days=after)
+        and event_date - pd.Timedelta(int(before), unit="D") <= flag_date
+        <= event_date + pd.Timedelta(int(after), unit="D")
     )
 
 
@@ -78,8 +79,8 @@ def event_hits(flags: pd.DataFrame, events: pd.DataFrame, before: int, after: in
     rows = []
     for event in events.itertuples(index=False):
         event_date = pd.Timestamp(event.event_date)
-        start = event_date - pd.Timedelta(days=before)
-        end = event_date + pd.Timedelta(days=after)
+        start = event_date - pd.Timedelta(int(before), unit="D")
+        end = event_date + pd.Timedelta(int(after), unit="D")
         matched = flags[
             flags["symbole"].eq(event.ticker)
             & flags["date"].between(start, end, inclusive="both")
