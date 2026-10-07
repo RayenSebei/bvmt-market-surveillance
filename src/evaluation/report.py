@@ -29,6 +29,7 @@ def main(output_dir=OUTPUT_DIR, title="Evaluation Summary") -> int:
     sensitivity = pd.read_csv(output_dir / "sensitivity.csv")
     events = pd.read_csv(output_dir / "events_table.csv")
     event_results = pd.read_csv(output_dir / "event_results.csv")
+    top20 = pd.read_csv(output_dir / "top_20_flags.csv")
     denominator = int(metrics["eligible_positive_events_30d"])
     denominator60 = int(metrics["eligible_positive_events_60d"])
     sourced = int(metrics["sourced_positive_events"])
@@ -91,6 +92,14 @@ def main(output_dir=OUTPUT_DIR, title="Evaluation Summary") -> int:
     if not lead_lines:
         lead_lines = ["- No evaluable positive event had a matching flag."]
 
+    top20_lines = []
+    for row in top20.itertuples(index=False):
+        top20_lines.append(
+            f"| {int(row.rank)} | {row.symbole} | {str(row.date)[:10]} | "
+            f"{row.screening_score:.3f} | {'Yes' if bool(row.illiquid) else 'No'} |"
+        )
+    illiquidity_cutoff = float(top20["illiquidity_cutoff"].iloc[0])
+
     reference_baseline = baselines.loc[baselines["method"].eq("reference_union")].iloc[0]
     return_baseline = baselines.loc[baselines["method"].eq("absolute_return_only")].iloc[0]
     target_recall = 1 / denominator if denominator else float("nan")
@@ -119,7 +128,7 @@ The combined file contains 60 symbols while 85 valid individual ticker files exi
 |---|---:|---:|---:|---:|---|---|---|
 {chr(10).join(comparison_lines)}
 
-The OHLCV rows and detector flags agree on all 60 shared symbols. The established 60-symbol run remains the reference; the 85-symbol run is a separately generated coverage comparison.
+The OHLCV rows and detector flags agree on all 60 shared symbols. The 85-symbol run is the delivered reference; the earlier 60-symbol result is retained as an archive for this coverage comparison.
 """
 
     text = f"""# {title}
@@ -153,6 +162,18 @@ This is a case-study-level evaluation, not a statistical performance estimate. T
 ### Lead time for each hit
 
 {chr(10).join(lead_lines)}
+
+### Ranking and top 20 flags
+
+Precision@k ranks every reference flag by **`max(abs(volume_zscore), abs(return_zscore))`**, highest first. Ties are resolved by earlier date and then ticker symbol. The displayed z-score is that ranking score. This rule was fixed independently of the event labels.
+
+“Illiquid” means the ticker's median daily volume is at or below the 25th percentile across the 83 tickers represented in the delivered reference flag set. The resulting cutoff is **{illiquidity_cutoff:,.1f} shares per observed trading day**; this descriptive label does not affect ranking or detection.
+
+| Rank | Ticker | Date | Ranking z-score | Illiquid |
+|---:|---|---|---:|---|
+{chr(10).join(top20_lines)}
+
+The **0 of 20** result means none of these 20 highest-scoring flags falls inside the fixed -30/+5-day window around either of the 2 source-backed positive events with primary-window coverage. It does not establish that the 20 flags are false positives: the repository event list is intentionally small and incomplete.
 
 ## Baseline comparison
 

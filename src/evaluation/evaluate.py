@@ -108,10 +108,23 @@ def flags_per_ticker_year(flags: pd.DataFrame, trading: pd.DataFrame) -> float:
     return float(len(flags) / ticker_years)
 
 
-def ranked_flags(flags: pd.DataFrame) -> pd.DataFrame:
+def ranked_flags(flags: pd.DataFrame, trading: pd.DataFrame | None = None) -> pd.DataFrame:
     ranked = flags.copy()
     ranked["screening_score"] = ranked[["volume_zscore", "return_zscore"]].abs().max(axis=1)
-    return ranked.sort_values(["screening_score", "date"], ascending=[False, True]).reset_index(drop=True)
+    if trading is not None:
+        represented = set(ranked["symbole"].dropna().astype(str))
+        median_volume = (
+            trading[trading["symbole"].isin(represented)]
+            .groupby("symbole")["volume"]
+            .median()
+        )
+        cutoff = float(median_volume.quantile(0.25))
+        ranked["median_daily_volume"] = ranked["symbole"].map(median_volume)
+        ranked["illiquidity_cutoff"] = cutoff
+        ranked["illiquid"] = ranked["median_daily_volume"].le(cutoff)
+    return ranked.sort_values(
+        ["screening_score", "date", "symbole"], ascending=[False, True, True]
+    ).reset_index(drop=True)
 
 
 def precision_at_k(
@@ -187,6 +200,8 @@ def main(
     hits30 = event_hits(flags, positives30, before, after)
     hits60 = event_hits(flags, positives60, secondary, after)
     precision = precision_at_k(flags, positives30, before, after, config["precision_at_k"])
+    top20 = ranked_flags(flags, trading).head(20).copy()
+    top20.insert(0, "rank", range(1, len(top20) + 1))
 
     event_results = events.merge(coverage, on=["event_id", "ticker"], how="left")
     event_results = event_results.merge(hits30.add_suffix("_30d"), left_on="event_id", right_on="event_id_30d", how="left").drop(columns=["event_id_30d"])
@@ -236,6 +251,10 @@ def main(
     events_table.to_csv(output_dir / "events_table.csv", index=False)
     coverage.to_csv(output_dir / "coverage.csv", index=False)
     precision.to_csv(output_dir / "precision_at_k.csv", index=False)
+    top20[[
+        "rank", "symbole", "date", "screening_score", "volume_zscore",
+        "return_zscore", "median_daily_volume", "illiquidity_cutoff", "illiquid",
+    ]].to_csv(output_dir / "top_20_flags.csv", index=False)
     metrics.to_csv(output_dir / "metrics.csv", index=False)
     print(metrics.to_string(index=False))
     print(f"Saved evaluation outputs to {output_dir}")

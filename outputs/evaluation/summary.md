@@ -39,6 +39,37 @@ This is a case-study-level evaluation, not a statistical performance estimate. T
 
 - **GIF: 3 days to primary date 2024-10-25**; **21 days to secondary date 2024-11-12** (first matching flag 2024-10-22).
 
+### Ranking and top 20 flags
+
+Precision@k ranks every reference flag by **`max(abs(volume_zscore), abs(return_zscore))`**, highest first. Ties are resolved by earlier date and then ticker symbol. The displayed z-score is that ranking score. This rule was fixed independently of the event labels.
+
+“Illiquid” means the ticker's median daily volume is at or below the 25th percentile across the 83 tickers represented in the delivered reference flag set. The resulting cutoff is **349.5 shares per observed trading day**; this descriptive label does not affect ranking or detection.
+
+| Rank | Ticker | Date | Ranking z-score | Illiquid |
+|---:|---|---|---:|---|
+| 1 | ASSAD | 2021-09-01 | 38.907 | No |
+| 2 | MIP | 2022-03-24 | 25.000 | Yes |
+| 3 | CITY | 2026-04-27 | 21.748 | No |
+| 4 | CITY | 2026-04-28 | 19.703 | No |
+| 5 | BT | 2022-05-10 | 18.598 | No |
+| 6 | PGH | 2021-11-30 | 17.375 | No |
+| 7 | ADWYA | 2022-06-13 | 16.933 | No |
+| 8 | SOMOC | 2025-05-13 | 14.704 | No |
+| 9 | TJARI | 2023-04-05 | 12.247 | No |
+| 10 | SAM | 2023-04-20 | 12.180 | No |
+| 11 | STAR | 2025-03-12 | 11.987 | No |
+| 12 | SIPHA | 2023-11-29 | 11.937 | Yes |
+| 13 | ARTES | 2023-07-31 | 11.690 | No |
+| 14 | ICF | 2022-09-01 | 11.664 | No |
+| 15 | SOTET | 2025-07-29 | 11.502 | No |
+| 16 | BNA | 2025-06-17 | 11.060 | No |
+| 17 | ARTES | 2022-07-06 | 11.018 | No |
+| 18 | TINV | 2025-10-22 | 10.880 | Yes |
+| 19 | BIAT | 2024-11-29 | 10.447 | No |
+| 20 | NBL | 2025-06-11 | 9.959 | No |
+
+The **0 of 20** result means none of these 20 highest-scoring flags falls inside the fixed -30/+5-day window around either of the 2 source-backed positive events with primary-window coverage. It does not establish that the 20 flags are false positives: the repository event list is intentionally small and incomplete.
+
 ## Baseline comparison
 
 | Method | Flags | Flags/ticker-year | Recall -30/+5 | Recall -60/+5 | Precision@20 | SOPAT-window flags |
@@ -83,7 +114,7 @@ The combined file contains 60 symbols while 85 valid individual ticker files exi
 | 60-symbol archive | 60 | 44,531 | 1,027 | 3.607 | 1 of 2 events | 1 of 3 events | 0 of 20 flags |
 | 85-symbol delivered universe | 85 | 61,812 | 1,454 | 3.681 | 1 of 2 events | 1 of 3 events | 0 of 20 flags |
 
-The OHLCV rows and detector flags agree on all 60 shared symbols. The established 60-symbol run remains the reference; the 85-symbol run is a separately generated coverage comparison.
+The OHLCV rows and detector flags agree on all 60 shared symbols. The 85-symbol run is the delivered reference; the earlier 60-symbol result is retained as an archive for this coverage comparison.
 
 
 ## Limitations

@@ -166,3 +166,12 @@
 - Done: Full offline suite passes 44 tests, and all 178 protected raw files match `../bvmt_snapshot2`.
 - Next: Add the exact precision-ranking rule, the top-20/illiquidity table, and the plain-language interpretation.
 - Blockers: None.
+
+## Precision ranking and top-20 audit
+
+- Done: Defined the ranking score as `max(abs(volume_zscore), abs(return_zscore))`, descending, with earlier date and ticker symbol as deterministic tie-breaks.
+- Done: Defined “illiquid” without event labels as ticker median daily volume at or below the 25th percentile across the 83 tickers represented in delivered reference flags; the generated cutoff is 349.5 shares per observed trading day.
+- Done: Generated `outputs/evaluation/top_20_flags.csv` and added the complete table to `summary.md`. Three of the top 20 are labeled illiquid: MIP, SIPHA, and TINV.
+- Done: Explained that 0 of 20 means none of the 20 highest scores lies in the fixed primary window around GIF or LSTR; it does not prove the other flags are false positives because event labels are incomplete.
+- Next: Rewrite the non-technical report last, then synchronize README and run final verification.
+- Blockers: None.
