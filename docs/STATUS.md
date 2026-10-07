@@ -104,3 +104,9 @@
 - Done: Expanded `outputs/evaluation/summary.md` with the full evaluability audit, lead time, count-form metrics, all baselines, the complete sensitivity grid, and the explicit conclusion that the reference does not beat the return-only baseline on recall or precision.
 - Next: Expand the watchlist decision record, then synchronize the report and README.
 - Blockers: New event rows still require the missing sourced table; existing `SOURCE_NEEDED` rows remain excluded.
+
+## Watchlist decision clarification
+
+- Done: Expanded `docs/DECISIONS.md` into an explicit paragraph: the input changed to the current 12-row `watchlist.csv`; the old 107-row refined artifact was stale; no detector or refinement parameter changed.
+- Next: Synchronize the report and README with the rerun outputs and screenshot state.
+- Blockers: None.
