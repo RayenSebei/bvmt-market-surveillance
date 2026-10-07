@@ -62,3 +62,15 @@
 - Done: Full offline suite passes: 32 tests in 0.90 seconds, with network access blocked and no canonical data writes.
 - Next: Phase 5 professional dashboard, Evaluation page, chart review, and screenshots.
 - Blockers: None.
+
+## Phase 5 — Dashboard
+
+- Done: Rebuilt the dashboard as a responsive, self-contained English interface with Overview, Anomaly Feed, Stock Search, News Feed, Pipeline Status, and Evaluation pages.
+- Done: Added the required banner: “Statistical screening tool for human review, not a fraud verdict.”
+- Done: Replaced the externally hosted chart library with native SVG/CSS charts; the timeline reads `anomaly_flags.csv`, while news categories read `anomaly_classified.csv` through their existing APIs.
+- Done: Added read-only evaluation endpoints for metrics, baselines, sensitivity, and the event audit; all are covered by fixtures and endpoint tests.
+- Done: Browser-tested every page against the real local outputs. Each page rendered its distinct content, the Evaluation page showed 1 of 2 primary recall and SOPAT as the negative control, and the browser console had no warnings or errors.
+- Done: Full offline suite passes: 36 tests in 0.90 seconds; compilation succeeds.
+- Partial: Saved the verified Overview capture at `docs/screenshots/overview.png`. The browser sandbox permitted all six in-browser captures but blocked exporting the remaining five captures to the repository; no synthetic or mislabeled screenshots were retained.
+- Next: Phase 6 report, demo script, README, final integrity checks, and final commit.
+- Blockers: Five requested screenshot files could not be exported from the browser sandbox in this environment.

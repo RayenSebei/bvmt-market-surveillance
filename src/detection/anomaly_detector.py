@@ -1,11 +1,11 @@
 """
 Phase 1 — Volume & Price Anomaly Detector for BVMT market surveillance.
 
-This is NOT a fraud detector in the legal sense — it's a statistical
-screening tool, the same kind of approach real exchanges/regulators use
+This is a statistical screening tool, not a legal finding. It uses the
+same kind of approach real exchanges and regulators use
 (SEC, ESMA, FINRA market surveillance systems): flag abnormal patterns
 that historically correlate with manipulation/insider-trading cases, so
-a human can investigate further. It does not prove fraud on its own.
+a human can investigate further. It does not establish wrongdoing.
 
 Two signals computed per ticker, per day:
   1. Volume anomaly: rolling z-score of volume vs trailing baseline.

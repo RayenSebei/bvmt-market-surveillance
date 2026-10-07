@@ -12,3 +12,5 @@
 - Phase 3: Limited headline evaluation to source-backed positive events with trading-window coverage, treated SOPAT only as a negative control and MIP only as exploratory, and retained every unresolved date as `SOURCE_NEEDED` rather than inferring or moving it.
 - Phase 3: Kept the reference z cutoff 3.0 and 60-day rolling window unchanged; all other grid cells are sensitivity reporting only, and the 1,000-seed random baseline preserves each ticker's reference flag count.
 - Phase 4: Used committed minimal read-only CSV fixtures for Flask endpoint tests because the host's pytest temporary directories have unusable Windows ACLs; this also guarantees tests never read or write canonical market data.
+- Phase 5: Replaced CDN-dependent charts with native SVG/CSS so dashboard charts render without external network access; exposed generated evaluation CSVs through read-only Flask endpoints.
+- Phase 5: Kept only the verified Overview screenshot after the browser sandbox blocked exporting five other successful in-browser captures; discarded four duplicate files rather than presenting them as different pages.

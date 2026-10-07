@@ -9,6 +9,7 @@ import app as dashboard
 def client(monkeypatch):
     fixture_dir = Path(__file__).parent / "fixtures" / "api_data"
     monkeypatch.setattr(dashboard, "DATA_DIR", fixture_dir)
+    monkeypatch.setattr(dashboard, "EVALUATION_DIR", Path(__file__).parent / "fixtures" / "evaluation")
     dashboard.scrape_state.update({"running": False, "last_run": None, "last_status": "never", "log": []})
     class DummyThread:
         def __init__(self, *args, **kwargs): pass
@@ -26,6 +27,8 @@ def client(monkeypatch):
     ("get", "/api/news/recent"), ("get", "/api/news/by_ticker?ticker=AAA"),
     ("get", "/api/stock/AAA"), ("get", "/api/tickers"),
     ("get", "/api/summary"), ("get", "/api/news/categories"),
+    ("get", "/api/evaluation/metrics"), ("get", "/api/evaluation/baselines"),
+    ("get", "/api/evaluation/sensitivity"), ("get", "/api/evaluation/events"),
 ])
 def test_every_endpoint_smoke(client, method, path):
     response = getattr(client, method)(path)

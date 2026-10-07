@@ -49,6 +49,7 @@ CORS(app)
 
 # ── DATA DIRECTORY ──────────────────────────────────────────────────────────
 DATA_DIR = Path(os.environ.get("DATA_DIR", "./bvmt_data"))
+EVALUATION_DIR = Path(os.environ.get("EVALUATION_DIR", "./outputs/evaluation"))
 
 # ── SCRAPER SCRIPT PATH ──────────────────────────────────────────────────────
 # Point this to your existing scraper/pipeline entry point
@@ -71,8 +72,21 @@ def load_csv(filename: str, **kwargs) -> pd.DataFrame:
         return pd.DataFrame()
     try:
         return pd.read_csv(path, **kwargs)
-    except Exception as e:
-        app.logger.error(f"Error reading {path}: {e}")
+    except Exception as exc:
+        app.logger.error(f"Error reading {path}: {exc}")
+        return pd.DataFrame()
+
+
+def load_evaluation_csv(filename: str) -> pd.DataFrame:
+    """Load a generated evaluation table without modifying it."""
+    path = EVALUATION_DIR / filename
+    if not path.exists():
+        app.logger.warning(f"Evaluation file not found: {path}")
+        return pd.DataFrame()
+    try:
+        return pd.read_csv(path)
+    except Exception as exc:
+        app.logger.error(f"Error reading {path}: {exc}")
         return pd.DataFrame()
 
 
@@ -121,6 +135,7 @@ def api_status():
         "anomaly_flags": (DATA_DIR / "anomaly_flags.csv").exists(),
         "anomaly_classified": (DATA_DIR / "anomaly_classified.csv").exists(),
         "anomaly_summary": (DATA_DIR / "anomaly_summary.csv").exists(),
+        "evaluation": (EVALUATION_DIR / "metrics.csv").exists(),
     }
     return jsonify({
         "files": files,
@@ -154,6 +169,13 @@ def api_kpis():
 
     n_tickers   = tickers_df["symbole"].nunique() if not tickers_df.empty else 0
     n_news      = len(news_df) if not news_df.empty else 0
+    data_start = ""
+    data_end = ""
+    if not tickers_df.empty and "date" in tickers_df.columns:
+        dates = pd.to_datetime(tickers_df["date"], errors="coerce")
+        if dates.notna().any():
+            data_start = dates.min().strftime("%Y-%m-%d")
+            data_end = dates.max().strftime("%Y-%m-%d")
 
     # Flagged = combined_anomaly == True in the most recent 30 days of *scraped* data.
     # Anchored to the latest date actually present in the data, not datetime.now(),
@@ -203,7 +225,9 @@ def api_kpis():
         "total_anomalies": total_anomalies,
         "high_risk_count": high_risk_count,
         "unexplained_count": unexplained,
-        "last_scrape": scrape_state.get("last_scrape") or datetime.now().strftime("%Y-%m-%d %H:%M")
+        "last_scrape": scrape_state.get("last_scrape") or datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "data_start": data_start,
+        "data_end": data_end,
     })
 
 
@@ -426,6 +450,30 @@ def api_news_categories():
     counts = cats.value_counts().reset_index()
     counts.columns = ["category", "count"]
     return jsonify(counts.to_dict(orient="records"))
+
+
+@app.route("/api/evaluation/metrics")
+def api_evaluation_metrics():
+    df = load_evaluation_csv("metrics.csv")
+    return jsonify(df.fillna("").to_dict(orient="records"))
+
+
+@app.route("/api/evaluation/baselines")
+def api_evaluation_baselines():
+    df = load_evaluation_csv("baseline_comparison.csv")
+    return jsonify(df.fillna("").to_dict(orient="records"))
+
+
+@app.route("/api/evaluation/sensitivity")
+def api_evaluation_sensitivity():
+    df = load_evaluation_csv("sensitivity.csv")
+    return jsonify(df.fillna("").to_dict(orient="records"))
+
+
+@app.route("/api/evaluation/events")
+def api_evaluation_events():
+    df = load_evaluation_csv("events_table.csv")
+    return jsonify(df.fillna("").to_dict(orient="records"))
 
 
 if __name__ == "__main__":

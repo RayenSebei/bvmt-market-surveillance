@@ -1,0 +1,2 @@
+event_id,ticker,event_name,event_date,event_date_type,source,confidence,label_role,include_headline,has_30d_window_coverage,days_from_last_trade_to_event,evaluable,evaluable_reason
+AAA-1,AAA,Fixture event,2025-01-02,public_announcement,https://example.test/source,high,positive,True,True,0,True,fixture
