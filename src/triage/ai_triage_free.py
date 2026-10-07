@@ -37,6 +37,7 @@ IN_PATH = OUT_DIR / "watchlist_refined.csv"
 OUT_PATH = OUT_DIR / "watchlist_ai_assessed.csv"
 PAUSE_SECONDS = 3
 VALID_ASSESSMENTS = {"likely_noise", "worth_investigating", "uncertain"}
+MAX_COMPLETION_TOKENS = 1500
 
 SYSTEM_PROMPT = """You assist a student market-surveillance research tool for
 the Tunis Stock Exchange. Assess only the quantitative evidence supplied.
@@ -92,13 +93,19 @@ def assess_row(row: Any, repeat_count: int, client: Any, max_retries: int = 3) -
     for attempt in range(max_retries):
         try:
             response = client.chat.completions.create(
-                model=MODEL, max_tokens=300,
+                model=MODEL,
+                max_completion_tokens=MAX_COMPLETION_TOKENS,
+                reasoning_effort="low",
+                response_format={"type": "json_object"},
                 messages=[
                     {"role": "system", "content": SYSTEM_PROMPT},
                     {"role": "user", "content": user_prompt},
                 ],
             )
-            parsed = parse_json_response(response.choices[0].message.content or "")
+            content = response.choices[0].message.content or ""
+            if not content.strip():
+                raise ValueError("model returned empty content")
+            parsed = parse_json_response(content)
             return parsed["assessment"], parsed["reasoning"]
         except Exception as exc:
             last_error = f"{type(exc).__name__}: {exc}"

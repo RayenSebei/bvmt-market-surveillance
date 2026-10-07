@@ -27,5 +27,17 @@
 - Done: Zero of 178 protected raw files differ. Protected means case-sensitive uppercase ticker CSVs, `news_*.csv`, `_all_tickers_combined.csv`, and `_all_news_combined.csv`.
 - Done: Row counts before → after: anomaly flags 1027 → 1027; anomaly classified 1027 → 1027; anomaly summary 58 → 58; watchlist 12 → 12; watchlist refined 107 → 12; decay flags 8 → 8; decay classified 8 → 8.
 - Done: The 179 → 178 correction was required because PowerShell `-match` is case-insensitive and mistakenly counted lowercase `watchlist.csv` as an uppercase ticker filename; the total is 178 protected + 9 derived = 187.
-- Next: Fix and validate Groq reasoning-model output handling within the bounded live-call budget.
+- Next: Step B Groq fix.
+- Blockers: None.
+
+## Step B — Groq triage fix
+
+- Done: Installed only `requirements.txt` into the project `.venv`.
+- Done: Diagnostic metadata confirmed `finish_reason=length`, 40 completion tokens, 38 reasoning tokens, 154 reasoning characters, and empty content.
+- Done: Raised the completion budget to 1,500, requested low reasoning effort and JSON output, and added retry coverage for empty content.
+- Done: Mock suite passes (4 tests), including empty-content retry and configured request fields.
+- Done: The first post-fix live test returned a valid non-empty assessment.
+- Done: Completed the authorized 12-row full triage; output has 12 rows, 8 `worth_investigating`, 4 `likely_noise`, and no empty reasoning. These are draft opinions for human review, never verdicts.
+- Done: Used 15 live calls in total across the earlier empty-response check, diagnostic/fix checks, and the 12-row run; within the maximum of 20.
+- Next: Finish and verify the source-backed evaluation framework, equivalence test, figures, and summary.
 - Blockers: None.

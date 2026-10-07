@@ -31,3 +31,27 @@ def test_assess_row_uses_configured_model(monkeypatch):
     assert assessment == "likely_noise"
     assert reasoning == "Repeated thin trading."
     assert captured["model"] == "test/model"
+    assert captured["max_completion_tokens"] == 1500
+    assert captured["reasoning_effort"] == "low"
+    assert captured["response_format"] == {"type": "json_object"}
+
+
+def test_assess_row_retries_empty_content(monkeypatch):
+    calls = []
+
+    def create(**kwargs):
+        calls.append(kwargs)
+        content = "" if len(calls) == 1 else '{"assessment":"uncertain","reasoning":"Limited evidence."}'
+        return SimpleNamespace(
+            choices=[SimpleNamespace(message=SimpleNamespace(content=content))]
+        )
+
+    client = SimpleNamespace(
+        chat=SimpleNamespace(completions=SimpleNamespace(create=create))
+    )
+    monkeypatch.setattr(ai_triage_free.time, "sleep", lambda _seconds: None)
+    result = ai_triage_free.assess_row(
+        {"symbole": "TEST", "date": "2025-01-01"}, 1, client, max_retries=2
+    )
+    assert result == ("uncertain", "Limited evidence.")
+    assert len(calls) == 2
