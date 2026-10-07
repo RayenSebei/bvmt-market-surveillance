@@ -1,5 +1,13 @@
 # Delivery Status
 
+## Dashboard v2 delivery
+
+- Done: Rebuilt the seven-page dashboard with native SVG price/volume charts, complete flag filtering, contextual drawers, Watchlist, Help/Glossary, responsive states, and offline-only assets.
+- Done: Browser-verified all pages against the real 85-symbol outputs at desktop and 380-pixel widths; the console reported no warnings or errors.
+- Done: Saved all seven requested screenshots under `docs/screenshots/` and confirmed 17 Watchlist rows, 15 decay cases, 1,454 searchable flags, and more than 30 News Feed items.
+- Done: Expanded API fixture coverage while keeping legacy endpoint defaults backward compatible.
+- Blockers: None.
+
 ## Phase 1 — Cleanup (complete, commit `78eed82`)
 
 - Done: Confirmed duplicate scripts differ only in usage docstrings or equivalent string spelling; kept the copies used by `run_all.py`.
