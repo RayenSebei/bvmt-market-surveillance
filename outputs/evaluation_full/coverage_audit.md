@@ -9,11 +9,11 @@
 ## Requested symbols
 
 - UBCI: individual file yes; 60-symbol combined yes.
-- CGF: individual file no; 60-symbol combined no.
-- TSI: individual file no; 60-symbol combined no.
+- CGF: individual file no; 60-symbol combined no; not in the dataset and cannot be evaluated.
+- TSI: individual file no; 60-symbol combined no; not in the dataset and cannot be evaluated.
 - TINV: individual file yes; 60-symbol combined yes.
 - UADH: individual file yes; 60-symbol combined yes.
 
 ## Repository-supported cause
 
-`src/scraping/scrape_ilboursa.py` skips a symbol when its individual CSV already exists, but appends only newly downloaded frames to `all_data` and then overwrites `_all_tickers_combined.csv` from `all_data`. The 25 omitted files are therefore the existing files skipped by that run, not invalid rows. No scraper or raw file was changed or run for this audit.
+`src/scraping/scrape_ilboursa.py` skipped a symbol when its individual CSV already existed, but appended only newly downloaded frames to `all_data` and then overwrote `_all_tickers_combined.csv` from `all_data`. The 25 omitted files are therefore existing files skipped by that run, not invalid rows. The code now rebuilds from all uppercase individual ticker CSVs; no scraper or raw file was changed or run for this audit.

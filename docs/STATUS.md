@@ -146,3 +146,11 @@
 - Done: Shared OHLCV rows and flags agree across all 60 shared symbols. The 60-symbol reference has 1,027 flags and 3.607 flags/ticker-year; the 85-symbol comparison has 1,454 and 3.681. Both report 1 of 2 primary events, 1 of 3 secondary events, and 0 of 20 flags at precision@20.
 - Next: Document the exact ranking rule, produce the top-20 flag table with an explicit illiquidity definition, and explain 0 of 20 in plain language.
 - Blockers: None.
+
+## Scraper combined-file rebuild fix
+
+- Done: Recorded that CGF and TSI have no ticker files, are not in either price universe, and cannot be evaluated; they remain `SOURCE_NEEDED`, not tested misses.
+- Done: Fixed `src/scraping/scrape_ilboursa.py` so a future authorized scrape rebuilds its combined output from every valid uppercase individual ticker CSV instead of only files downloaded in that run.
+- Done: Added a file-based unit test proving both a pre-existing ticker and a newly present ticker are included. The scraper was not run, no network was used, and no raw file changed.
+- Next: Snapshot canonical data to `../bvmt_snapshot2`, adopt `_all_tickers_full.csv` in the analysis-only pipeline, archive the 60-symbol evaluation, and regenerate all derived outputs for 85 symbols.
+- Blockers: None.
