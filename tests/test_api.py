@@ -33,3 +33,21 @@ def client(monkeypatch):
 def test_every_endpoint_smoke(client, method, path):
     response = getattr(client, method)(path)
     assert response.status_code == 200
+
+
+def test_tickers_merge_combined_and_individual_files(client):
+    response = client.get("/api/tickers")
+    assert response.status_code == 200
+    tickers = {row["symbole"]: row["name"] for row in response.get_json()}
+    assert tickers == {
+        "AAA": "Alpha",
+        "BIAT": "BIAT",
+        "BNA": "BANQUE NATIONALE AGRICOLE",
+    }
+
+
+@pytest.mark.parametrize("ticker", ["BIAT", "BNA"])
+def test_stock_endpoint_reads_individual_ticker_files(client, ticker):
+    response = client.get(f"/api/stock/{ticker}")
+    assert response.status_code == 200
+    assert response.get_json()[0]["date"] == "2025-01-01"

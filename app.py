@@ -7,6 +7,7 @@ No fake data. All endpoints serve real scraped files.
 import os
 import json
 import math
+import re
 import threading
 import subprocess
 from datetime import datetime, timedelta
@@ -50,6 +51,7 @@ CORS(app)
 # ── DATA DIRECTORY ──────────────────────────────────────────────────────────
 DATA_DIR = Path(os.environ.get("DATA_DIR", "./bvmt_data"))
 EVALUATION_DIR = Path(os.environ.get("EVALUATION_DIR", "./outputs/evaluation"))
+TICKER_FILE_PATTERN = re.compile(r"^[A-Z0-9]+$")
 
 # ── SCRAPER SCRIPT PATH ──────────────────────────────────────────────────────
 # Point this to your existing scraper/pipeline entry point
@@ -414,18 +416,35 @@ def api_stock(ticker):
 @app.route("/api/tickers")
 def api_tickers():
     """List of all available ticker symbols."""
+    tickers = {}
     combined = load_csv("_all_tickers_combined.csv")
     if not combined.empty and "symbole" in combined.columns:
-        tickers = sorted(combined["symbole"].dropna().unique().tolist())
-        names = {}
-        if "ticker_name" in combined.columns:
-            names = combined.drop_duplicates("symbole").set_index("symbole")["ticker_name"].to_dict()
-        return jsonify([{"symbole": t, "name": names.get(t, t)} for t in tickers])
+        for _, row in combined.drop_duplicates("symbole").iterrows():
+            symbol = str(row["symbole"]).strip().upper()
+            if not symbol:
+                continue
+            name = str(row.get("ticker_name", symbol)).strip()
+            tickers[symbol] = name or symbol
 
-    # Fallback: scan individual CSV files
-    csvs = [f.stem for f in DATA_DIR.glob("*.csv")
-            if not f.stem.startswith("_") and not f.stem.startswith("anomaly")]
-    return jsonify([{"symbole": t, "name": t} for t in sorted(csvs)])
+    # The combined file can be incomplete even when canonical per-ticker files
+    # are present. Merge both sources so Stock Search exposes every local file.
+    for path in DATA_DIR.glob("*.csv"):
+        symbol = path.stem
+        if not TICKER_FILE_PATTERN.fullmatch(symbol):
+            continue
+        if symbol not in tickers:
+            name = symbol
+            try:
+                sample = pd.read_csv(path, nrows=1)
+                if not sample.empty and "ticker_name" in sample.columns:
+                    candidate = str(sample.iloc[0]["ticker_name"]).strip()
+                    name = candidate or symbol
+            except Exception as exc:
+                app.logger.warning(f"Could not read ticker metadata from {path}: {exc}")
+            tickers[symbol] = name
+
+    return jsonify([{"symbole": symbol, "name": tickers[symbol]}
+                    for symbol in sorted(tickers)])
 
 
 @app.route("/api/summary")

@@ -85,3 +85,13 @@
 - Done: No scraper or detector was run during Phases 4–6; `.env` was not touched; nothing was pushed.
 - Next: None. Delivery is complete except for the screenshot export limitation recorded in Phase 5.
 - Blockers: The repository contains only the verified Overview screenshot; five other pages were visually verified but could not be exported through the browser sandbox.
+
+## Dashboard stock coverage correction
+
+- Done: Confirmed the dropdown exposed only the 60 symbols in `_all_tickers_combined.csv`, although 85 canonical uppercase ticker files exist locally.
+- Done: Changed `/api/tickers` to merge the combined symbols with valid individual ticker files. The resulting list contains all 85 local symbols, including BIAT and BNA; no data was downloaded or modified.
+- Done: Constrained chart SVGs to their responsive panel so the Stock Search plot and labels cannot render outside the white card.
+- Done: Added regression coverage for BIAT/BNA discovery and individual-file stock histories.
+- Done: Browser QA loaded BIAT with 252 observations, confirmed 85 dropdown symbols, confirmed the chart bounds remain inside the panel, and found no console warnings or errors. The offline suite passes 39 tests.
+- Next: Re-run the source-backed evaluation and refresh the report and README.
+- Blockers: The message referenced a new sourced event table, but the only attachment was a dashboard screenshot and contained no event rows; no event was invented or changed.

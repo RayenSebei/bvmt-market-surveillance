@@ -84,8 +84,11 @@
     .panel-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 17px; }
     .panel h3 { margin: 0; font-size: 15px; }
     .panel-sub { color: var(--muted); font-size: 12px; margin-top: 3px; }
-    .chart { height: 270px; min-height: 220px; display: grid; place-items: center; color: var(--muted); }
-    .chart svg { width: 100%; height: 100%; overflow: visible; }
+    .chart {
+      height: clamp(240px, 28vw, 420px); min-height: 220px;
+      display: grid; place-items: center; color: var(--muted); overflow: hidden;
+    }
+    .chart svg { display: block; width: 100%; height: 100%; max-width: 100%; overflow: hidden; }
     .bar-list { width: 100%; display: grid; gap: 12px; }
     .bar-row { display: grid; grid-template-columns: 130px 1fr 42px; align-items: center; gap: 10px; }
     .bar-track { height: 9px; background: #edf1f6; border-radius: 999px; overflow: hidden; }
