@@ -18,7 +18,7 @@ The system does not train a machine-learning model. The labeled sample is too sm
 
 ## 2. Data
 
-The canonical local dataset is in `bvmt_data/`. The combined price file contains 44,531 observations for 60 symbols from 17 June 2021 to 17 June 2026. The combined news file contains 11,850 records. Individual ticker and news CSVs remain unchanged by this delivery work.
+The canonical local dataset is in `bvmt_data/`. The combined price file contains 44,531 observations for 60 symbols from 17 June 2021 to 17 June 2026. The combined news file contains 11,850 records. There are 85 valid individual ticker CSVs locally; Stock Search now merges those files with the combined list, so BIAT, BNA, and 23 other locally available symbols are no longer omitted. Individual ticker and news CSVs remain unchanged by this delivery work.
 
 The evaluation event table is separate at `data/evaluation/events.csv`. It keeps each event date, date type, source, confidence, role, coverage status, and exclusion reason. Missing evidence is written as `SOURCE_NEEDED`; dates are never guessed.
 
@@ -38,7 +38,7 @@ These parameters were not changed after looking at the labeled events. The 16-ce
 
 ### 3.2 Context and review queue
 
-The next stages cross-reference flags with local news, classify the available context, and produce a smaller watchlist. During the final pipeline repair, `watchlist_refined.csv` changed from 107 stale rows to 12 current rows. No threshold or refinement parameter changed. The old file did not match the current 12-row `watchlist.csv`; classification now runs before refinement, so the output is regenerated from the correct input.
+The next stages cross-reference flags with local news, classify the available context, and produce a smaller watchlist. During the final pipeline repair, `watchlist_refined.csv` changed from 107 stale rows to 12 current rows because its input changed to the current 12-row `watchlist.csv`. The former 107-row file was an old artifact produced from an earlier, larger watchlist. Classification now runs before refinement, so refinement receives the current input. No detector threshold, refinement rule, or labeled-event parameter changed.
 
 ### 3.3 AI-assisted triage
 
@@ -63,18 +63,20 @@ This definition of precision is conservative because many real events are not la
 
 ### 4.1 Event audit
 
-| Event | Date | Date type | Source/confidence | Evaluation status |
-|---|---|---|---|---|
-| GIF Filter | 2024-11-12 | Public announcement | [IlBoursa](https://www.ilboursa.com/marches/la-bourse-de-tunis-decide-la-radiation-de-la-societe-gif-filter_49247), high | Positive; evaluable |
-| Electrostar (LSTR) | 2024-07-24 | Public announcement | [IlBoursa](https://www.ilboursa.com/marches/en-cessation-de-paiement-le-tribunal-declare-la-faillite-de-la-societe-electrostar_47391), high | Positive; evaluable |
-| Servicom (SERVI) | 2024-03-27 | Public announcement | [IlBoursa](https://www.ilboursa.com/marches/le-tribunal-de-tunis-declare-la-faillite-de-la-societe-servicom_45451), high | Positive; trading data ends before the window |
-| SOPAT | 2023-09-19 | Public announcement | [IlBoursa](https://www.ilboursa.com/marches/le-groupe-la-rose-blanche-retire-la-sopat-de-la-cote-de-la-bourse_42686), high | Negative control |
-| MIP | 2024-08-05 | Public announcement | [IlBoursa](https://www.ilboursa.com/marches/vers-la-mise-en-faillite-directe-de-la-societe-mip_47579), medium | Exploratory; excluded |
-| TINV | 2025-10-06 | Other / unresolved | `SOURCE_NEEDED`, low | Excluded |
-| UADH | 2026-03-24 | Suspension | `SOURCE_NEEDED`, low | Excluded |
-| TSI, CGF, UBCI | — | Other | `SOURCE_NEEDED`, not assessed | Excluded |
+| Event | Date | Date type | Source/confidence | Evaluable | Reason |
+|---|---|---|---|---|---|
+| TINV | 2025-10-06 | Other | `SOURCE_NEEDED`, low | No | No supporting repository source |
+| UADH | 2026-03-24 | Suspension | `SOURCE_NEEDED`, low | No | No supporting repository source |
+| TSI | — | Other | `SOURCE_NEEDED`, not assessed | No | No event date or supporting source |
+| CGF | — | Other | `SOURCE_NEEDED`, not assessed | No | No event date or supporting source |
+| UBCI | — | Other | `SOURCE_NEEDED`, not assessed | No | No event date or supporting source |
+| GIF Filter | 2024-11-12 | Public announcement | [IlBoursa](https://www.ilboursa.com/marches/la-bourse-de-tunis-decide-la-radiation-de-la-societe-gif-filter_49247), high | Yes | Source and trading-window coverage available |
+| Electrostar (LSTR) | 2024-07-24 | Public announcement | [IlBoursa](https://www.ilboursa.com/marches/en-cessation-de-paiement-le-tribunal-declare-la-faillite-de-la-societe-electrostar_47391), high | Yes | Source and trading-window coverage available |
+| Servicom (SERVI) | 2024-03-27 | Public announcement | [IlBoursa](https://www.ilboursa.com/marches/le-tribunal-de-tunis-declare-la-faillite-de-la-societe-servicom_45451), high | No | Trading data ends before the window |
+| MIP | 2024-08-05 | Public announcement | [IlBoursa](https://www.ilboursa.com/marches/vers-la-mise-en-faillite-directe-de-la-societe-mip_47579), medium | No | Exploratory event excluded from headline metrics |
+| SOPAT | 2023-09-19 | Public announcement | [IlBoursa](https://www.ilboursa.com/marches/le-groupe-la-rose-blanche-retire-la-sopat-de-la-cote-de-la-bourse_42686), high | No | Negative control, not a positive event |
 
-The TINV label remains 6 October 2025. Its date type is unresolved and it has no supporting repository source. The detector flags on 13 October and 22 October 2025 are after the label. The date was not moved to improve the result.
+The TINV label remains 6 October 2025. Its stored date type is `other`, explicitly not `public_announcement`, and it has no supporting repository source. The detector flags on 13 October and 22 October 2025 are after the label. The date was not moved to improve the result.
 
 ## 5. Results
 
@@ -89,6 +91,10 @@ There are 3 source-backed positive events, but only 2 have trading data in the p
 
 For the reference detector, precision at 10, 20, and 50 is 0 of 10, 0 of 20, and 0 of 50 ranked flags. This result looks weak, but it must not be read as proof that every other flag is irrelevant: the event list is known to be incomplete.
 
+GIF is the only reference hit. Its first matching flag is 22 October 2024, giving a lead time of 21 days before the 12 November 2024 event.
+
+The reference detector does not beat the absolute-return-only baseline on recall or precision. Both match 1 of 2 events in both windows and 0 of 20 top-ranked flags, while the reference produces 1,027 flags and the return-only baseline produces 903. The reference matches more events than the volume-only baseline, but with a much larger review load.
+
 The sensitivity grid contains 16 parameter combinations. Primary recall remains 1 of 2 events in 14 cells. It becomes 0 of 2 events only for a 120-day window with z cutoffs of 3.5 and 4.0. Flag load ranges from 329 to 1,862. This grid was not used to choose a new reference setting.
 
 ![Baseline comparison](../outputs/evaluation/baseline_comparison.svg)
@@ -101,7 +107,7 @@ The Flask dashboard has six English pages: Overview, Anomaly Feed, Stock Search,
 
 ![Dashboard overview](screenshots/overview.png)
 
-Only the Overview capture could be exported into the repository. The controlled browser successfully captured and visually verified the other five pages, but its security boundary blocked exporting those captures to disk. No duplicate or synthetic image is presented as another page.
+The Overview image above is the only screenshot currently referenced. Additional page captures can be added under `docs/screenshots/` without changing the report text or results.
 
 ## 7. Limitations
 

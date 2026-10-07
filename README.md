@@ -6,7 +6,7 @@ A reproducible statistical screening project for the Bourse de Valeurs Mobilièr
 
 ## What is included
 
-- Historical local market data for 60 tickers, covering 17 June 2021 to 17 June 2026.
+- A 60-symbol combined analysis dataset covering 17 June 2021 to 17 June 2026, plus 85 valid individual ticker files available in Stock Search.
 - A transparent rolling z-score detector for volume and returns.
 - News cross-reference, rule-based classification, and watchlist refinement.
 - Optional Groq-assisted triage whose output is a draft opinion for human review.
@@ -109,6 +109,7 @@ The evaluation window was fixed before calculation: 30 calendar days before thro
 - Precision at 10, 20, and 50: 0 of 10, 0 of 20, and 0 of 50 flags near a labeled event.
 - SOPAT negative control: 0 flags in the primary window.
 - Volume-only baseline: 0 of 2 events; return-only baseline: 1 of 2 events.
+- The reference does not beat the return-only baseline on recall or precision and produces 124 more flags.
 
 These are case-study results, not a statistical performance estimate. See [outputs/evaluation/summary.md](outputs/evaluation/summary.md) and [docs/REPORT.md](docs/REPORT.md).
 
@@ -120,6 +121,7 @@ These are case-study results, not a statistical performance estimate. See [outpu
 - There is no independent test set; reference parameters were chosen before this evaluation, and the sensitivity grid is reporting only.
 - Thin trading, missing news, delistings, and survivorship bias can affect results.
 - AI output is a draft assessment for a human reviewer, never a verdict.
+- Stock Search lists all 85 local ticker files; this broader browsing list does not change the 60-symbol evaluation dataset.
 
 ## Documentation
 

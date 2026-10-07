@@ -110,3 +110,11 @@
 - Done: Expanded `docs/DECISIONS.md` into an explicit paragraph: the input changed to the current 12-row `watchlist.csv`; the old 107-row refined artifact was stale; no detector or refinement parameter changed.
 - Next: Synchronize the report and README with the rerun outputs and screenshot state.
 - Blockers: None.
+
+## Report and README synchronization
+
+- Done: Updated the report and README from the rerun outputs; the evaluation numbers remain unchanged because the audited event set did not change.
+- Done: Added the 85-file Stock Search coverage, full event evaluability, TINV's non-public date type, GIF's 21-day lead time, and the explicit comparison showing that the reference does not beat the return-only baseline on recall or precision.
+- Done: Retained only the valid Overview screenshot link and removed the obsolete browser-export explanation; the user can add the remaining captures under `docs/screenshots/`.
+- Next: Run the final offline tests, endpoint checks, and protected-raw hash audit.
+- Blockers: The missing sourced event table prevents adding the requested new event rows.
