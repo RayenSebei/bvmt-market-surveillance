@@ -8,39 +8,43 @@ Run `python app.py` and open `http://127.0.0.1:5000`. Do not run the scraper dur
 
 Say: “This is a statistical screening tool for the Tunisian stock market. It finds unusual price or volume activity and organizes it for human review. The banner is important: a flag is not a verdict.”
 
-Point out the local data period, the 60 covered tickers, and the visible disclaimer.
+Point out the local data period, the 85 covered tickers, and the visible disclaimer.
 
 ## 0:35–1:15 — Overview
 
 Click **Overview**.
 
-Say: “The overview shows the size of the dataset and the current reference output. The detector produced 1,027 flags. The timeline and category chart are rendered locally, so the dashboard does not depend on an external chart service.”
+Say: “The overview shows the full 85-symbol dataset and 1,454 statistical flags. The charts have labelled axes and are rendered locally, so the dashboard does not depend on an external chart service.”
 
 ## 1:15–1:55 — Anomaly Feed
 
 Click **Anomaly Feed**.
 
-Say: “This table is the review queue. I can search by ticker and filter by risk level. The ranking helps a reviewer decide where to start, but it does not claim that a company did anything wrong.”
+Say: “This is the complete 1,454-row review queue. I can filter, sort, paginate, and export the current result. This row has news nearby; the timing and source are visible here, but nearby news is context, not proof of cause.”
+
+Click a row with **News nearby**, open the drawer, and point to both plain-English z-score descriptions, the ±7-day news list, and the reminder about cause.
 
 ## 1:55–2:30 — Stock Search
 
 Click **Stock Search** and select a ticker.
 
-Say: “This page puts a signal back into its price history. The blue line shows the available close prices, and marked points show statistical flags. This makes the result easier to inspect than a CSV alone.”
+Say: “This page puts a signal back into its price history. Price and volume use separate labelled axes, the range buttons change the requested history, and hovering shows OHLCV plus the daily change.”
 
-## 2:30–3:00 — News Feed
+Click a red marker and say: “The same contextual drawer opens from the chart, so the reviewer never loses the link between a signal and its source data.”
 
-Click **News Feed**.
+## 2:30–3:00 — Watchlist
 
-Say: “The news page provides possible public context. A nearby article can explain a movement, but a missing article does not prove that a flag is important. Local coverage can be incomplete.”
+Click **Watchlist**.
 
-## 3:00–3:30 — Pipeline Status
+Say: “The refined queue contains 17 rows. The colour chips are draft opinions from an external model, never findings, and the reasoning remains expandable for human review. Below it are 15 separate volume-decay cases.”
+
+## 3:00–3:20 — Pipeline Status
 
 Click **Pipeline Status**.
 
 Say: “This page shows which generated files are available. The dashboard does not start scraping. The safe default command runs analysis from existing local data, and a network refresh needs an explicit option.”
 
-## 3:30–4:35 — Evaluation
+## 3:20–4:35 — Evaluation
 
 Click **Evaluation**.
 

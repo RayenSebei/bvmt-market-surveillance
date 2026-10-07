@@ -11,7 +11,20 @@ A reproducible statistical screening project for the Bourse de Valeurs Mobilièr
 - News cross-reference, rule-based classification, and watchlist refinement.
 - Optional Groq-assisted triage whose output is a draft opinion for human review.
 - A source-audited, case-study-level evaluation with fixed event windows, simple baselines, sensitivity reporting, and a negative control.
-- A six-page Flask dashboard and an offline pytest suite.
+- A seven-page, responsive Flask dashboard with native SVG charts and an offline pytest suite.
+
+## Dashboard v2
+
+- Overview with labelled monthly activity, top-ticker counts, news-context split, and recent flags.
+- Full Anomaly Feed with server-side filters, sorting, pagination, CSV export, and contextual detail drawers.
+- Stock Search with price and volume axes, OHLCV hover tooltips, range controls, and clickable flag markers.
+- News Feed with ticker/category filters and links from matched headlines back to flag detail.
+- Watchlist with all 17 AI draft assessments and 15 volume-decay cases.
+- Help/glossary, keyboard-friendly drawers, loading/error states, responsive layouts, and an optional saved dark theme.
+
+![Dashboard overview](docs/screenshots/overview.png)
+![Stock Search with labelled price and volume panels](docs/screenshots/stock-search.png)
+![Watchlist triage page](docs/screenshots/watchlist.png)
 
 ## Install
 
@@ -94,7 +107,9 @@ src/triage/                  optional Groq-assisted draft triage
 src/evaluation/              metrics, baselines, and sensitivity tools
 outputs/evaluation/          generated tables, figures, and summary
 outputs/evaluation_60symbol/ archived earlier 60-symbol evaluation
-templates/dashboard.html     self-contained six-page dashboard
+templates/dashboard.html     semantic seven-page dashboard shell
+static/dashboard.css         offline responsive design system
+static/dashboard.js          API client, native SVG charts, filters, and drawers
 tests/                       offline tests and minimal fixtures
 docs/REPORT.md               full project report
 docs/DEMO_SCRIPT.md          five-minute presentation guide
