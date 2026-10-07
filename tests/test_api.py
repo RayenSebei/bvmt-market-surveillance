@@ -24,9 +24,11 @@ def client(monkeypatch):
     ("get", "/api/status"), ("post", "/api/scrape"),
     ("get", "/api/scrape/status"), ("get", "/api/kpis"),
     ("get", "/api/anomalies"), ("get", "/api/anomalies/timeline"),
+    ("get", "/api/anomalies/search"), ("get", "/api/anomaly/AAA/2025-01-02"),
     ("get", "/api/news/recent"), ("get", "/api/news/by_ticker?ticker=AAA"),
     ("get", "/api/stock/AAA"), ("get", "/api/tickers"),
     ("get", "/api/summary"), ("get", "/api/news/categories"),
+    ("get", "/api/watchlist"), ("get", "/api/overview"),
     ("get", "/api/evaluation/metrics"), ("get", "/api/evaluation/baselines"),
     ("get", "/api/evaluation/sensitivity"), ("get", "/api/evaluation/events"),
 ])
@@ -51,3 +53,33 @@ def test_stock_endpoint_reads_individual_ticker_files(client, ticker):
     response = client.get(f"/api/stock/{ticker}")
     assert response.status_code == 200
     assert response.get_json()[0]["date"] == "2025-01-01"
+
+
+def test_anomaly_search_filters_and_paginates(client):
+    response = client.get("/api/anomalies/search?status=none&min_z=4&page_size=1")
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload["total"] == 1
+    assert payload["page_size"] == 1
+    assert payload["rows"][0]["news_status"] == "No news nearby"
+
+
+def test_stock_range_is_optional_and_flag_details_are_additive(client):
+    default = client.get("/api/stock/AAA").get_json()
+    all_rows = client.get("/api/stock/AAA?range=ALL").get_json()
+    assert default == all_rows
+    assert all_rows[1]["flag"]["signal"] == "Volume + Price"
+
+
+def test_recent_news_optional_limit_and_ticker(client):
+    rows = client.get("/api/news/recent?limit=1&ticker=AAA").get_json()
+    assert len(rows) == 1
+    assert rows[0]["symbole"] == "AAA"
+    assert "linked_flag_date" in rows[0]
+
+
+def test_anomaly_detail_returns_window_news_and_prices(client):
+    payload = client.get("/api/anomaly/AAA/2025-01-02").get_json()
+    assert payload["flag"]["symbole"] == "AAA"
+    assert payload["prices"][-1]["date"] == "2025-01-02"
+    assert payload["news"][0]["headline"] == "Alpha results"
