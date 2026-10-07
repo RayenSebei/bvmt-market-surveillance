@@ -74,3 +74,14 @@
 - Partial: Saved the verified Overview capture at `docs/screenshots/overview.png`. The browser sandbox permitted all six in-browser captures but blocked exporting the remaining five captures to the repository; no synthetic or mislabeled screenshots were retained.
 - Next: Phase 6 report, demo script, README, final integrity checks, and final commit.
 - Blockers: Five requested screenshot files could not be exported from the browser sandbox in this environment.
+
+## Phase 6 — Report, demo, and README
+
+- Done: Rewrote `README.md` to match the 60-ticker local dataset, analysis-first runner, optional Groq triage, current results, and limitations.
+- Done: Added `docs/REPORT.md` with data, methods, the Groq response fix, the 107 → 12 refined-watchlist explanation, event audit, real result and baseline tables, sensitivity, limitations, reproducibility, and sources.
+- Done: Added `docs/DEMO_SCRIPT.md` with a timed five-minute six-page walkthrough and five likely teacher questions.
+- Done: Final offline suite passes: 36 tests. Compilation succeeds, and all 11 final smoke-test endpoints return HTTP 200.
+- Done: All 178 protected raw CSV hashes match `../bvmt_snapshot`. Seven derived CSVs differ after the pipeline and authorized AI run: anomaly flags/classification/summary, decay classification, watchlist, refined watchlist, and AI-assessed watchlist.
+- Done: No scraper or detector was run during Phases 4–6; `.env` was not touched; nothing was pushed.
+- Next: None. Delivery is complete except for the screenshot export limitation recorded in Phase 5.
+- Blockers: The repository contains only the verified Overview screenshot; five other pages were visually verified but could not be exported through the browser sandbox.

@@ -1,154 +1,134 @@
-# BVMT Market Surveillance Pipeline
+# BVMT Market Surveillance
 
-[Python](https://img.shields.io/badge/python-3.10%2B-blue) [License](https://img.shields.io/badge/license-MIT-green) [Status](https://img.shields.io/badge/status-active-success)
+A reproducible statistical screening project for the Bourse de Valeurs Mobilières de Tunis (BVMT). It identifies unusual price or volume activity, adds local news context, and produces a review queue for a human analyst.
 
-Multi-phase market-surveillance pipeline for the Bourse de Valeurs Mobilières de Tunis (BVMT). The project scrapes historical OHLCV and news data, detects volume/price anomalies, cross-checks market-wide moves, and uses AI-assisted triage to prioritize suspicious cases for manual review. It is designed as a research workflow for studying potential insider trading, governance failures, and other event-driven distortions in an emerging-market setting.
+> **Statistical screening tool for human review, not a fraud verdict.** This independent academic project is not affiliated with BVMT or CMF and is not investment or legal advice.
 
-> **Disclaimer:** Independent academic project, not affiliated with BVMT, CMF, or any exchange; not investment or legal advice.
+## What is included
 
-## Table of Contents
-- [Background](#background)
-- [Architecture](#architecture)
-- [Repository Structure](#repository-structure)
-- [Installation](#installation)
-- [Environment Setup](#environment-setup)
-- [Usage](#usage)
-- [Ground Truth and Validation](#ground-truth-and-validation)
-- [Key Results](#key-results)
-- [Limitations and Future Work](#limitations-and-future-work)
-- [License](#license)
+- Historical local market data for 60 tickers, covering 17 June 2021 to 17 June 2026.
+- A transparent rolling z-score detector for volume and returns.
+- News cross-reference, rule-based classification, and watchlist refinement.
+- Optional Groq-assisted triage whose output is a draft opinion for human review.
+- A source-audited, case-study-level evaluation with fixed event windows, simple baselines, sensitivity reporting, and a negative control.
+- A six-page Flask dashboard and an offline pytest suite.
 
-## Background
-Emerging markets often have thinner liquidity, fewer analysts, and slower public-information diffusion than larger exchanges. That combination can make abnormal trading activity harder to interpret: some spikes are simply microstructure noise, while others may reflect meaningful information leakage, governance failures, or distress. This project explores BVMT data with a practical surveillance workflow that combines statistical anomaly detection with contextual news and market-index checks.
+## Install
 
-## Architecture
-```text
-src/scraping/scrape_ilboursa.py  ->  src/scraping/scrape_news.py
-        |                             |
-        v                             v
-src/detection/anomaly_detector.py   src/detection/crossref_legal_events.py
-        |                             |
-        v                             v
-src/detection/decay_detector.py  -> src/validation/classify_anomalies.py
-          \                         /
-           v                       v
-      src/validation/refine_watchlist.py
-               |
-               v
-         src/triage/ai_triage_free.py
-```
+Python 3.10 or later is recommended.
 
-## Repository Structure
-```text
-.
-├── data/
-│   ├── raw/
-│   ├── processed/
-│   └── external/
-├── docs/
-├── notebooks/
-├── outputs/
-├── src/
-│   ├── scraping/
-│   ├── detection/
-│   ├── triage/
-│   └── validation/
-├── bvmt_data/
-├── requirements.txt
-└── README.md
-```
-
-The runnable Python entry points now live under `src/`.
-
-## Installation
-### Conda environment
 ```bash
-conda create -n bvmt-surveillance python=3.11
-conda activate bvmt-surveillance
-pip install -r requirements.txt
+python -m venv .venv
 ```
 
-### Requirements file
-If you prefer an existing environment, install the dependencies directly:
+On Windows PowerShell:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+```
+
+On macOS or Linux:
+
 ```bash
-pip install -r requirements.txt
+source .venv/bin/activate
+python -m pip install -r requirements.txt
 ```
 
-## Environment Setup
-Sensitive credentials are loaded from a local `.env` file and are excluded from version control via `.gitignore`.
+AI triage is optional. To enable it, copy `.env.example` to `.env`, set `GROQ_API_KEY`, and keep `GROQ_MODEL=openai/gpt-oss-120b`. Never commit `.env`.
 
-1. Copy `.env.example` to `.env`
-2. Set `GROQ_API_KEY=...`
-3. Keep `.env` out of Git history
+## Run
 
-The AI triage script also accepts `OPENAI_API_KEY` as a fallback, but `GROQ_API_KEY` is the preferred variable for this project.
+Run all analysis steps from the existing local data:
 
-## Usage
-Run the pipeline phases in order:
+```bash
+python run_all.py
+```
 
-1. **Scrape market data**
-   ```bash
-   python src/scraping/scrape_ilboursa.py
-   ```
+This default does not run a scraper. Use `--skip-ai` to omit optional Groq triage. The `--with-scrape` option performs network collection and should be used only when a deliberate data refresh is required.
 
-2. **Scrape ticker news**
-   ```bash
-   python src/scraping/scrape_news.py
-   ```
+Start the dashboard:
 
-3. **Detect spike anomalies**
-   ```bash
-   python src/detection/anomaly_detector.py
-   ```
+```bash
+python app.py
+```
 
-4. **Detect decay/fade patterns**
-   ```bash
-   python src/detection/decay_detector.py
-   ```
+Then open `http://127.0.0.1:5000`.
 
-5. **Cross-check legal or event context**
-   ```bash
-   python src/detection/crossref_legal_events.py
-   ```
+Run the offline tests:
 
-6. **Refine the watchlist**
-   ```bash
-   python src/validation/refine_watchlist.py
-   ```
+```bash
+python -m pytest -q
+```
 
-7. **Run AI-assisted triage**
-   ```bash
-   python src/triage/ai_triage_free.py
-   ```
+## Pipeline
 
-8. **Classify and validate cases**
-   ```bash
-   python src/validation/classify_anomalies.py
-   python src/validation/validate_distress_cases.py
-   ```
+```text
+existing price/news CSVs
+        |
+        v
+rolling anomaly detector + decay detector
+        |
+        v
+news/event cross-reference -> classification -> refined watchlist
+        |
+        v
+optional Groq draft triage
+        |
+        +----> dashboard
+        +----> case-study evaluation
+```
 
-Output files are written primarily under `bvmt_data/`.
+The reference detector uses a 60-trading-day rolling window and z-score cutoff of 3.0. The current day is excluded from its own baseline. Volume uses `log(1 + volume)`, standard deviations have defensive floors, and returns across gaps longer than 10 days are excluded.
 
-## Ground Truth and Validation
-The project was checked against documented BVMT cases and bankruptcy/delisting events, including:
-- Tuninvest (TINV) insider-trading behavior flagged in Oct–Nov 2025
-- UADH governance failure
-- TSI Ponzi-scheme case
-- CGF and UBCI documented events
-- Bankruptcy-linked delistings such as GIF Filter, Electrostar, and Servicom
+## Repository structure
 
-These cases were used to sanity-check whether the detectors surfaced plausible event windows and whether false positives were concentrated in illiquid, bursty names.
+```text
+app.py                       Flask API and dashboard server
+run_all.py                   safe, analysis-first pipeline entry point
+bvmt_data/                   canonical local raw and derived CSVs
+data/evaluation/events.csv   audited evaluation events
+src/detection/               transparent statistical detectors
+src/validation/              context and watchlist stages
+src/triage/                  optional Groq-assisted draft triage
+src/evaluation/              metrics, baselines, and sensitivity tools
+outputs/evaluation/          generated tables, figures, and summary
+templates/dashboard.html     self-contained six-page dashboard
+tests/                       offline tests and minimal fixtures
+docs/REPORT.md               full project report
+docs/DEMO_SCRIPT.md          five-minute presentation guide
+```
 
-## Key Results
-- The system correctly flagged the TINV Oct–Nov 2025 insider-trading anomaly.
-- UADH was also validated as a meaningful signal.
-- A major modeling insight was that rolling z-scores can lose sensitivity on bursty or illiquid stocks, so contextual filters and manual review remain important.
+## Results summary
 
-## Limitations and Future Work
-- Thinly traded BVMT names can create noisy spike signals.
-- Public news coverage may lag the trading event or miss the relevant catalyst entirely.
-- The AI triage layer is advisory only and should not be treated as a regulator-grade conclusion.
-- Future work could add alternative detectors, event-study statistics, and a more structured labeling workflow.
+The evaluation window was fixed before calculation: 30 calendar days before through 5 days after an event, with a secondary 60-day lookback.
+
+- 3 source-backed positive events; 2 have trading data in the primary window.
+- Reference detector: 1 of 2 evaluable events in both event windows.
+- 1,027 flags, equal to 3.607 flags per observed ticker-year.
+- Precision at 10, 20, and 50: 0 of 10, 0 of 20, and 0 of 50 flags near a labeled event.
+- SOPAT negative control: 0 flags in the primary window.
+- Volume-only baseline: 0 of 2 events; return-only baseline: 1 of 2 events.
+
+These are case-study results, not a statistical performance estimate. See [outputs/evaluation/summary.md](outputs/evaluation/summary.md) and [docs/REPORT.md](docs/REPORT.md).
+
+## Important limitations
+
+- Only 3 positive events have repository sources, and only 2 are evaluable in the primary window.
+- TINV, UADH, TSI, CGF, and UBCI remain `SOURCE_NEEDED` and are excluded from headline metrics.
+- Labels are incomplete, so the reported precision measure undercounts unknown relevant events.
+- There is no independent test set; reference parameters were chosen before this evaluation, and the sensitivity grid is reporting only.
+- Thin trading, missing news, delistings, and survivorship bias can affect results.
+- AI output is a draft assessment for a human reviewer, never a verdict.
+
+## Documentation
+
+- [Project report](docs/REPORT.md)
+- [Demo script](docs/DEMO_SCRIPT.md)
+- [Evaluation summary](outputs/evaluation/summary.md)
+- [Engineering decisions](docs/DECISIONS.md)
+- [Delivery status](docs/STATUS.md)
 
 ## License
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for the full text.
+
+See [LICENSE](LICENSE).

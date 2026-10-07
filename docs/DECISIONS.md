@@ -14,3 +14,4 @@
 - Phase 4: Used committed minimal read-only CSV fixtures for Flask endpoint tests because the host's pytest temporary directories have unusable Windows ACLs; this also guarantees tests never read or write canonical market data.
 - Phase 5: Replaced CDN-dependent charts with native SVG/CSS so dashboard charts render without external network access; exposed generated evaluation CSVs through read-only Flask endpoints.
 - Phase 5: Kept only the verified Overview screenshot after the browser sandbox blocked exporting five other successful in-browser captures; discarded four duplicate files rather than presenting them as different pages.
+- Phase 6: Reported only generated results, expressed event metrics as counts, kept every unresolved case as `SOURCE_NEEDED`, and described the Groq and refined-watchlist changes as operational fixes rather than performance improvements.
