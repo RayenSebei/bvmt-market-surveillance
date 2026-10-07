@@ -1,1358 +1,319 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BVMT Quantum Surveillance Terminal | Corporate Edition</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BVMT Market Surveillance</title>
   <style>
     :root {
-      --bg-base: #06080d;
-      --bg-surface: #0d111a;
-      --bg-card: #131926;
-      --bg-card-hover: #1a2336;
-      --border: rgba(255, 255, 255, 0.08);
-      --border-bright: rgba(0, 240, 255, 0.3);
-      --primary: #00f0ff;
-      --primary-glow: rgba(0, 240, 255, 0.15);
-      --gold: #f59e0b;
-      --gold-glow: rgba(245, 158, 11, 0.15);
-      --danger: #ff2a5f;
-      --danger-glow: rgba(255, 42, 95, 0.2);
-      --success: #00e676;
-      --success-glow: rgba(0, 230, 118, 0.15);
-      --warning: #ffb800;
-      --text-main: #f1f5f9;
-      --text-muted: #64748b;
-      --text-dim: #94a3b8;
-      --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-      --font-mono: 'JetBrains Mono', monospace;
+      --ink: #14213d;
+      --muted: #607087;
+      --paper: #f5f7fb;
+      --panel: #ffffff;
+      --line: #dfe5ee;
+      --navy: #0b1f3a;
+      --blue: #1967d2;
+      --teal: #087f8c;
+      --amber: #b56a00;
+      --red: #b42318;
+      --green: #137a4b;
+      --soft-blue: #eaf2ff;
+      --soft-amber: #fff4dd;
+      --shadow: 0 12px 35px rgba(20, 33, 61, .08);
+      --radius: 16px;
     }
-
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    
+    * { box-sizing: border-box; }
     body {
-      background-color: var(--bg-base);
-      color: var(--text-main);
-      font-family: var(--font-sans);
-      font-size: 13px;
-      line-height: 1.5;
-      overflow-x: hidden;
-      min-height: 100vh;
-    }
-
-    /* Custom Scrollbar */
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: var(--bg-base); }
-    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
-
-    /* Ticker Tape Marquee */
-    .ticker-tape {
-      background: #040609;
-      border-bottom: 1px solid var(--border);
-      height: 34px;
-      display: flex;
-      align-items: center;
-      overflow: hidden;
-      white-space: nowrap;
-      position: relative;
-      z-index: 100;
-    }
-
-    .ticker-tape-title {
-      background: var(--primary);
-      color: #000;
-      font-family: var(--font-mono);
-      font-weight: 800;
-      font-size: 11px;
-      padding: 0 14px;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      z-index: 2;
-    }
-
-    .ticker-track {
-      display: flex;
-      gap: 32px;
-      animation: marquee 35s linear infinite;
-      padding-left: 20px;
-    }
-
-    .ticker-track:hover { animation-play-state: paused; }
-
-    @keyframes marquee {
-      0% { transform: translateX(0); }
-      100% { transform: translateX(-50%); }
-    }
-
-    .ticker-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-family: var(--font-mono);
-      font-size: 11.5px;
-    }
-
-    .ticker-symbol { font-weight: 700; color: #fff; }
-    .ticker-val { color: var(--text-dim); }
-    .ticker-up { color: var(--success); }
-    .ticker-down { color: var(--danger); }
-    .ticker-alert { color: var(--gold); font-weight: 700; background: rgba(245,158,11,0.12); padding: 2px 8px; border-radius: 4px; border: 1px solid rgba(245,158,11,0.3); }
-
-    /* Top Navigation Header */
-    .header {
-      background: var(--bg-surface);
-      border-bottom: 1px solid var(--border);
-      padding: 0 24px;
-      height: 62px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 90;
-      backdrop-filter: blur(12px);
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .brand-icon {
-      width: 36px;
-      height: 36px;
-      background: linear-gradient(135deg, var(--primary), #0077ff);
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #000;
-      font-weight: 900;
-      font-family: var(--font-mono);
-      font-size: 18px;
-      box-shadow: 0 0 16px var(--primary-glow);
-    }
-
-    .brand-text h1 {
-      font-size: 15.5px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .brand-text p {
-      font-size: 11px;
-      color: var(--text-muted);
-      font-family: var(--font-mono);
-    }
-
-    .live-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: rgba(0, 230, 118, 0.1);
-      border: 1px solid rgba(0, 230, 118, 0.3);
-      color: var(--success);
-      font-size: 10px;
-      font-weight: 700;
-      font-family: var(--font-mono);
-      padding: 2px 8px;
-      border-radius: 12px;
-      text-transform: uppercase;
-    }
-
-    .live-dot {
-      width: 6px;
-      height: 6px;
-      background: var(--success);
-      border-radius: 50%;
-      box-shadow: 0 0 8px var(--success);
-      animation: pulse 1.5s infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.4; transform: scale(0.8); }
-    }
-
-    .header-actions {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-
-    .clock-display {
-      font-family: var(--font-mono);
-      font-size: 12px;
-      color: var(--text-dim);
-      background: var(--bg-base);
-      padding: 6px 14px;
-      border-radius: 6px;
-      border: 1px solid var(--border);
-    }
-
-    .btn {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      color: var(--text-main);
-      font-family: var(--font-sans);
-      font-size: 12px;
-      font-weight: 600;
-      padding: 8px 16px;
-      border-radius: 6px;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      transition: all 0.2s ease;
-    }
-
-    .btn:hover {
-      background: var(--bg-card-hover);
-      border-color: var(--primary);
-      color: var(--primary);
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, var(--primary), #0099ff);
-      color: #000;
-      border: none;
-      font-weight: 700;
-      box-shadow: 0 0 14px var(--primary-glow);
-    }
-
-    .btn-primary:hover {
-      opacity: 0.92;
-      color: #000;
-      transform: translateY(-1px);
-    }
-
-    /* Main App Layout */
-    .app-container {
-      display: grid;
-      grid-template-columns: 230px 1fr;
-      min-height: calc(100vh - 96px);
-    }
-
-    /* Sidebar Navigation */
-    .sidebar {
-      background: var(--bg-surface);
-      border-right: 1px solid var(--border);
-      padding: 24px 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
-    }
-
-    .nav-group-title {
-      font-family: var(--font-mono);
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--text-muted);
-      padding: 0 12px 8px;
-    }
-
-    .nav-menu {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .nav-item button {
-      width: 100%;
-      background: transparent;
-      border: none;
-      color: var(--text-dim);
-      font-family: var(--font-sans);
-      font-size: 13px;
-      font-weight: 500;
-      padding: 10px 14px;
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      text-align: left;
-    }
-
-    .nav-item button:hover {
-      background: var(--bg-card);
-      color: #fff;
-    }
-
-    .nav-item.active button {
-      background: rgba(0, 240, 255, 0.08);
-      color: var(--primary);
-      border-left: 3px solid var(--primary);
-      font-weight: 600;
-    }
-
-    .nav-item svg { width: 18px; height: 18px; stroke-width: 2; }
-
-    .sidebar-widget {
-      margin-top: auto;
-      background: var(--bg-base);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 16px;
-    }
-
-    .widget-title {
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--text-dim);
-      margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .sys-status-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      font-family: var(--font-mono);
-      font-size: 11.5px;
-    }
-
-    .sys-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .sys-ok { color: var(--success); font-weight: 600; }
-
-    /* Content Area */
-    .main-content {
-      padding: 24px 28px;
-      background: var(--bg-base);
-      overflow-y: auto;
-    }
-
-    .page-section { display: none; }
-    .page-section.active { display: block; }
-
-    /* Metric Grid (KPIs) - Inside Overview Only */
-    .kpi-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 18px;
-      margin-bottom: 24px;
-    }
-
-    .kpi-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 20px;
-      position: relative;
-      overflow: hidden;
-      transition: transform 0.2s ease, border-color 0.2s ease;
-    }
-
-    .kpi-card:hover {
-      transform: translateY(-2px);
-      border-color: rgba(255, 255, 255, 0.2);
-    }
-
-    .kpi-card.danger-card {
-      border-color: rgba(255, 42, 95, 0.35);
-      box-shadow: 0 0 20px var(--danger-glow);
-    }
-
-    .kpi-card.gold-card {
-      border-color: rgba(245, 158, 11, 0.35);
-      box-shadow: 0 0 20px var(--gold-glow);
-    }
-
-    .kpi-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-    }
-
-    .kpi-title {
-      font-size: 11.5px;
-      font-weight: 600;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .kpi-icon-svg {
-      width: 20px;
-      height: 20px;
-      stroke: var(--primary);
-    }
-
-    .danger-card .kpi-icon-svg { stroke: var(--danger); }
-    .gold-card .kpi-icon-svg { stroke: var(--gold); }
-
-    .kpi-value {
-      font-family: var(--font-mono);
-      font-size: 28px;
-      font-weight: 700;
-      color: #fff;
-      margin-bottom: 6px;
-      letter-spacing: -0.5px;
-    }
-
-    .kpi-footer {
-      font-size: 11.5px;
-      color: var(--text-dim);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .trend-badge {
-      font-family: var(--font-mono);
-      font-size: 10px;
-      font-weight: 700;
-      padding: 1px 6px;
-      border-radius: 4px;
-    }
-    .trend-danger { background: rgba(255,42,95,0.15); color: var(--danger); }
-    .trend-gold { background: rgba(245,158,11,0.15); color: var(--gold); }
-
-    /* Layout Grids */
-    .grid-main {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 20px;
-      margin-bottom: 24px;
-    }
-
-    .grid-equal {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-      margin-bottom: 24px;
-    }
-
-    /* Cards & Containers */
-    .card {
-      background: var(--bg-surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 22px;
-      position: relative;
-    }
-
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 18px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .card-title-group {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .card-title {
-      font-size: 14.5px;
-      font-weight: 700;
-      color: #fff;
-      letter-spacing: 0.2px;
-    }
-
-    .card-tag {
-      font-family: var(--font-mono);
-      font-size: 10px;
-      padding: 3px 8px;
-      border-radius: 4px;
-      background: rgba(0, 240, 255, 0.1);
-      color: var(--primary);
-      border: 1px solid rgba(0, 240, 255, 0.2);
-    }
-
-    /* Cyber Table Styling */
-    .table-container {
-      width: 100%;
-      overflow-x: auto;
-    }
-
-    .cyber-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 12px;
-      text-align: left;
-    }
-
-    .cyber-table th {
-      background: #090d14;
-      color: var(--text-muted);
-      font-weight: 600;
-      font-family: var(--font-mono);
-      text-transform: uppercase;
-      font-size: 10.5px;
-      padding: 11px 14px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .cyber-table td {
-      padding: 12px 14px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-      color: var(--text-main);
-    }
-
-    .cyber-table tr:hover td {
-      background: var(--bg-card);
-    }
-
-    .ticker-pill {
-      font-family: var(--font-mono);
-      font-weight: 700;
-      background: #1e293b;
-      color: #fff;
-      padding: 3px 8px;
-      border-radius: 4px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      display: inline-block;
-    }
-
-    .risk-badge {
-      font-family: var(--font-mono);
-      font-size: 10px;
-      font-weight: 700;
-      padding: 3px 8px;
-      border-radius: 4px;
-      text-transform: uppercase;
-      display: inline-block;
-    }
-
-    .risk-high { background: var(--danger-glow); color: var(--danger); border: 1px solid rgba(255,42,95,0.4); }
-    .risk-med { background: var(--gold-glow); color: var(--gold); border: 1px solid rgba(245,158,11,0.4); }
-    .risk-low { background: rgba(100,116,139,0.2); color: var(--text-dim); }
-
-    .status-pill {
-      font-size: 10.5px;
-      font-weight: 600;
-      padding: 3px 9px;
-      border-radius: 12px;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .status-unexplained { background: rgba(255, 42, 95, 0.15); color: #ff5e83; border: 1px solid rgba(255,42,95,0.3); }
-    .status-explained { background: rgba(0, 230, 118, 0.15); color: #34d399; border: 1px solid rgba(0,230,118,0.3); }
-
-    /* News Feed Wall Street Style */
-    .news-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      max-height: 480px;
-      overflow-y: auto;
-    }
-
-    .news-item {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 14px;
-      transition: border-color 0.2s ease;
-    }
-
-    .news-item:hover {
-      border-color: var(--primary);
-    }
-
-    .news-meta {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 6px;
-      font-size: 11px;
-    }
-
-    .news-date { color: var(--text-muted); font-family: var(--font-mono); }
-
-    .news-title {
-      font-size: 13px;
-      font-weight: 600;
-      color: #fff;
-      text-decoration: none;
-      line-height: 1.4;
-      display: block;
-      margin-bottom: 6px;
-    }
-
-    .news-title:hover { color: var(--primary); }
-
-    .news-snippet {
-      font-size: 11.5px;
-      color: var(--text-dim);
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-
-    /* Leaderboard list */
-    .leaderboard-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .lb-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .lb-sym {
-      width: 70px;
-    }
-
-    .lb-bar-bg {
-      flex: 1;
-      height: 8px;
-      background: #090d14;
-      border-radius: 4px;
-      overflow: hidden;
-    }
-
-    .lb-bar-fill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--primary), var(--gold));
-      border-radius: 4px;
-    }
-
-    .lb-val {
-      font-family: var(--font-mono);
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--text-dim);
-      width: 32px;
-      text-align: right;
-    }
-
-    /* Stock Analyzer Search */
-    .search-box {
-      position: relative;
-      max-width: 320px;
-      width: 100%;
-    }
-
-    .search-input {
-      width: 100%;
-      background: #090d14;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 8px 12px 8px 34px;
-      color: #fff;
-      font-family: var(--font-sans);
-      font-size: 12px;
-      outline: none;
-    }
-
-    .search-input:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 10px var(--primary-glow);
-    }
-
-    .search-icon {
-      position: absolute;
-      left: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--text-muted);
-      width: 14px;
-      height: 14px;
-    }
-
-    /* Chart Container */
-    .chart-box {
-      width: 100%;
-      height: 320px;
-      position: relative;
-    }
-
-    /* Filters Bar */
-    .filters-bar {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 16px;
-      flex-wrap: wrap;
-    }
-
-    .filter-btn {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      color: var(--text-dim);
-      padding: 6px 14px;
-      border-radius: 20px;
-      font-size: 11.5px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .filter-btn.active, .filter-btn:hover {
-      background: var(--primary);
-      color: #000;
-      border-color: var(--primary);
+      margin: 0; background: var(--paper); color: var(--ink);
+      font: 14px/1.5 Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+    button, select, input { font: inherit; }
+    .topbar { background: var(--navy); color: white; }
+    .topbar-inner {
+      max-width: 1440px; margin: auto; min-height: 72px; padding: 14px 28px;
+      display: flex; align-items: center; justify-content: space-between; gap: 20px;
+    }
+    .brand { display: flex; align-items: center; gap: 13px; }
+    .brand-mark {
+      width: 40px; height: 40px; border: 1px solid rgba(255,255,255,.35);
+      border-radius: 11px; display: grid; place-items: center; font-weight: 800;
+      letter-spacing: .04em; background: linear-gradient(145deg,#15385e,#0b1f3a);
+    }
+    .brand h1 { margin: 0; font-size: 17px; letter-spacing: .01em; }
+    .brand p { margin: 2px 0 0; color: #aebdd0; font-size: 12px; }
+    .system-chip {
+      padding: 7px 11px; border-radius: 999px; border: 1px solid rgba(255,255,255,.22);
+      color: #dbe7f6; font-size: 12px; display: inline-flex; align-items: center; gap: 7px;
+    }
+    .system-chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #53d49a; }
+    .disclaimer {
+      background: #fff7e8; border-bottom: 1px solid #efdbad; color: #70460a;
+      text-align: center; padding: 9px 18px; font-weight: 650; font-size: 13px;
+    }
+    .nav-wrap { background: white; border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 20; }
+    .nav {
+      max-width: 1440px; margin: auto; padding: 0 28px; display: flex; gap: 6px;
+      overflow-x: auto; scrollbar-width: thin;
+    }
+    .nav button {
+      border: 0; border-bottom: 3px solid transparent; background: transparent; color: var(--muted);
+      padding: 15px 13px 12px; cursor: pointer; white-space: nowrap; font-weight: 650;
+    }
+    .nav button:hover { color: var(--ink); background: #f8fafc; }
+    .nav button.active { color: var(--blue); border-bottom-color: var(--blue); }
+    main { max-width: 1440px; margin: auto; padding: 28px; min-height: calc(100vh - 230px); }
+    .page { display: none; animation: enter .2s ease-out; }
+    .page.active { display: block; }
+    @keyframes enter { from { opacity: .4; transform: translateY(4px); } }
+    .page-head { display: flex; justify-content: space-between; align-items: end; gap: 20px; margin-bottom: 22px; }
+    .eyebrow { color: var(--blue); font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+    .page-head h2 { margin: 4px 0 3px; font-size: clamp(24px,3vw,34px); letter-spacing: -.035em; }
+    .page-head p { margin: 0; color: var(--muted); max-width: 720px; }
+    .data-pill { color: var(--muted); background: white; border: 1px solid var(--line); padding: 8px 11px; border-radius: 10px; white-space: nowrap; }
+    .grid { display: grid; gap: 18px; }
+    .kpis { grid-template-columns: repeat(4,minmax(0,1fr)); margin-bottom: 18px; }
+    .two-col { grid-template-columns: minmax(0,1.4fr) minmax(320px,.8fr); }
+    .panel, .kpi {
+      background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow);
+    }
+    .kpi { padding: 19px; }
+    .kpi-label { color: var(--muted); font-size: 12px; font-weight: 700; }
+    .kpi-value { font-size: 31px; font-weight: 760; letter-spacing: -.04em; margin: 5px 0 2px; }
+    .kpi-note { color: var(--muted); font-size: 11px; }
+    .panel { padding: 20px; min-width: 0; }
+    .panel-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 17px; }
+    .panel h3 { margin: 0; font-size: 15px; }
+    .panel-sub { color: var(--muted); font-size: 12px; margin-top: 3px; }
+    .chart {
+      height: clamp(240px, 28vw, 420px); min-height: 220px;
+      display: grid; place-items: center; color: var(--muted); overflow: hidden;
+    }
+    .chart svg { display: block; width: 100%; height: 100%; max-width: 100%; overflow: hidden; }
+    .bar-list { width: 100%; display: grid; gap: 12px; }
+    .bar-row { display: grid; grid-template-columns: 130px 1fr 42px; align-items: center; gap: 10px; }
+    .bar-track { height: 9px; background: #edf1f6; border-radius: 999px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 999px; background: var(--teal); }
+    .table-wrap { overflow: auto; border: 1px solid var(--line); border-radius: 12px; }
+    table { width: 100%; border-collapse: collapse; min-width: 760px; }
+    th { color: var(--muted); background: #f8fafc; font-size: 11px; text-transform: uppercase; letter-spacing: .045em; text-align: left; }
+    th, td { padding: 12px 13px; border-bottom: 1px solid var(--line); }
+    tr:last-child td { border-bottom: 0; }
+    tbody tr:hover { background: #f9fbfe; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+    .badge { display: inline-flex; padding: 4px 8px; border-radius: 999px; font-size: 11px; font-weight: 750; white-space: nowrap; }
+    .high { background: #feeceb; color: var(--red); }
+    .medium { background: var(--soft-amber); color: var(--amber); }
+    .low, .yes { background: #e8f7f0; color: var(--green); }
+    .no { background: #eef1f5; color: #5e6978; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; }
+    .control { border: 1px solid var(--line); background: white; color: var(--ink); padding: 9px 11px; border-radius: 10px; min-width: 180px; }
+    .news-list { display: grid; gap: 12px; }
+    .news-card { border: 1px solid var(--line); border-radius: 12px; padding: 15px; background: white; }
+    .news-card a { color: var(--ink); font-weight: 700; text-decoration: none; }
+    .news-card a:hover { color: var(--blue); text-decoration: underline; }
+    .news-meta { color: var(--muted); font-size: 11px; margin-top: 7px; }
+    .empty, .error { padding: 30px; text-align: center; color: var(--muted); border: 1px dashed var(--line); border-radius: 12px; width: 100%; }
+    .error { color: var(--red); background: #fff7f7; }
+    .steps { display: grid; gap: 10px; }
+    .step { display: grid; grid-template-columns: 28px 1fr auto; gap: 12px; align-items: center; padding: 13px; border: 1px solid var(--line); border-radius: 12px; }
+    .step-num { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; background: var(--soft-blue); color: var(--blue); font-weight: 800; }
+    code.command { display: block; background: #0f1d30; color: #d7e5f6; padding: 15px; border-radius: 12px; margin-top: 12px; overflow-x: auto; }
+    .disabled-action { width: 100%; padding: 11px; border-radius: 10px; border: 1px solid var(--line); color: #8490a0; background: #eef1f5; cursor: not-allowed; margin-top: 12px; }
+    .heatmap { display: grid; grid-template-columns: 74px repeat(4,minmax(72px,1fr)); gap: 6px; min-width: 520px; }
+    .heat-cell { border-radius: 8px; padding: 12px 8px; text-align: center; font-weight: 750; }
+    .heat-head { color: var(--muted); background: transparent; font-size: 11px; text-transform: uppercase; }
+    .score-0 { background: #edf1f6; color: #617083; }
+    .score-50 { background: #cce8e9; color: #075d66; }
+    .footer { border-top: 1px solid var(--line); background: white; color: var(--muted); }
+    .footer-inner { max-width: 1440px; margin: auto; padding: 18px 28px; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    @media (max-width: 980px) {
+      .kpis { grid-template-columns: repeat(2,1fr); }
+      .two-col { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 620px) {
+      .topbar-inner, main { padding-left: 16px; padding-right: 16px; }
+      .system-chip { display: none; }
+      .nav { padding: 0 10px; }
+      .kpis { grid-template-columns: 1fr; }
+      .page-head { align-items: start; flex-direction: column; }
+      .bar-row { grid-template-columns: 95px 1fr 34px; }
     }
   </style>
 </head>
 <body>
-
-  <!-- 1. LIVE TICKER TAPE -->
-  <div class="ticker-tape">
-    <div class="ticker-tape-title">BVMT LIVE</div>
-    <div class="ticker-track" id="ticker-track">
-      <!-- Dynamically filled with real BVMT anomalies -->
-      <div class="ticker-item"><span class="ticker-symbol">BIAT</span> <span class="ticker-val">Z = +4.12</span> <span class="ticker-alert">HIGH VOLATILITY</span></div>
-      <div class="ticker-item"><span class="ticker-symbol">SFBT</span> <span class="ticker-val">Z = +3.85</span> <span class="ticker-up">VOLUME SURGE</span></div>
-      <div class="ticker-item"><span class="ticker-symbol">BNA</span> <span class="ticker-val">Z = +3.10</span> <span class="ticker-alert">UNEXPLAINED</span></div>
-      <div class="ticker-item"><span class="ticker-symbol">SAH</span> <span class="ticker-val">Z = +2.95</span> <span class="ticker-up">NEWS MATCHED</span></div>
-    </div>
-  </div>
-
-  <!-- 2. HEADER BAR -->
-  <header class="header">
-    <div class="brand">
-      <div class="brand-icon">Q</div>
-      <div class="brand-text">
-        <h1>BVMT QUANTUM SURVEILLANCE <span class="live-badge"><span class="live-dot"></span> LIVE PRO</span></h1>
-        <p>Institutional Fraud Detection & Market Anomaly Intelligence</p>
-      </div>
-    </div>
-
-    <div class="header-actions">
-      <div class="clock-display" id="tunis-clock">TUNIS: --:--:-- UTC+1</div>
-      <button class="btn btn-primary" onclick="triggerScraper()">
-        <svg style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.5;" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-        Run Scraper Pipeline
-      </button>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand"><div class="brand-mark">BV</div><div><h1>BVMT Market Surveillance</h1><p>Tunisian market statistical screening</p></div></div>
+      <div class="system-chip" id="system-chip">Loading data status</div>
     </div>
   </header>
+  <div class="disclaimer">Statistical screening tool for human review, not a legal finding</div>
+  <div class="nav-wrap"><nav class="nav" aria-label="Dashboard pages">
+    <button class="active" data-page="overview">Overview</button>
+    <button data-page="anomalies">Anomaly Feed</button>
+    <button data-page="stocks">Stock Search</button>
+    <button data-page="news">News Feed</button>
+    <button data-page="pipeline">Pipeline Status</button>
+    <button data-page="evaluation">Evaluation</button>
+  </nav></div>
 
-  <!-- 3. MAIN APPLICATION CONTAINER -->
-  <div class="app-container">
-    
-    <!-- SIDEBAR NAVIGATION -->
-    <aside class="sidebar">
-      <div>
-        <div class="nav-group-title">Surveillance Modules</div>
-        <ul class="nav-menu">
-          <li class="nav-item active">
-            <button onclick="switchTab('overview', this)">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-              Command Center
-            </button>
-          </li>
-          <li class="nav-item">
-            <button onclick="switchTab('anomalies', this)">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-              Anomaly Feed
-            </button>
-          </li>
-          <li class="nav-item">
-            <button onclick="switchTab('analyzer', this)">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
-              Stock Analyzer
-            </button>
-          </li>
-          <li class="nav-item">
-            <button onclick="switchTab('news', this)">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>
-              News Intelligence
-            </button>
-          </li>
-        </ul>
+  <main>
+    <section class="page active" id="page-overview">
+      <div class="page-head"><div><div class="eyebrow">Market snapshot</div><h2>Overview</h2><p>A concise view of data coverage, statistical flags, and news-based triage.</p></div><div class="data-pill" id="range-pill">Loading coverage…</div></div>
+      <div class="grid kpis">
+        <div class="kpi"><div class="kpi-label">Covered tickers</div><div class="kpi-value" id="kpi-tickers">—</div><div class="kpi-note">Symbols in the combined file</div></div>
+        <div class="kpi"><div class="kpi-label">Statistical flags</div><div class="kpi-value" id="kpi-flags">—</div><div class="kpi-note">Reference detector output</div></div>
+        <div class="kpi"><div class="kpi-label">Unexplained flags</div><div class="kpi-value" id="kpi-unexplained">—</div><div class="kpi-note">No nearby local news match</div></div>
+        <div class="kpi"><div class="kpi-label">News triage rate</div><div class="kpi-value" id="kpi-triage">—</div><div class="kpi-note">Flags with nearby news</div></div>
       </div>
-
-      <div class="sidebar-widget">
-        <div class="widget-title">
-          <span>PIPELINE HEALTH</span>
-          <span class="sys-ok" id="pipe-dot">ONLINE</span>
-        </div>
-        <div class="sys-status-list">
-          <div class="sys-row"><span>Tickers Engine</span> <span class="sys-ok" id="st-tickers">Ready</span></div>
-          <div class="sys-row"><span>News Engine</span> <span class="sys-ok" id="st-news">Ready</span></div>
-          <div class="sys-row"><span>ML Classifier</span> <span class="sys-ok" id="st-ml">Active</span></div>
-        </div>
+      <div class="grid two-col">
+        <article class="panel"><div class="panel-head"><div><h3>Flag activity</h3><div class="panel-sub">Daily flags over the latest 90 data-days window</div></div></div><div class="chart" id="timeline-chart">Loading chart…</div></article>
+        <article class="panel"><div class="panel-head"><div><h3>News explanations</h3><div class="panel-sub">Top categories matched to statistical flags</div></div></div><div class="chart" id="category-chart">Loading chart…</div></article>
       </div>
-    </aside>
+    </section>
 
-    <!-- MAIN CONTENT AREA -->
-    <main class="main-content">
+    <section class="page" id="page-anomalies">
+      <div class="page-head"><div><div class="eyebrow">Review queue</div><h2>Anomaly Feed</h2><p>Ranked statistical signals. A flag is a review prompt, not a finding of wrongdoing.</p></div></div>
+      <article class="panel"><div class="toolbar"><input class="control" id="anomaly-search" placeholder="Search ticker or company"><select class="control" id="risk-filter"><option value="">All risk levels</option><option>High</option><option>Medium</option><option>Low</option></select></div><div class="table-wrap"><table><thead><tr><th>Date</th><th>Ticker</th><th>Signal</th><th>Max z-score</th><th>Risk</th><th>News status</th></tr></thead><tbody id="anomaly-body"><tr><td colspan="6">Loading…</td></tr></tbody></table></div></article>
+    </section>
 
-      <!-- PAGE 1: COMMAND CENTER -->
-      <div id="page-overview" class="page-section active">
-        
-        <!-- EXECUTIVE KPI GRID (Overview Only) -->
-        <div class="kpi-grid">
-          <div class="kpi-card danger-card">
-            <div class="kpi-header">
-              <span class="kpi-title">Total Anomalies</span>
-              <svg class="kpi-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-            </div>
-            <div class="kpi-value" id="kpi-total">--</div>
-            <div class="kpi-footer"><span class="trend-badge trend-danger">FLAGGED</span> Volume & price spikes</div>
-          </div>
+    <section class="page" id="page-stocks">
+      <div class="page-head"><div><div class="eyebrow">Instrument detail</div><h2>Stock Search</h2><p>Inspect local price history and see where the statistical screen raised a flag.</p></div></div>
+      <div class="toolbar"><select class="control" id="ticker-select"><option value="">Select a ticker</option></select></div>
+      <article class="panel"><div class="panel-head"><div><h3 id="stock-title">Choose a ticker</h3><div class="panel-sub" id="stock-subtitle">Price history will appear here.</div></div></div><div class="chart" id="stock-chart"><div class="empty">Select a ticker to load its history.</div></div></article>
+    </section>
 
-          <div class="kpi-card danger-card">
-            <div class="kpi-header">
-              <span class="kpi-title">High Risk Alerts</span>
-              <svg class="kpi-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0zM12 9v4m0 4h.01"/></svg>
-            </div>
-            <div class="kpi-value" id="kpi-highrisk" style="color: var(--danger);">--</div>
-            <div class="kpi-footer"><span class="trend-badge trend-danger">Z-SCORE &ge; 4.0</span> Severe anomalies</div>
-          </div>
+    <section class="page" id="page-news">
+      <div class="page-head"><div><div class="eyebrow">Context</div><h2>News Feed</h2><p>Recent local news records used for contextual triage. Links open the recorded source.</p></div></div>
+      <article class="panel"><div class="toolbar"><input class="control" id="news-search" placeholder="Filter headline or ticker"></div><div class="news-list" id="news-list"><div class="empty">Loading news…</div></div></article>
+    </section>
 
-          <div class="kpi-card gold-card">
-            <div class="kpi-header">
-              <span class="kpi-title">Unexplained Spikes</span>
-              <svg class="kpi-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-            </div>
-            <div class="kpi-value" id="kpi-unexplained" style="color: var(--gold);">--</div>
-            <div class="kpi-footer"><span class="trend-badge trend-gold">NO MATCHED NEWS</span> Unreviewed</div>
-          </div>
-
-          <div class="kpi-card">
-            <div class="kpi-header">
-              <span class="kpi-title">Scraper Pipeline</span>
-              <svg class="kpi-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
-            </div>
-            <div class="kpi-value" id="kpi-scrape-status" style="font-size: 16px; margin-top: 6px; color: var(--success);">READY</div>
-            <div class="kpi-footer" id="kpi-last-scrape">Status: Standby</div>
-          </div>
-        </div>
-
-        <div class="grid-main">
-          <!-- Timeline & Volatility Chart Card -->
-          <div class="card">
-            <div class="card-header">
-              <div class="card-title-group">
-                <span class="card-title">Anomaly Volatility Timeline</span>
-                <span class="card-tag">BVMT HISTORICAL SURGE</span>
-              </div>
-            </div>
-            <div class="chart-box">
-              <canvas id="timelineChart"></canvas>
-            </div>
-          </div>
-
-          <!-- Top Volatility Leaderboard -->
-          <div class="card">
-            <div class="card-header">
-              <div class="card-title-group">
-                <span class="card-title">Top Flagged Tickers</span>
-              </div>
-            </div>
-            <div class="leaderboard-list" id="top-tickers-list">
-              <!-- JS Populated -->
-            </div>
-          </div>
-        </div>
-
-        <div class="grid-equal">
-          <!-- Live Anomaly Feed Table -->
-          <div class="card">
-            <div class="card-header">
-              <div class="card-title-group">
-                <span class="card-title">High Severity Alerts</span>
-              </div>
-              <button class="btn" style="padding:4px 10px; font-size:11px;" onclick="switchTab('anomalies', document.querySelectorAll('.nav-item button')[1])">View All &rarr;</button>
-            </div>
-            <div class="table-container">
-              <table class="cyber-table">
-                <thead>
-                  <tr>
-                    <th>Ticker</th>
-                    <th>Date</th>
-                    <th>Z-Score</th>
-                    <th>Risk</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody id="home-anomaly-rows">
-                  <!-- JS Populated -->
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- Institutional News Wire -->
-          <div class="card">
-            <div class="card-header">
-              <div class="card-title-group">
-                <span class="card-title">Market Intelligence Wire</span>
-              </div>
-            </div>
-            <div class="news-list" id="home-news-wire">
-              <!-- JS Populated -->
-            </div>
-          </div>
-        </div>
-
+    <section class="page" id="page-pipeline">
+      <div class="page-head"><div><div class="eyebrow">Reproducibility</div><h2>Pipeline Status</h2><p>File availability and the safe local analysis workflow.</p></div></div>
+      <div class="grid two-col">
+        <article class="panel"><div class="panel-head"><div><h3>Required outputs</h3><div class="panel-sub">Read-only health check</div></div></div><div class="steps" id="file-status"><div class="empty">Loading status…</div></div></article>
+        <article class="panel"><h3>Run locally</h3><div class="panel-sub">Default mode analyses existing data and does not scrape.</div><code class="command">python run_all.py</code><div class="panel-sub" style="margin-top:14px">Scraping is intentionally unavailable from the dashboard. It requires an explicit command and network access.</div><button class="disabled-action" disabled>Dashboard scraping disabled</button></article>
       </div>
+    </section>
 
-      <!-- PAGE 2: ANOMALY FEED -->
-      <div id="page-anomalies" class="page-section">
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title-group">
-              <span class="card-title">Anomaly Surveillance Radar</span>
-            </div>
-            <div class="filters-bar" style="margin-bottom:0;">
-              <button class="filter-btn active" onclick="filterAnomalyList('all', this)">All Incidents</button>
-              <button class="filter-btn" onclick="filterAnomalyList('High', this)">High Risk</button>
-              <button class="filter-btn" onclick="filterAnomalyList('UNEXPLAINED', this)">Unexplained</button>
-              <button class="filter-btn" onclick="filterAnomalyList('EXPLAINED', this)">Explained</button>
-            </div>
-          </div>
-
-          <div class="table-container">
-            <table class="cyber-table">
-              <thead>
-                <tr>
-                  <th>Ticker</th>
-                  <th>Date</th>
-                  <th>Volume Z-Score</th>
-                  <th>Max Z-Score</th>
-                  <th>Risk Level</th>
-                  <th>Status</th>
-                  <th>News Context</th>
-                </tr>
-              </thead>
-              <tbody id="full-anomaly-rows">
-                <!-- JS Populated -->
-              </tbody>
-            </table>
-          </div>
-        </div>
+    <section class="page" id="page-evaluation">
+      <div class="page-head"><div><div class="eyebrow">Case-study evidence</div><h2>Evaluation</h2><p>Source-backed event matching, simple baselines, and parameter sensitivity. The labeled set is too small for a general performance claim.</p></div></div>
+      <div class="grid kpis">
+        <div class="kpi"><div class="kpi-label">Primary recall</div><div class="kpi-value" id="eval-recall">—</div><div class="kpi-note">Window: 30 days before to 5 after</div></div>
+        <div class="kpi"><div class="kpi-label">Evaluable positives</div><div class="kpi-value" id="eval-events">—</div><div class="kpi-note">Source + trading-window coverage</div></div>
+        <div class="kpi"><div class="kpi-label">Flag load</div><div class="kpi-value" id="eval-load">—</div><div class="kpi-note">Flags per ticker-year</div></div>
+        <div class="kpi"><div class="kpi-label">Negative control</div><div class="kpi-value" id="eval-negative">—</div><div class="kpi-note">Flags near SOPAT</div></div>
       </div>
-
-      <!-- PAGE 3: STOCK ANALYZER -->
-      <div id="page-analyzer" class="page-section">
-        <div class="card" style="margin-bottom:20px;">
-          <div class="card-header">
-            <div class="card-title-group">
-              <span class="card-title">Single Ticker Technical Deep-Dive</span>
-            </div>
-            <div class="search-box">
-              <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-              <input type="text" id="ticker-search-input" class="search-input" list="tickers-datalist" placeholder="Type or select Ticker (e.g. BIAT, SFBT)..." onchange="onTickerSearch(this.value)" onkeyup="if(event.key==='Enter') onTickerSearch(this.value)">
-              <datalist id="tickers-datalist"></datalist>
-            </div>
-          </div>
-
-          <div class="filters-bar" id="ticker-chips">
-            <!-- Popular ticker chips inserted by JS -->
-          </div>
-
-          <div class="chart-box" style="height:360px;">
-            <canvas id="stockChart"></canvas>
-          </div>
-        </div>
-
-        <div class="grid-equal">
-          <div class="card">
-            <div class="card-header">
-              <span class="card-title" id="selected-stock-title">Stock Specific Anomalies</span>
-            </div>
-            <div class="table-container">
-              <table class="cyber-table">
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Z-Score</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody id="stock-anomalies-rows">
-                  <tr><td colspan="3" style="text-align:center; color:var(--text-muted);">Select a ticker above</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="card-header">
-              <span class="card-title">Ticker News Wire</span>
-            </div>
-            <div class="news-list" id="stock-news-list">
-              <div style="text-align:center; padding:20px; color:var(--text-muted);">Select a ticker above to load news</div>
-            </div>
-          </div>
-        </div>
+      <div class="grid two-col">
+        <article class="panel"><div class="panel-head"><div><h3>Baseline comparison</h3><div class="panel-sub">Same event windows; random baseline averages 1,000 seeds</div></div></div><div class="table-wrap"><table><thead><tr><th>Method</th><th>Flags</th><th>Flags/year</th><th>Recall</th><th>P@20</th></tr></thead><tbody id="baseline-body"><tr><td colspan="5">Loading…</td></tr></tbody></table></div></article>
+        <article class="panel"><div class="panel-head"><div><h3>Sensitivity grid</h3><div class="panel-sub">30-day recall; reporting only</div></div></div><div style="overflow:auto"><div class="heatmap" id="heatmap"></div></div></article>
       </div>
+      <article class="panel" style="margin-top:18px"><div class="panel-head"><div><h3>Event audit</h3><div class="panel-sub">Source, confidence, coverage, and exclusion reason</div></div></div><div class="table-wrap"><table><thead><tr><th>Ticker</th><th>Event date</th><th>Date type</th><th>Confidence</th><th>Evaluable</th><th>Reason</th></tr></thead><tbody id="events-body"><tr><td colspan="6">Loading…</td></tr></tbody></table></div></article>
+    </section>
+  </main>
 
-      <!-- PAGE 4: NEWS INTELLIGENCE -->
-      <div id="page-news" class="page-section">
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title-group">
-              <span class="card-title">BVMT Market Intelligence Wire</span>
-            </div>
-          </div>
-          <div class="news-list" id="all-news-container">
-            <!-- Full news wire -->
-          </div>
-        </div>
-      </div>
-
-    </main>
-  </div>
+  <footer class="footer"><div class="footer-inner"><span>BVMT Market Surveillance · Internship project</span><span id="footer-data">Data range loading · Last update loading</span></div></footer>
 
   <script>
-    // Global State
-    let allAnomalies = [];
-    let availableTickers = [];
-    let timelineChartInst = null;
-    let stockChartInst = null;
+    const state = { anomalies: [], news: [], tickers: [] };
+    const $ = (id) => document.getElementById(id);
+    const esc = (value) => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[c]));
+    async function getJSON(path) {
+      const response = await fetch(path);
+      if (!response.ok) throw new Error(`Request failed (${response.status})`);
+      return response.json();
+    }
+    function showError(target, message) { target.innerHTML = `<div class="error">${esc(message)}</div>`; }
 
-    // Utility API fetcher
-    async function api(endpoint, options={}) {
-      const res = await fetch(endpoint, options);
-      if (!res.ok) throw new Error(`API Error ${res.status}`);
-      return await res.json();
+    function activatePage(button, updateUrl = true) {
+      document.querySelectorAll(".nav button").forEach(x => x.classList.toggle("active", x === button));
+      document.querySelectorAll(".page").forEach(page => page.classList.toggle("active", page.id === `page-${button.dataset.page}`));
+      if (updateUrl) history.replaceState(null, "", `?page=${button.dataset.page}`);
+      window.scrollTo({top: 0, behavior: "smooth"});
+    }
+    document.querySelectorAll(".nav button").forEach(button => button.addEventListener("click", () => activatePage(button)));
+    const requestedPage = new URLSearchParams(location.search).get("page");
+    const requestedButton = requestedPage && document.querySelector(`.nav button[data-page="${requestedPage}"]`);
+    if (requestedButton) activatePage(requestedButton, false);
+
+    function metricMap(rows) { return Object.fromEntries(rows.map(row => [row.metric, Number(row.value)])); }
+    function riskBadge(risk) { return `<span class="badge ${String(risk).toLowerCase()}">${esc(risk)}</span>`; }
+    function renderAnomalies() {
+      const term = $("anomaly-search").value.trim().toLowerCase();
+      const risk = $("risk-filter").value;
+      const rows = state.anomalies.filter(row => (!term || `${row.symbole} ${row.ticker_name}`.toLowerCase().includes(term)) && (!risk || row.risk === risk));
+      $("anomaly-body").innerHTML = rows.length ? rows.map(row => `<tr><td class="mono">${esc(row.date)}</td><td><strong>${esc(row.symbole)}</strong><br><span class="panel-sub">${esc(row.ticker_name)}</span></td><td>${esc(row.signal)}</td><td class="mono">${esc(row.max_zscore)}</td><td>${riskBadge(row.risk)}</td><td>${esc(row.status || "Not classified")}</td></tr>`).join("") : '<tr><td colspan="6"><div class="empty">No flags match these filters.</div></td></tr>';
+    }
+    function renderNews() {
+      const term = $("news-search").value.trim().toLowerCase();
+      const rows = state.news.filter(row => (!term || `${row.symbole} ${row.headline}`.toLowerCase().includes(term)));
+      $("news-list").innerHTML = rows.length ? rows.map(row => `<div class="news-card"><a href="${esc(row.url)}" target="_blank" rel="noreferrer">${esc(row.headline)}</a><div class="news-meta"><strong>${esc(row.symbole)}</strong> · ${esc(row.date)} · ${esc(row.time)}</div></div>`).join("") : '<div class="empty">No news items match this filter.</div>';
+    }
+    function lineChart(rows, valueKey, color="#1967d2") {
+      if (!rows.length) return '<div class="empty">No chart data available.</div>';
+      const width=760, height=240, pad=30, values=rows.map(r=>Number(r[valueKey])||0), max=Math.max(...values,1);
+      const points=values.map((v,i)=>`${pad+i*(width-pad*2)/Math.max(values.length-1,1)},${height-pad-v*(height-pad*2)/max}`).join(" ");
+      const area=`${pad},${height-pad} ${points} ${width-pad},${height-pad}`;
+      return `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Timeline chart"><defs><linearGradient id="area" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${color}" stop-opacity=".28"/><stop offset="1" stop-color="${color}" stop-opacity=".02"/></linearGradient></defs><line x1="${pad}" y1="${height-pad}" x2="${width-pad}" y2="${height-pad}" stroke="#dfe5ee"/><polygon points="${area}" fill="url(#area)"/><polyline points="${points}" fill="none" stroke="${color}" stroke-width="3" stroke-linejoin="round"/><text x="${pad}" y="18" fill="#607087" font-size="11">Peak: ${max}</text><text x="${pad}" y="${height-5}" fill="#607087" font-size="10">${esc(rows[0].date||"")}</text><text x="${width-pad}" y="${height-5}" fill="#607087" font-size="10" text-anchor="end">${esc(rows.at(-1).date||"")}</text></svg>`;
+    }
+    function categoryBars(rows) {
+      if (!rows.length) return '<div class="empty">No category data available.</div>';
+      const top=rows.slice(0,6), max=Math.max(...top.map(r=>Number(r.count)),1);
+      return `<div class="bar-list">${top.map(r=>`<div class="bar-row"><span>${esc(String(r.category).replaceAll("_"," "))}</span><div class="bar-track"><div class="bar-fill" style="width:${Number(r.count)/max*100}%"></div></div><strong>${esc(r.count)}</strong></div>`).join("")}</div>`;
+    }
+    function renderHeatmap(rows, denominator) {
+      const windows=[20,40,60,120], cutoffs=[2.5,3,3.5,4];
+      const map=new Map(rows.map(r=>[`${Number(r.z_cutoff)}-${Number(r.rolling_window)}`,Number(r.recall_30d)]));
+      $("heatmap").innerHTML='<div class="heat-cell heat-head">z / days</div>'+windows.map(w=>`<div class="heat-cell heat-head">${w}</div>`).join("")+cutoffs.map(z=>`<div class="heat-cell heat-head">${z}</div>`+windows.map(w=>{const v=map.get(`${z}-${w}`)??0;return `<div class="heat-cell ${v>=.5?"score-50":"score-0"}">${Math.round(v*denominator)} of ${denominator}</div>`;}).join("")).join("");
+    }
+    async function loadStock(ticker) {
+      if (!ticker) { $("stock-chart").innerHTML='<div class="empty">Select a ticker to load its history.</div>'; return; }
+      $("stock-title").textContent=ticker; $("stock-subtitle").textContent="Loading price history…";
+      try {
+        const rows=await getJSON(`/api/stock/${encodeURIComponent(ticker)}`);
+        $("stock-subtitle").textContent=`${rows.length} trading observations · dots indicate screen flags`;
+        if (!rows.length) { $("stock-chart").innerHTML='<div class="empty">No local history available.</div>'; return; }
+        const width=760,height=240,pad=30,vals=rows.map(r=>Number(r.cloture)),min=Math.min(...vals),max=Math.max(...vals),span=max-min||1;
+        const xy=rows.map((r,i)=>({x:pad+i*(width-pad*2)/Math.max(rows.length-1,1),y:height-pad-(Number(r.cloture)-min)*(height-pad*2)/span,a:r.anomaly}));
+        $("stock-chart").innerHTML=`<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(ticker)} price history"><line x1="${pad}" y1="${height-pad}" x2="${width-pad}" y2="${height-pad}" stroke="#dfe5ee"/><polyline points="${xy.map(p=>`${p.x},${p.y}`).join(" ")}" fill="none" stroke="#087f8c" stroke-width="2.5"/>${xy.filter(p=>p.a).map(p=>`<circle cx="${p.x}" cy="${p.y}" r="4" fill="#b42318" stroke="white" stroke-width="2"/>`).join("")}<text x="${pad}" y="18" fill="#607087" font-size="11">High ${max.toFixed(3)}</text><text x="${pad}" y="${height-5}" fill="#607087" font-size="11">Low ${min.toFixed(3)}</text></svg>`;
+      } catch(error) { showError($("stock-chart"), error.message); }
     }
 
-    // Clock
-    function updateClock() {
-      const now = new Date();
-      document.getElementById('tunis-clock').innerText = 'TUNIS: ' + now.toLocaleTimeString('fr-FR') + ' UTC+1';
-    }
-    setInterval(updateClock, 1000);
-    updateClock();
-
-    // Tab Switching
-    function switchTab(tabId, btnEl) {
-      document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
-      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-
-      document.getElementById('page-' + tabId).classList.add('active');
-      if (btnEl && btnEl.parentElement) {
-        btnEl.parentElement.classList.add('active');
+    async function init() {
+      const requests = await Promise.allSettled([
+        getJSON("/api/status"), getJSON("/api/kpis"), getJSON("/api/anomalies"),
+        getJSON("/api/anomalies/timeline"), getJSON("/api/news/categories"),
+        getJSON("/api/news/recent"), getJSON("/api/tickers"),
+        getJSON("/api/evaluation/metrics"), getJSON("/api/evaluation/baselines"),
+        getJSON("/api/evaluation/sensitivity"), getJSON("/api/evaluation/events")
+      ]);
+      const value = i => requests[i].status === "fulfilled" ? requests[i].value : null;
+      const status=value(0), kpis=value(1), timeline=value(3), categories=value(4);
+      if (status) {
+        $("system-chip").textContent=Object.values(status.files).every(Boolean)?"All core outputs available":"Some outputs are missing";
+        $("file-status").innerHTML=Object.entries(status.files).map(([name,ok],i)=>`<div class="step"><span class="step-num">${i+1}</span><span>${esc(name.replaceAll("_"," "))}</span><span class="badge ${ok?"yes":"no"}">${ok?"Available":"Missing"}</span></div>`).join("");
+      } else { $("system-chip").textContent="Status unavailable"; showError($("file-status"),"Could not load pipeline status."); }
+      if (kpis) {
+        $("kpi-tickers").textContent=kpis.n_tickers; $("kpi-flags").textContent=kpis.total_anomalies;
+        $("kpi-unexplained").textContent=kpis.unexplained_count; $("kpi-triage").textContent=`${kpis.triage_rate}%`;
+        $("range-pill").textContent=`${kpis.data_start||"Unknown"} — ${kpis.data_end||"Unknown"}`;
+        $("footer-data").textContent=`Data range ${kpis.data_start||"unknown"} to ${kpis.data_end||"unknown"} · Last dashboard check ${kpis.last_scrape}`;
       }
-
-      if (tabId === 'analyzer') {
-        loadStockData('BIAT');
-      }
+      $("timeline-chart").innerHTML=timeline?lineChart(timeline,"count"):'<div class="error">Timeline unavailable.</div>';
+      $("category-chart").innerHTML=categories?categoryBars(categories):'<div class="error">Category chart unavailable.</div>';
+      state.anomalies=value(2)||[]; renderAnomalies();
+      state.news=value(5)||[]; renderNews();
+      state.tickers=value(6)||[]; $("ticker-select").innerHTML='<option value="">Select a ticker</option>'+state.tickers.map(t=>`<option value="${esc(t.symbole)}">${esc(t.symbole)} — ${esc(t.name)}</option>`).join("");
+      const metrics=value(7)?metricMap(value(7)):{}; const denom=metrics.eligible_positive_events_30d||0;
+      $("eval-recall").textContent=denom?`${Math.round((metrics.recall_30d||0)*denom)} of ${denom}`:"—";
+      $("eval-events").textContent=denom||"—"; $("eval-load").textContent=metrics.flags_per_ticker_year?.toFixed(2)||"—"; $("eval-negative").textContent=metrics.negative_control_flags_30d??"—";
+      const baselines=value(8)||[]; $("baseline-body").innerHTML=baselines.length?baselines.map(r=>`<tr><td>${esc(String(r.method).replaceAll("_"," "))}</td><td>${Math.round(r.flag_count)}</td><td>${Number(r.flags_per_ticker_year).toFixed(2)}</td><td>${(Number(r.recall_30d)*denom).toFixed(Number(r.recall_30d)*denom%1?2:0)} of ${denom}</td><td>${Number(r.precision_at_20).toFixed(4)}</td></tr>`).join(""):'<tr><td colspan="5">No baseline results.</td></tr>';
+      renderHeatmap(value(9)||[],denom);
+      const events=value(10)||[]; $("events-body").innerHTML=events.length?events.map(r=>`<tr><td><strong>${esc(r.ticker)}</strong></td><td class="mono">${esc(r.event_date||"SOURCE_NEEDED")}</td><td>${esc(r.event_date_type)}</td><td>${esc(r.confidence)}</td><td><span class="badge ${String(r.evaluable).toLowerCase()==="true"?"yes":"no"}">${String(r.evaluable).toLowerCase()==="true"?"Yes":"No"}</span></td><td>${esc(r.evaluable_reason)}</td></tr>`).join(""):'<tr><td colspan="6">No event audit available.</td></tr>';
     }
-
-    // Dynamic Ticker Tape Generator
-    function populateTickerTape(anomalies) {
-      const track = document.getElementById('ticker-track');
-      if (!anomalies || !anomalies.length) return;
-      const topItems = anomalies.slice(0, 10);
-      track.innerHTML = topItems.map(a => {
-        const zVal = Number(a.max_zscore || a.volume_zscore || 0).toFixed(2);
-        const isUnexplained = (a.status || '').includes('UNEXPLAINED');
-        const alertClass = a.risk === 'High' ? 'ticker-alert' : (isUnexplained ? 'ticker-down' : 'ticker-up');
-        return `
-          <div class="ticker-item">
-            <span class="ticker-symbol">${a.symbole}</span>
-            <span class="ticker-val">Z = +${zVal}</span>
-            <span class="${alertClass}">${a.status || 'VOLATILE'}</span>
-          </div>
-        `;
-      }).join('');
-    }
-
-    // Initialize Dashboard Data
-    async function initTerminal() {
-      try {
-        // Load KPIs
-        const kpis = await api('/api/kpis');
-        document.getElementById('kpi-total').innerText = kpis.total_anomalies || kpis.total_classified || 0;
-        document.getElementById('kpi-highrisk').innerText = kpis.high_risk_count || 0;
-        document.getElementById('kpi-unexplained').innerText = kpis.unexplained_count || 0;
-        document.getElementById('kpi-last-scrape').innerText = 'Status: Ready (' + (kpis.last_scrape || 'Ready') + ')';
-
-        // Load Status
-        const sys = await api('/api/status');
-        document.getElementById('st-tickers').innerText = sys.files?.tickers ? 'Ready' : 'Offline';
-        document.getElementById('st-news').innerText = sys.files?.news ? 'Ready' : 'Offline';
-
-        // Load Anomalies
-        allAnomalies = await api('/api/anomalies');
-        populateTickerTape(allAnomalies);
-        renderTopAnomalies(allAnomalies);
-        renderFullAnomalies(allAnomalies);
-        renderLeaderboard(allAnomalies);
-
-        // Load Timeline Chart
-        loadTimelineChart();
-
-        // Load News
-        loadNews();
-
-        // Load Tickers
-        loadTickersList();
-
-      } catch(e) {
-        console.error('Terminal Init Error:', e);
-      }
-    }
-
-    // Timeline Chart
-    async function loadTimelineChart() {
-      try {
-        const data = await api('/api/anomalies/timeline');
-        const ctx = document.getElementById('timelineChart').getContext('2d');
-        
-        const labels = data.map(d => d.date);
-        const counts = data.map(d => d.count);
-
-        if (timelineChartInst) timelineChartInst.destroy();
-
-        const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-        gradient.addColorStop(0, 'rgba(0, 240, 255, 0.45)');
-        gradient.addColorStop(1, 'rgba(0, 240, 255, 0.0)');
-
-        timelineChartInst = new Chart(ctx, {
-          type: 'line',
-          data: {
-            labels: labels,
-            datasets: [{
-              label: 'Anomaly Count',
-              data: counts,
-              borderColor: '#00f0ff',
-              borderWidth: 2.5,
-              backgroundColor: gradient,
-              fill: true,
-              tension: 0.3,
-              pointBackgroundColor: '#ff2a5f',
-              pointBorderColor: '#fff',
-              pointRadius: 4.5
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-              x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } },
-              y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } }
-            }
-          }
-        });
-      } catch(e) { console.error(e); }
-    }
-
-    // Render Home Anomalies Table
-    function renderTopAnomalies(anomalies) {
-      const tbody = document.getElementById('home-anomaly-rows');
-      const top = anomalies.slice(0, 6);
-      tbody.innerHTML = top.map(a => `
-        <tr>
-          <td><span class="ticker-pill">${a.symbole}</span></td>
-          <td>${a.date}</td>
-          <td style="font-family:var(--font-mono); font-weight:700; color:var(--primary);">Z = ${Number(a.max_zscore || a.volume_zscore || 0).toFixed(2)}</td>
-          <td><span class="risk-badge ${a.risk === 'High' ? 'risk-high' : 'risk-med'}">${a.risk}</span></td>
-          <td><span class="status-pill ${(a.status||'').includes('UNEXPLAINED') ? 'status-unexplained' : 'status-explained'}">${a.status}</span></td>
-        </tr>
-      `).join('');
-    }
-
-    // Render Full Anomalies Table
-    function renderFullAnomalies(anomalies) {
-      const tbody = document.getElementById('full-anomaly-rows');
-      tbody.innerHTML = anomalies.map(a => `
-        <tr>
-          <td><span class="ticker-pill">${a.symbole}</span></td>
-          <td style="font-family:var(--font-mono);">${a.date}</td>
-          <td style="font-family:var(--font-mono); font-weight:700; color:var(--primary);">Z = ${Number(a.volume_zscore || 0).toFixed(2)}</td>
-          <td style="font-family:var(--font-mono); font-weight:700;">Z = ${Number(a.max_zscore || 0).toFixed(2)}</td>
-          <td><span class="risk-badge ${a.risk === 'High' ? 'risk-high' : 'risk-med'}">${a.risk}</span></td>
-          <td><span class="status-pill ${(a.status||'').includes('UNEXPLAINED') ? 'status-unexplained' : 'status-explained'}">${a.status}</span></td>
-          <td style="max-width:280px; font-size:11.5px; color:var(--text-dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-            ${a.matched_headline || a.headline || 'No matching disclosure'}
-          </td>
-        </tr>
-      `).join('');
-    }
-
-    // Filter Anomalies
-    function filterAnomalyList(filter, btn) {
-      document.querySelectorAll('#page-anomalies .filter-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-
-      if (filter === 'all') {
-        renderFullAnomalies(allAnomalies);
-      } else if (filter === 'High') {
-        renderFullAnomalies(allAnomalies.filter(a => a.risk === 'High'));
-      } else if (filter === 'EXPLAINED') {
-        renderFullAnomalies(allAnomalies.filter(a => String(a.status).toUpperCase().includes('EXPLAINED') && !String(a.status).toUpperCase().includes('UNEXPLAINED')));
-      } else if (filter === 'UNEXPLAINED') {
-        renderFullAnomalies(allAnomalies.filter(a => String(a.status).toUpperCase().includes('UNEXPLAINED')));
-      }
-    }
-
-    // Render Top Tickers Leaderboard
-    function renderLeaderboard(anomalies) {
-      const counts = {};
-      anomalies.forEach(a => { counts[a.symbole] = (counts[a.symbole]||0) + 1; });
-      const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0, 6);
-      const max = sorted[0]?.[1] || 1;
-      const el = document.getElementById('top-tickers-list');
-      el.innerHTML = sorted.map(([sym, cnt]) => `
-        <div class="lb-row">
-          <div class="lb-sym"><span class="ticker-pill">${sym}</span></div>
-          <div class="lb-bar-bg"><div class="lb-bar-fill" style="width:${Math.round(cnt/max*100)}%"></div></div>
-          <div class="lb-val">${cnt}</div>
-        </div>
-      `).join('');
-    }
-
-    // News Loader
-    async function loadNews() {
-      try {
-        const news = await api('/api/news/recent');
-        const wire = document.getElementById('home-news-wire');
-        const fullNews = document.getElementById('all-news-container');
-
-        const renderItems = (items) => items.map(n => `
-          <div class="news-item">
-            <div class="news-meta">
-              <span class="ticker-pill">${n.symbole || n.ticker || 'BVMT'}</span>
-              <span class="news-date">${n.date || ''} ${n.time || ''}</span>
-            </div>
-            <a href="${n.url || '#'}" target="_blank" class="news-title">${n.headline || n.title}</a>
-          </div>
-        `).join('');
-
-        wire.innerHTML = renderItems(news.slice(0, 5));
-        fullNews.innerHTML = renderItems(news);
-      } catch(e) { console.error(e); }
-    }
-
-    // Stock Analyzer Ticker Chips & Search
-    async function loadTickersList() {
-      try {
-        const tickersData = await api('/api/tickers');
-        availableTickers = tickersData.map(t => typeof t === 'object' ? t.symbole : t);
-        
-        // Populate Datalist for autocomplete
-        const datalist = document.getElementById('tickers-datalist');
-        datalist.innerHTML = availableTickers.map(s => `<option value="${s}"></option>`).join('');
-
-        // Populate Chip Buttons
-        const container = document.getElementById('ticker-chips');
-        container.innerHTML = availableTickers.slice(0, 10).map(s => `
-          <button class="filter-btn" onclick="loadStockData('${s}')">${s}</button>
-        `).join('');
-      } catch(e) { console.error(e); }
-    }
-
-    async function loadStockData(ticker) {
-      if (!ticker || typeof ticker !== 'string') return;
-      ticker = ticker.trim().toUpperCase();
-      
-      document.getElementById('selected-stock-title').innerText = ticker + ' Anomaly History';
-      try {
-        const data = await api(`/api/stock/${ticker}`);
-        const ctx = document.getElementById('stockChart').getContext('2d');
-
-        const labels = data.map(d => d.date);
-        const prices = data.map(d => d.cloture || d.close);
-        const volumes = data.map(d => d.volume);
-
-        if (stockChartInst) stockChartInst.destroy();
-
-        stockChartInst = new Chart(ctx, {
-          type: 'line',
-          data: {
-            labels: labels,
-            datasets: [
-              {
-                label: 'Close Price (TND)',
-                data: prices,
-                borderColor: '#00f0ff',
-                borderWidth: 2.5,
-                yAxisID: 'y'
-              },
-              {
-                label: 'Volume',
-                data: volumes,
-                backgroundColor: 'rgba(245, 158, 11, 0.35)',
-                type: 'bar',
-                yAxisID: 'y1'
-              }
-            ]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-              x: { grid: { color: 'rgba(255,255,255,0.05)' } },
-              y: { position: 'left', grid: { color: 'rgba(255,255,255,0.05)' } },
-              y1: { position: 'right', grid: { display: false } }
-            }
-          }
-        });
-
-        // Load Stock News
-        const sNews = await api(`/api/news/by_ticker?ticker=${ticker}`);
-        document.getElementById('stock-news-list').innerHTML = sNews.map(n => `
-          <div class="news-item">
-            <div class="news-meta"><span class="news-date">${n.date || ''}</span></div>
-            <a href="${n.url || '#'}" target="_blank" class="news-title">${n.headline || n.title}</a>
-          </div>
-        `).join('') || '<div style="padding:10px; color:var(--text-muted);">No news found for ticker</div>';
-
-        // Filter stock anomalies
-        const stockAnom = allAnomalies.filter(a => a.symbole === ticker);
-        document.getElementById('stock-anomalies-rows').innerHTML = stockAnom.map(a => `
-          <tr>
-            <td>${a.date}</td>
-            <td style="color:var(--primary); font-weight:700;">Z = ${Number(a.max_zscore||a.volume_zscore||0).toFixed(2)}</td>
-            <td><span class="status-pill ${(a.status||'').includes('UNEXPLAINED') ? 'status-unexplained' : 'status-explained'}">${a.status}</span></td>
-          </tr>
-        `).join('') || '<tr><td colspan="3">No anomalies recorded</td></tr>';
-
-      } catch(e) { console.error(e); }
-    }
-
-    function onTickerSearch(val) {
-      if (!val) return;
-      val = val.trim().toUpperCase();
-      if (availableTickers.length === 0 || availableTickers.includes(val)) {
-        loadStockData(val);
-      }
-    }
-
-    async function triggerScraper() {
-      try {
-        await api('/api/scrape', { method: 'POST' });
-        alert('Scraper pipeline triggered successfully! Refreshing data...');
-        initTerminal();
-      } catch(e) { alert('Failed to trigger scraper: ' + e.message); }
-    }
-
-    // Run on load
-    window.addEventListener('DOMContentLoaded', initTerminal);
+    $("anomaly-search").addEventListener("input",renderAnomalies); $("risk-filter").addEventListener("change",renderAnomalies);
+    $("news-search").addEventListener("input",renderNews); $("ticker-select").addEventListener("change",e=>loadStock(e.target.value));
+    init().catch(error => { $("system-chip").textContent="Dashboard load failed"; console.error(error); });
   </script>
 </body>
 </html>

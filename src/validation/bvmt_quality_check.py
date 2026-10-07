@@ -1,5 +1,5 @@
 """
-BVMT (_all_tickers_combined.csv) Full Data Quality Check
+BVMT (_all_tickers_full.csv) Full Data Quality Check
 =========================================================
 1. Structure        - row count, unique tickers, column dtypes
 2. Coverage         - min/max date and row count per ticker; flags < 1 year or < 50 rows
@@ -16,7 +16,7 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 
-CSV_PATH = Path(__file__).resolve().parents[2] / "bvmt_data" / "_all_tickers_combined.csv"
+CSV_PATH = Path(__file__).resolve().parents[2] / "bvmt_data" / "_all_tickers_full.csv"
 SEP = "=" * 72
 
 

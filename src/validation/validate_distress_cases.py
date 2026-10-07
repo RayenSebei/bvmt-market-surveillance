@@ -4,7 +4,7 @@ Phase 1.5 extension — Labeled ground-truth events + fade validation.
 Two things this script does:
 
 1. Writes bvmt_data/labeled_events.csv — combining the original documented
-   cases from your fraud research (Tuninvest, UADH) with the newly
+   cases from the earlier market-conduct research (Tuninvest, UADH) with the newly
    researched delisting cases (GIF, Electrostar/LSTR, Servicom/SERVI, MIP,
    SOPAT). This becomes the reference set every detector you build from
    here on should be evaluated against, instead of ad-hoc spot checks.
@@ -32,13 +32,13 @@ import pandas as pd
 
 from src.detection.decay_detector import load_data, monthly_spotlight
 
-DATA_PATH = os.path.join("bvmt_data", "_all_tickers_combined.csv")
+DATA_PATH = os.path.join("bvmt_data", "_all_tickers_full.csv")
 EVENTS_PATH = os.path.join("bvmt_data", "labeled_events.csv")
 
 # Labeled ground-truth events. event_date = the date the market-facing
 # action occurred (suspension date where known). category distinguishes
 # the underlying mechanism, which matters for evaluating different
-# detector types against different fraud/distress archetypes later.
+# detector types against different market-conduct/distress archetypes later.
 LABELED_EVENTS = [
     {"symbole": "TINV", "ticker_name": "Tuninvest SICAR", "event_date": "2025-10-06",
      "category": "insider_trading_suspected",

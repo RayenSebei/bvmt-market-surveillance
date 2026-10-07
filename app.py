@@ -7,6 +7,7 @@ No fake data. All endpoints serve real scraped files.
 import os
 import json
 import math
+import re
 import threading
 import subprocess
 from datetime import datetime, timedelta
@@ -49,6 +50,8 @@ CORS(app)
 
 # ── DATA DIRECTORY ──────────────────────────────────────────────────────────
 DATA_DIR = Path(os.environ.get("DATA_DIR", "./bvmt_data"))
+EVALUATION_DIR = Path(os.environ.get("EVALUATION_DIR", "./outputs/evaluation"))
+TICKER_FILE_PATTERN = re.compile(r"^[A-Z0-9]+$")
 
 # ── SCRAPER SCRIPT PATH ──────────────────────────────────────────────────────
 # Point this to your existing scraper/pipeline entry point
@@ -71,8 +74,21 @@ def load_csv(filename: str, **kwargs) -> pd.DataFrame:
         return pd.DataFrame()
     try:
         return pd.read_csv(path, **kwargs)
-    except Exception as e:
-        app.logger.error(f"Error reading {path}: {e}")
+    except Exception as exc:
+        app.logger.error(f"Error reading {path}: {exc}")
+        return pd.DataFrame()
+
+
+def load_evaluation_csv(filename: str) -> pd.DataFrame:
+    """Load a generated evaluation table without modifying it."""
+    path = EVALUATION_DIR / filename
+    if not path.exists():
+        app.logger.warning(f"Evaluation file not found: {path}")
+        return pd.DataFrame()
+    try:
+        return pd.read_csv(path)
+    except Exception as exc:
+        app.logger.error(f"Error reading {path}: {exc}")
         return pd.DataFrame()
 
 
@@ -116,11 +132,12 @@ def index():
 def api_status():
     """Pipeline health + last scrape info."""
     files = {
-        "tickers": (DATA_DIR / "_all_tickers_combined.csv").exists(),
+        "tickers": (DATA_DIR / "_all_tickers_full.csv").exists(),
         "news": (DATA_DIR / "_all_news_combined.csv").exists(),
         "anomaly_flags": (DATA_DIR / "anomaly_flags.csv").exists(),
         "anomaly_classified": (DATA_DIR / "anomaly_classified.csv").exists(),
         "anomaly_summary": (DATA_DIR / "anomaly_summary.csv").exists(),
+        "evaluation": (EVALUATION_DIR / "metrics.csv").exists(),
     }
     return jsonify({
         "files": files,
@@ -147,13 +164,20 @@ def api_scrape_status():
 @app.route("/api/kpis")
 def api_kpis():
     """Summary KPIs for the top bar."""
-    tickers_df = load_csv("_all_tickers_combined.csv")
+    tickers_df = load_csv("_all_tickers_full.csv")
     news_df    = load_csv("_all_news_combined.csv")
     flags_df   = load_csv("anomaly_flags.csv")
     classified = load_csv("anomaly_classified.csv")
 
     n_tickers   = tickers_df["symbole"].nunique() if not tickers_df.empty else 0
     n_news      = len(news_df) if not news_df.empty else 0
+    data_start = ""
+    data_end = ""
+    if not tickers_df.empty and "date" in tickers_df.columns:
+        dates = pd.to_datetime(tickers_df["date"], errors="coerce")
+        if dates.notna().any():
+            data_start = dates.min().strftime("%Y-%m-%d")
+            data_end = dates.max().strftime("%Y-%m-%d")
 
     # Flagged = combined_anomaly == True in the most recent 30 days of *scraped* data.
     # Anchored to the latest date actually present in the data, not datetime.now(),
@@ -203,7 +227,9 @@ def api_kpis():
         "total_anomalies": total_anomalies,
         "high_risk_count": high_risk_count,
         "unexplained_count": unexplained,
-        "last_scrape": scrape_state.get("last_scrape") or datetime.now().strftime("%Y-%m-%d %H:%M")
+        "last_scrape": scrape_state.get("last_scrape") or datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "data_start": data_start,
+        "data_end": data_end,
     })
 
 
@@ -351,7 +377,7 @@ def api_stock(ticker):
 
     if df.empty:
         # Try combined file
-        combined = load_csv("_all_tickers_combined.csv")
+        combined = load_csv("_all_tickers_full.csv")
         if not combined.empty and "symbole" in combined.columns:
             df = combined[combined["symbole"].str.upper() == ticker].copy()
 
@@ -365,7 +391,7 @@ def api_stock(ticker):
     flags = load_csv("anomaly_classified.csv")
     anomaly_dates = set()
     if not flags.empty and "symbole" in flags.columns:
-        tf = flags[flags["symbole"].str.upper() == ticker]
+        tf = flags[flags["symbole"].str.upper() == ticker].copy()
         if not tf.empty:
             tf["date"] = pd.to_datetime(tf["date"], errors="coerce")
             va = tf["volume_anomaly"].astype(str).str.strip().str.lower() == "true"
@@ -390,18 +416,35 @@ def api_stock(ticker):
 @app.route("/api/tickers")
 def api_tickers():
     """List of all available ticker symbols."""
-    combined = load_csv("_all_tickers_combined.csv")
+    tickers = {}
+    combined = load_csv("_all_tickers_full.csv")
     if not combined.empty and "symbole" in combined.columns:
-        tickers = sorted(combined["symbole"].dropna().unique().tolist())
-        names = {}
-        if "ticker_name" in combined.columns:
-            names = combined.drop_duplicates("symbole").set_index("symbole")["ticker_name"].to_dict()
-        return jsonify([{"symbole": t, "name": names.get(t, t)} for t in tickers])
+        for _, row in combined.drop_duplicates("symbole").iterrows():
+            symbol = str(row["symbole"]).strip().upper()
+            if not symbol:
+                continue
+            name = str(row.get("ticker_name", symbol)).strip()
+            tickers[symbol] = name or symbol
 
-    # Fallback: scan individual CSV files
-    csvs = [f.stem for f in DATA_DIR.glob("*.csv")
-            if not f.stem.startswith("_") and not f.stem.startswith("anomaly")]
-    return jsonify([{"symbole": t, "name": t} for t in sorted(csvs)])
+    # The combined file can be incomplete even when canonical per-ticker files
+    # are present. Merge both sources so Stock Search exposes every local file.
+    for path in DATA_DIR.glob("*.csv"):
+        symbol = path.stem
+        if not TICKER_FILE_PATTERN.fullmatch(symbol):
+            continue
+        if symbol not in tickers:
+            name = symbol
+            try:
+                sample = pd.read_csv(path, nrows=1)
+                if not sample.empty and "ticker_name" in sample.columns:
+                    candidate = str(sample.iloc[0]["ticker_name"]).strip()
+                    name = candidate or symbol
+            except Exception as exc:
+                app.logger.warning(f"Could not read ticker metadata from {path}: {exc}")
+            tickers[symbol] = name
+
+    return jsonify([{"symbole": symbol, "name": tickers[symbol]}
+                    for symbol in sorted(tickers)])
 
 
 @app.route("/api/summary")
@@ -426,6 +469,30 @@ def api_news_categories():
     counts = cats.value_counts().reset_index()
     counts.columns = ["category", "count"]
     return jsonify(counts.to_dict(orient="records"))
+
+
+@app.route("/api/evaluation/metrics")
+def api_evaluation_metrics():
+    df = load_evaluation_csv("metrics.csv")
+    return jsonify(df.fillna("").to_dict(orient="records"))
+
+
+@app.route("/api/evaluation/baselines")
+def api_evaluation_baselines():
+    df = load_evaluation_csv("baseline_comparison.csv")
+    return jsonify(df.fillna("").to_dict(orient="records"))
+
+
+@app.route("/api/evaluation/sensitivity")
+def api_evaluation_sensitivity():
+    df = load_evaluation_csv("sensitivity.csv")
+    return jsonify(df.fillna("").to_dict(orient="records"))
+
+
+@app.route("/api/evaluation/events")
+def api_evaluation_events():
+    df = load_evaluation_csv("events_table.csv")
+    return jsonify(df.fillna("").to_dict(orient="records"))
 
 
 if __name__ == "__main__":

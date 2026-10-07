@@ -1,0 +1,9 @@
+metric,value,detail
+sourced_positive_events,3.0,before coverage exclusions
+eligible_positive_events_30d,2.0,source-backed and trading-window coverage
+eligible_positive_events_60d,3.0,source-backed and trading-window coverage
+recall_30d,0.5,window -30/+5 calendar days
+recall_60d,0.3333333333333333,window -60/+5 calendar days
+flag_count,1027.0,reference detector union
+flags_per_ticker_year,3.6069131137137247,all reference flags / observed ticker-years
+negative_control_flags_30d,0.0,SOPAT window

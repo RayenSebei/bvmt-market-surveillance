@@ -1,0 +1,5 @@
+metric,value,detail
+recall_30d,0.5,fixture
+eligible_positive_events_30d,2,fixture
+flags_per_ticker_year,3.5,fixture
+negative_control_flags_30d,0,fixture
