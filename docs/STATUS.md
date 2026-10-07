@@ -41,3 +41,15 @@
 - Done: Used 15 live calls in total across the earlier empty-response check, diagnostic/fix checks, and the 12-row run; within the maximum of 20.
 - Next: Finish and verify the source-backed evaluation framework, equivalence test, figures, and summary.
 - Blockers: None.
+
+## Step C — Phase 3 evaluation
+
+- Done: Added a source-audited event table with date type, source, confidence, evaluability, and exclusion reason.
+- Done: Defined the primary window as -30/+5 calendar days and secondary window as -60/+5 before computing metrics.
+- Done: Produced reference metrics, precision@10/20/50, coverage/lead-time detail, volume and return baselines, a 1,000-seed same-count random baseline, the 16-cell sensitivity grid, two SVG figures, and `outputs/evaluation/summary.md`.
+- Done: Added a 20-seed equivalence test showing NumPy window counts exactly match the slower pandas calculation; focused suite passes 5 tests.
+- Done: Headline result is 1 of 2 evaluable events for both windows; source-backed positives are 3, but SERVI lacks window coverage. SOPAT has 0 reference flags in its primary window.
+- Done: Reference parameters remain z=3.0 and rolling window=60; no labeled-event tuning occurred.
+- Done: All 178 protected raw files still match `../bvmt_snapshot`.
+- Next: Phase 4 comprehensive offline tests.
+- Blockers: The evaluation is case-study-level only; five events remain `SOURCE_NEEDED`, and the evaluable positive denominator is two.

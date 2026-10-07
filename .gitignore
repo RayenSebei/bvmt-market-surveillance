@@ -8,7 +8,9 @@ pytest-cache-files-*/
 .ruff_cache/
 dist/
 build/
-outputs/
+outputs/*
+!outputs/evaluation/
+!outputs/evaluation/**
 bvmt_quality_report.txt
 .venv/
 venv/

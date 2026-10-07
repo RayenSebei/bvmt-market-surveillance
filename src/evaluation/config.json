@@ -1,0 +1,9 @@
+{
+  "primary_window_days_before": 30,
+  "secondary_window_days_before": 60,
+  "window_days_after": 5,
+  "precision_at_k": [10, 20, 50],
+  "random_seeds": 1000,
+  "sensitivity_z_cutoffs": [2.5, 3.0, 3.5, 4.0],
+  "sensitivity_rolling_windows": [20, 40, 60, 120]
+}

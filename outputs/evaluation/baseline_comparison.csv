@@ -1,0 +1,5 @@
+method,flag_count,flags_per_ticker_year,recall_30d,recall_60d,precision_at_20,negative_control_flags_30d
+reference_union,1027.0,3.6069131137137247,0.5,0.5,0.0,0.0
+volume_zscore_only,140.0,0.49169214792592153,0.0,0.0,0.0,0.0
+absolute_return_only,903.0,3.171414354122194,0.5,0.5,0.0,0.0
+random_same_count_mean_1000_seeds,1027.0,3.606913113713724,0.1815,0.3265,0.00035,0.6
