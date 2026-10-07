@@ -2,7 +2,7 @@
 
 A reproducible statistical screening project for the Bourse de Valeurs Mobilières de Tunis (BVMT). It identifies unusual price or volume activity, adds local news context, and produces a review queue for a human analyst.
 
-> **Statistical screening tool for human review, not a legal finding.** This independent academic project is not affiliated with BVMT or CMF and is not investment or legal advice.
+> **Statistical screening tool for human review, not a fraud verdict.** This independent academic project is not affiliated with BVMT or CMF and is not investment or legal advice.
 
 ## What is included
 
@@ -116,7 +116,7 @@ The evaluation window was fixed before calculation: 30 calendar days before thro
 
 These are case-study results, not a statistical performance estimate. See [outputs/evaluation/summary.md](outputs/evaluation/summary.md) and [docs/REPORT.md](docs/REPORT.md).
 
-## Important limitations
+## Limitations
 
 - Only 3 positive events have repository sources, and only 2 are evaluable in the primary window.
 - TINV, UADH, TSI, CGF, and UBCI remain `SOURCE_NEEDED` and are excluded from headline metrics. CGF and TSI have no ticker files, are not in the dataset, and cannot be evaluated.
