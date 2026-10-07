@@ -118,3 +118,12 @@
 - Done: Retained only the valid Overview screenshot link and removed the obsolete browser-export explanation; the user can add the remaining captures under `docs/screenshots/`.
 - Next: Run the final offline tests, endpoint checks, and protected-raw hash audit.
 - Blockers: The missing sourced event table prevents adding the requested new event rows.
+
+## Final verification after evaluation follow-up
+
+- Done: Full offline suite passes: 40 tests in 0.89 seconds; compilation succeeds.
+- Done: All 13 real-data smoke endpoints return HTTP 200, including `/api/tickers`, `/api/stock/BIAT`, `/api/stock/BNA`, and all evaluation APIs. The ticker endpoint returns 85 symbols.
+- Done: SHA-256 comparison covers 187 canonical CSVs; all 178 protected raw files match `../bvmt_snapshot` with zero differences.
+- Done: Confirmed the report, README, and evaluation summary contain no claim that the reference beats the return-only baseline and no prohibited output wording.
+- Next: None until the missing sourced event table or additional dashboard screenshots are supplied.
+- Blockers: No new event rows could be added because the referenced sourced table was absent.
