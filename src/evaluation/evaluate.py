@@ -20,10 +20,14 @@ def load_config() -> dict:
     return json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
 
 
-def load_inputs() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    trading = pd.read_csv(DATA_PATH, parse_dates=["date"])
-    flags = pd.read_csv(FLAGS_PATH, parse_dates=["date"])
-    events = pd.read_csv(EVENTS_PATH)
+def load_inputs(
+    data_path: Path = DATA_PATH,
+    flags_path: Path = FLAGS_PATH,
+    events_path: Path = EVENTS_PATH,
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    trading = pd.read_csv(data_path, parse_dates=["date"])
+    flags = pd.read_csv(flags_path, parse_dates=["date"])
+    events = pd.read_csv(events_path)
     for column in ("event_date", "original_label_date", "secondary_date"):
         events[column] = pd.to_datetime(events[column], errors="coerce")
     events["include_headline"] = events["include_headline"].astype(str).str.lower().eq("true")
@@ -160,13 +164,18 @@ def write_summary_svg(metrics: pd.DataFrame, path: Path) -> None:
     path.write_text(svg, encoding="utf-8")
 
 
-def main() -> int:
+def main(
+    data_path: Path = DATA_PATH,
+    flags_path: Path = FLAGS_PATH,
+    events_path: Path = EVENTS_PATH,
+    output_dir: Path = OUTPUT_DIR,
+) -> int:
     config = load_config()
     before = int(config["primary_window_days_before"])
     secondary = int(config["secondary_window_days_before"])
     after = int(config["window_days_after"])
-    trading, flags, events = load_inputs()
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    trading, flags, events = load_inputs(data_path, flags_path, events_path)
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     coverage30 = coverage_table(trading, events, before)
     coverage60 = coverage_table(trading, events, secondary)
@@ -197,7 +206,7 @@ def main() -> int:
         {"metric": "negative_control_flags_30d", "value": negative_control_count(flags, events, before, after), "detail": "SOPAT window"},
     ])
 
-    event_results.to_csv(OUTPUT_DIR / "event_results.csv", index=False)
+    event_results.to_csv(output_dir / "event_results.csv", index=False)
     events_table = event_results[[
         "event_id", "ticker", "event_name", "event_date", "event_date_type",
         "original_label_date", "secondary_date",
@@ -224,12 +233,12 @@ def main() -> int:
             return "trading data ends before the evaluation window"
         return "source-backed positive event with window coverage"
     events_table["evaluable_reason"] = events_table.apply(reason, axis=1)
-    events_table.to_csv(OUTPUT_DIR / "events_table.csv", index=False)
-    coverage.to_csv(OUTPUT_DIR / "coverage.csv", index=False)
-    precision.to_csv(OUTPUT_DIR / "precision_at_k.csv", index=False)
-    metrics.to_csv(OUTPUT_DIR / "metrics.csv", index=False)
+    events_table.to_csv(output_dir / "events_table.csv", index=False)
+    coverage.to_csv(output_dir / "coverage.csv", index=False)
+    precision.to_csv(output_dir / "precision_at_k.csv", index=False)
+    metrics.to_csv(output_dir / "metrics.csv", index=False)
     print(metrics.to_string(index=False))
-    print(f"Saved evaluation outputs to {OUTPUT_DIR}")
+    print(f"Saved evaluation outputs to {output_dir}")
     return 0
 
 

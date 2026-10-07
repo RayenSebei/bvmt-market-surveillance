@@ -33,7 +33,7 @@ def parameter_flags(trading: pd.DataFrame, window: int, cutoff: float) -> pd.Dat
     return pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
 
 
-def write_heatmap(table: pd.DataFrame, event_count: int) -> None:
+def write_heatmap(table: pd.DataFrame, event_count: int, output_dir=OUTPUT_DIR) -> None:
     windows = sorted(table["rolling_window"].unique())
     cutoffs = sorted(table["z_cutoff"].unique())
     cells = []
@@ -49,12 +49,22 @@ def write_heatmap(table: pd.DataFrame, event_count: int) -> None:
     xlabels = ''.join(f'<text x="{226+i*120}" y="82" text-anchor="middle" font-family="Arial" font-size="13">{w} days</text>' for i,w in enumerate(windows))
     ylabels = ''.join(f'<text x="150" y="{125+i*55}" text-anchor="end" font-family="Arial" font-size="13">z = {c:g}</text>' for i,c in enumerate(cutoffs))
     svg = f'<svg xmlns="http://www.w3.org/2000/svg" width="720" height="360"><rect width="100%" height="100%" fill="#f8fafc"/><text x="30" y="36" font-family="Arial" font-size="22" font-weight="700">Sensitivity: 30-day event hits</text><text x="30" y="58" font-family="Arial" font-size="13" fill="#64748b">Reporting grid only; reference parameters remain z=3 and 60 days.</text>{xlabels}{ylabels}{"".join(cells)}</svg>'
-    (OUTPUT_DIR / "sensitivity_heatmap.svg").write_text(svg, encoding="utf-8")
+    (output_dir / "sensitivity_heatmap.svg").write_text(svg, encoding="utf-8")
 
 
-def main() -> int:
+def main(
+    data_path=None,
+    flags_path=None,
+    events_path=None,
+    output_dir=OUTPUT_DIR,
+) -> int:
     config = load_config()
-    trading, _, events = load_inputs()
+    load_kwargs = {
+        key: value for key, value in {
+            "data_path": data_path, "flags_path": flags_path, "events_path": events_path,
+        }.items() if value is not None
+    }
+    trading, _, events = load_inputs(**load_kwargs)
     positives = eligible_positive_events(trading, events, config["primary_window_days_before"])
     rows = []
     for cutoff in config["sensitivity_z_cutoffs"]:
@@ -68,9 +78,9 @@ def main() -> int:
                 "recall_30d": hits["hit"].mean() if len(hits) else np.nan,
             })
     table = pd.DataFrame(rows)
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    table.to_csv(OUTPUT_DIR / "sensitivity.csv", index=False)
-    write_heatmap(table, len(positives))
+    output_dir.mkdir(parents=True, exist_ok=True)
+    table.to_csv(output_dir / "sensitivity.csv", index=False)
+    write_heatmap(table, len(positives), output_dir)
     print(table.to_string(index=False))
     return 0
 

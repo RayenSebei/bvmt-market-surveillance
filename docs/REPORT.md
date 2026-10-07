@@ -20,6 +20,8 @@ The system does not train a machine-learning model. The labeled sample is too sm
 
 The canonical local dataset is in `bvmt_data/`. The combined price file contains 44,531 observations for 60 symbols from 17 June 2021 to 17 June 2026. The combined news file contains 11,850 records. There are 85 valid individual ticker CSVs locally; Stock Search now merges those files with the combined list, so BIAT, BNA, and 23 other locally available symbols are no longer omitted. Individual ticker and news CSVs remain unchanged by this delivery work.
 
+The 25 price symbols omitted from the combined file are AB, ADWYA, AETEC, AL, AMS, ARTES, ASSAD, ASSMA, AST, ATB, ATL, BH, BHASS, BHL, BIAT, BL, BNA, BNASS, BT, BTE, CC, CELL, CREAL, TJARI, and TJL. Repository code explains the omission: the scraper skips a ticker when its individual CSV already exists, but builds the combined output only from frames downloaded in that run. UBCI, TINV, and UADH are already in the 60-symbol file. CGF and TSI have neither individual files nor rows in the combined file.
+
 The evaluation event table is separate at `data/evaluation/events.csv`. Its primary date is the earliest public suspension, court ruling, or first announcement found in repository evidence. It also preserves every original date from `labeled_events.csv` and a later public date where one exists. Missing evidence is written as `SOURCE_NEEDED`; dates are never guessed or moved to improve a result.
 
 ## 3. Methods
@@ -96,6 +98,17 @@ GIF is the only reference hit. Its first matching flag is 22 October 2024: 3 day
 The reference detector does not beat the absolute-return-only baseline on recall or precision. Both match 1 of 2 events in the primary window, 1 of 3 events in the secondary window, and 0 of 20 top-ranked flags, while the reference produces 1,027 flags and the return-only baseline produces 903. The reference matches more events than the volume-only baseline, but with a much larger review load.
 
 The sensitivity grid contains 16 parameter combinations. Primary recall remains 1 of 2 events in 14 cells. It becomes 0 of 2 events only for a 120-day window with z cutoffs of 3.5 and 4.0. Flag load ranges from 329 to 1,862. This grid was not used to choose a new reference setting.
+
+### 5.1 Full-universe coverage comparison
+
+All 85 individual files pass the fixed detector's input checks; PLTU has only 41 observations but is explicitly excluded by the detector as known-incomplete. A separate derived file adds the 25 omitted valid symbols without changing any raw file. The shared OHLCV rows and resulting detector flags agree across all 60 shared symbols.
+
+| Universe | Symbols | Rows | Flags | Flags per ticker-year | Recall, -30/+5 | Recall, -60/+5 | Precision at 20 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Reference combined | 60 | 44,531 | 1,027 | 3.607 | 1 of 2 events | 1 of 3 events | 0 of 20 flags |
+| Separate full universe | 85 | 61,812 | 1,454 | 3.681 | 1 of 2 events | 1 of 3 events | 0 of 20 flags |
+
+The added 25 symbols increase the review load by 427 flags but do not change recall or precision at 20. The established 60-symbol result remains the reference; the 85-symbol outputs are retained separately under `outputs/evaluation_full/`.
 
 ![Baseline comparison](../outputs/evaluation/baseline_comparison.svg)
 

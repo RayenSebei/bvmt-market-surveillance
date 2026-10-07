@@ -19,3 +19,5 @@
 # Evaluation event-date rule
 
 The evaluation date is the earliest public event in an event chain: a trading suspension, court ruling, or first public announcement. A later public announcement is retained as `secondary_date`, while `original_label_date` preserves the date supplied by `bvmt_data/labeled_events.csv`; dates are never shifted to improve detector results. For GIF, the primary date is 2024-10-25 (trading suspension), the later article date 2024-11-12 is secondary, and the intervening board decision (2024-11-07) and effective delisting date (2024-11-11) remain documented in the event notes.
+
+**Universe coverage:** `_all_tickers_combined.csv` remains the 60-symbol reference, while `_all_tickers_full.csv` is a separate derived 85-symbol comparison. The full file starts with the exact shared rows from the reference combined file and appends the 25 validated missing individual files. Detector flags agree on all 60 shared symbols, so the comparison isolates coverage rather than changing shared-symbol behavior; no raw ticker file was edited.

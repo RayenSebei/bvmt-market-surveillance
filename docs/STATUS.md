@@ -136,3 +136,13 @@
 - Done: GIF's 2024-10-22 flag is 3 days before the suspension and 21 days before the later article date. Report and README numbers were synchronized.
 - Next: Audit the 25 symbols omitted from the 60-symbol combined file, validate all 85 individual files, and—if valid—build and evaluate the separate full-universe derived file.
 - Blockers: None.
+
+## Coverage audit and full-universe comparison
+
+- Done: Confirmed 60 symbols in `_all_tickers_combined.csv` and 85 uppercase individual ticker files. The 25 missing symbols are AB, ADWYA, AETEC, AL, AMS, ARTES, ASSAD, ASSMA, AST, ATB, ATL, BH, BHASS, BHL, BIAT, BL, BNA, BNASS, BT, BTE, CC, CELL, CREAL, TJARI, and TJL.
+- Done: Established from repository code that the scraper skips existing individual files but concatenates only newly downloaded frames when rebuilding the combined file. UBCI, TINV, and UADH are present in both; CGF and TSI are absent from both and have no individual files.
+- Done: Validated all 85 individual files for schema, symbol identity, dates, numeric OHLCV, duplicates, and detector history requirements. PLTU has 41 rows but is accepted because the detector explicitly excludes it as known-incomplete.
+- Done: Created the separate derived `_all_tickers_full.csv` with 61,812 rows across 85 symbols, then ran the unchanged reference detector and evaluation into `outputs/evaluation_full/`.
+- Done: Shared OHLCV rows and flags agree across all 60 shared symbols. The 60-symbol reference has 1,027 flags and 3.607 flags/ticker-year; the 85-symbol comparison has 1,454 and 3.681. Both report 1 of 2 primary events, 1 of 3 secondary events, and 0 of 20 flags at precision@20.
+- Next: Document the exact ranking rule, produce the top-20 flag table with an explicit illiquidity definition, and explain 0 of 20 in plain language.
+- Blockers: None.

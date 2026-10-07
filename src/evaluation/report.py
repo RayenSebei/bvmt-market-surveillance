@@ -22,13 +22,13 @@ def count_text(value: float, denominator: int, noun: str) -> str:
     return f"{count:.3f} of {denominator} {noun} on average"
 
 
-def main() -> int:
-    metrics = pd.read_csv(OUTPUT_DIR / "metrics.csv").set_index("metric")["value"]
-    baselines = pd.read_csv(OUTPUT_DIR / "baseline_comparison.csv")
-    precision = pd.read_csv(OUTPUT_DIR / "precision_at_k.csv")
-    sensitivity = pd.read_csv(OUTPUT_DIR / "sensitivity.csv")
-    events = pd.read_csv(OUTPUT_DIR / "events_table.csv")
-    event_results = pd.read_csv(OUTPUT_DIR / "event_results.csv")
+def main(output_dir=OUTPUT_DIR, title="Evaluation Summary") -> int:
+    metrics = pd.read_csv(output_dir / "metrics.csv").set_index("metric")["value"]
+    baselines = pd.read_csv(output_dir / "baseline_comparison.csv")
+    precision = pd.read_csv(output_dir / "precision_at_k.csv")
+    sensitivity = pd.read_csv(output_dir / "sensitivity.csv")
+    events = pd.read_csv(output_dir / "events_table.csv")
+    event_results = pd.read_csv(output_dir / "event_results.csv")
     denominator = int(metrics["eligible_positive_events_30d"])
     denominator60 = int(metrics["eligible_positive_events_60d"])
     sourced = int(metrics["sourced_positive_events"])
@@ -96,8 +96,33 @@ def main() -> int:
     target_recall = 1 / denominator if denominator else float("nan")
     target_cells = int(np.isclose(sensitivity["recall_30d"], target_recall, equal_nan=False).sum())
     zero_cells = int(np.isclose(sensitivity["recall_30d"], 0, equal_nan=False).sum())
+    coverage_section = ""
+    comparison_path = OUTPUT_DIR.parent / "evaluation_full" / "universe_comparison.csv"
+    audit_path = OUTPUT_DIR.parent / "evaluation_full" / "coverage_audit.csv"
+    if output_dir == OUTPUT_DIR and comparison_path.exists() and audit_path.exists():
+        comparison = pd.read_csv(comparison_path)
+        audit = pd.read_csv(audit_path)
+        missing = ", ".join(audit.loc[~audit["in_60_symbol_combined"].astype(bool), "symbol"])
+        comparison_lines = []
+        for row in comparison.itertuples(index=False):
+            comparison_lines.append(
+                f"| {row.universe} | {int(row.symbols)} | {int(row.rows):,} | "
+                f"{int(row.flags):,} | {row.flags_per_ticker_year:.3f} | "
+                f"{row.primary_recall} | {row.secondary_recall} | {row.precision_at_20} |"
+            )
+        coverage_section = f"""
+## Universe coverage audit
 
-    text = f"""# Evaluation Summary
+The combined file contains 60 symbols while 85 valid individual ticker files exist. The 25 omitted symbols are **{missing}**. The scraper explains the gap: it skips existing individual files but builds the combined output only from newly downloaded frames. No scraper or raw file was changed or run. UBCI, TINV, and UADH are present in both sources; CGF and TSI have no individual file and are absent from both.
+
+| Universe | Symbols | Rows | Flags | Flags/ticker-year | Primary recall | Secondary recall | Precision@20 |
+|---|---:|---:|---:|---:|---|---|---|
+{chr(10).join(comparison_lines)}
+
+The OHLCV rows and detector flags agree on all 60 shared symbols. The established 60-symbol run remains the reference; the 85-symbol run is a separately generated coverage comparison.
+"""
+
+    text = f"""# {title}
 
 ## Scope
 
@@ -145,12 +170,14 @@ The reference detector does **not** beat the absolute-return-only baseline on re
 
 {target_cells} of {len(sensitivity)} sensitivity cells match {ratio_text(target_recall, denominator)}; {zero_cells} of {len(sensitivity)} match 0 of {denominator} events. Flag load ranges from {int(sensitivity['flag_count'].min())} to {int(sensitivity['flag_count'].max())}. No cell was selected to improve the labeled-event result.
 
+{coverage_section}
+
 ## Limitations
 
 Only {sourced} positive events have repository sources, only {denominator} overlap the trading-data window, and no independent test set exists. Original parameters were hand chosen, labels are incomplete, delisted companies create coverage gaps, and survivorship bias is possible. Precision against this incomplete event list can undercount relevant flags. These results cannot support a general performance claim or model training. Exact binomial intervals would still be dominated by the tiny denominator.
 """
-    (OUTPUT_DIR / "summary.md").write_text(text, encoding="utf-8")
-    print(f"Saved {OUTPUT_DIR / 'summary.md'}")
+    (output_dir / "summary.md").write_text(text, encoding="utf-8")
+    print(f"Saved {output_dir / 'summary.md'}")
     return 0
 
 

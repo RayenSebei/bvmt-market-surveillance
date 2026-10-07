@@ -123,12 +123,14 @@ These are case-study results, not a statistical performance estimate. See [outpu
 - Thin trading, missing news, delistings, and survivorship bias can affect results.
 - AI output is a draft assessment for a human reviewer, never a verdict.
 - Stock Search lists all 85 local ticker files; this broader browsing list does not change the 60-symbol evaluation dataset.
+- A separate 85-symbol coverage run contains 61,812 rows and 1,454 flags (3.681 per ticker-year), with the same 1 of 2 primary recall, 1 of 3 secondary recall, and 0 of 20 precision result. Its shared-symbol flags agree with the 60-symbol reference.
 
 ## Documentation
 
 - [Project report](docs/REPORT.md)
 - [Demo script](docs/DEMO_SCRIPT.md)
 - [Evaluation summary](outputs/evaluation/summary.md)
+- [Full-universe coverage audit](outputs/evaluation_full/coverage_audit.md)
 - [Engineering decisions](docs/DECISIONS.md)
 - [Delivery status](docs/STATUS.md)
 

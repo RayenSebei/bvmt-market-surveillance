@@ -114,7 +114,7 @@ def random_average(trading, reference, positives30, positives60, events, config)
     return averaged
 
 
-def write_baseline_svg(table: pd.DataFrame, event_count: int):
+def write_baseline_svg(table: pd.DataFrame, event_count: int, output_dir=OUTPUT_DIR):
     width, height = 820, 330
     bars = []
     colors = ["#0f766e", "#2563eb", "#7c3aed", "#94a3b8"]
@@ -130,12 +130,22 @@ def write_baseline_svg(table: pd.DataFrame, event_count: int):
         bar_height = 190 * value
         bars.append(f'<rect x="{x}" y="{260-bar_height:.1f}" width="110" height="{bar_height:.1f}" rx="6" fill="{colors[i]}"/><text x="{x+55}" y="{285}" text-anchor="middle" font-family="Arial" font-size="12" fill="#334155">{row["method"][:18]}</text><text x="{x+55}" y="{245-bar_height:.1f}" text-anchor="middle" font-family="Arial" font-size="14" font-weight="700" fill="#0f172a">{hit_label}</text>')
     svg = f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}"><rect width="100%" height="100%" fill="#f8fafc"/><text x="36" y="38" font-family="Arial" font-size="22" font-weight="700" fill="#0f172a">30-day recall by method</text><text x="36" y="62" font-family="Arial" font-size="13" fill="#64748b">Tiny source-backed set; comparisons are descriptive, not conclusive.</text><line x1="40" y1="260" x2="790" y2="260" stroke="#cbd5e1"/>{"".join(bars)}</svg>'
-    (OUTPUT_DIR / "baseline_comparison.svg").write_text(svg, encoding="utf-8")
+    (output_dir / "baseline_comparison.svg").write_text(svg, encoding="utf-8")
 
 
-def main() -> int:
+def main(
+    data_path=None,
+    flags_path=None,
+    events_path=None,
+    output_dir=OUTPUT_DIR,
+) -> int:
     config = load_config()
-    trading, reference, events = load_inputs()
+    load_kwargs = {
+        key: value for key, value in {
+            "data_path": data_path, "flags_path": flags_path, "events_path": events_path,
+        }.items() if value is not None
+    }
+    trading, reference, events = load_inputs(**load_kwargs)
     before, secondary = config["primary_window_days_before"], config["secondary_window_days_before"]
     positives30 = eligible_positive_events(trading, events, before)
     positives60 = eligible_positive_events(trading, events, secondary)
@@ -148,9 +158,9 @@ def main() -> int:
         random_average(trading, reference, positives30, positives60, events, config),
     ]
     table = pd.DataFrame(rows)
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    table.to_csv(OUTPUT_DIR / "baseline_comparison.csv", index=False)
-    write_baseline_svg(table, len(positives30))
+    output_dir.mkdir(parents=True, exist_ok=True)
+    table.to_csv(output_dir / "baseline_comparison.csv", index=False)
+    write_baseline_svg(table, len(positives30), output_dir)
     print(table.to_string(index=False))
     return 0
 
