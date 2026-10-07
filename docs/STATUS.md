@@ -175,3 +175,12 @@
 - Done: Explained that 0 of 20 means none of the 20 highest scores lies in the fixed primary window around GIF or LSTR; it does not prove the other flags are false positives because event labels are incomplete.
 - Next: Rewrite the non-technical report last, then synchronize README and run final verification.
 - Blockers: None.
+
+## Non-technical final report
+
+- Done: Rewrote `docs/REPORT.md` from the final generated 85-symbol results with a title block, five-line plain-English summary, seven-term glossary, exact denominator explanation, top-20 ranking table, 60-vs-85 comparison, limitations, and captions for all three linked figures.
+- Done: Stated explicitly that CGF and TSI are not in the dataset and cannot be evaluated, and documented the 25-symbol scraper merge bug as a coverage limitation.
+- Done: Synchronized README with 61,812 rows, 1,454 flags, 3.681 flags/ticker-year, 17 refined and AI-assessed rows, current evaluation counts, archive location, and ranking method.
+- Done: Replaced the user-facing verdict banner with “not a legal finding.” Missing page captures are an unlinked TODO list at the end of the report; all three retained image links exist.
+- Next: Run the complete final test suite, protected-raw hash audit, real-data API smoke test, and repository consistency checks.
+- Blockers: Five dashboard page screenshots remain TODOs for the user to add.
