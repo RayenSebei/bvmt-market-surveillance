@@ -33,7 +33,7 @@ def parameter_flags(trading: pd.DataFrame, window: int, cutoff: float) -> pd.Dat
     return pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
 
 
-def write_heatmap(table: pd.DataFrame) -> None:
+def write_heatmap(table: pd.DataFrame, event_count: int) -> None:
     windows = sorted(table["rolling_window"].unique())
     cutoffs = sorted(table["z_cutoff"].unique())
     cells = []
@@ -42,11 +42,13 @@ def write_heatmap(table: pd.DataFrame) -> None:
             row = table[(table["z_cutoff"] == cutoff) & (table["rolling_window"] == window)].iloc[0]
             recall = 0 if pd.isna(row["recall_30d"]) else float(row["recall_30d"])
             shade = int(235 - 150 * recall)
+            hit_count = recall * event_count
+            hit_label = f"{int(round(hit_count))} of {event_count}" if abs(hit_count - round(hit_count)) < 1e-9 else f"{hit_count:.3f} of {event_count}"
             x, y = 170 + col_i * 120, 95 + row_i * 55
-            cells.append(f'<rect x="{x}" y="{y}" width="112" height="47" rx="4" fill="rgb({shade},{min(245,shade+35)},{min(245,shade+30)})"/><text x="{x+56}" y="{y+29}" text-anchor="middle" font-family="Arial" font-size="14" font-weight="700">{recall:.0%}</text>')
+            cells.append(f'<rect x="{x}" y="{y}" width="112" height="47" rx="4" fill="rgb({shade},{min(245,shade+35)},{min(245,shade+30)})"/><text x="{x+56}" y="{y+29}" text-anchor="middle" font-family="Arial" font-size="14" font-weight="700">{hit_label}</text>')
     xlabels = ''.join(f'<text x="{226+i*120}" y="82" text-anchor="middle" font-family="Arial" font-size="13">{w} days</text>' for i,w in enumerate(windows))
     ylabels = ''.join(f'<text x="150" y="{125+i*55}" text-anchor="end" font-family="Arial" font-size="13">z = {c:g}</text>' for i,c in enumerate(cutoffs))
-    svg = f'<svg xmlns="http://www.w3.org/2000/svg" width="720" height="360"><rect width="100%" height="100%" fill="#f8fafc"/><text x="30" y="36" font-family="Arial" font-size="22" font-weight="700">Sensitivity: 30-day recall</text><text x="30" y="58" font-family="Arial" font-size="13" fill="#64748b">Reporting grid only; reference parameters remain z=3 and 60 days.</text>{xlabels}{ylabels}{"".join(cells)}</svg>'
+    svg = f'<svg xmlns="http://www.w3.org/2000/svg" width="720" height="360"><rect width="100%" height="100%" fill="#f8fafc"/><text x="30" y="36" font-family="Arial" font-size="22" font-weight="700">Sensitivity: 30-day event hits</text><text x="30" y="58" font-family="Arial" font-size="13" fill="#64748b">Reporting grid only; reference parameters remain z=3 and 60 days.</text>{xlabels}{ylabels}{"".join(cells)}</svg>'
     (OUTPUT_DIR / "sensitivity_heatmap.svg").write_text(svg, encoding="utf-8")
 
 
@@ -68,7 +70,7 @@ def main() -> int:
     table = pd.DataFrame(rows)
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     table.to_csv(OUTPUT_DIR / "sensitivity.csv", index=False)
-    write_heatmap(table)
+    write_heatmap(table, len(positives))
     print(table.to_string(index=False))
     return 0
 

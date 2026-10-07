@@ -1,6 +1,7 @@
 import pandas as pd
 
 from src.evaluation.evaluate import event_hits, precision_at_k
+from src.evaluation.report import count_text, ratio_text
 
 
 def test_event_metrics_have_known_answers():
@@ -19,3 +20,9 @@ def test_event_metrics_have_known_answers():
     precision = precision_at_k(flags, events, before=30, after=5, values=[2])
     assert precision.loc[0, "known_event_nearby_flags"] == 1
     assert precision.loc[0, "precision_at_k"] == 0.5
+
+
+def test_evaluation_counts_are_reported_with_denominators():
+    assert ratio_text(0.5, 2) == "1 of 2 events"
+    assert ratio_text(0.1815, 2) == "0.363 of 2 events on average"
+    assert count_text(0.0, 20, "flags") == "0 of 20 flags"

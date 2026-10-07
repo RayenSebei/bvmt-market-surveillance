@@ -95,3 +95,12 @@
 - Done: Browser QA loaded BIAT with 252 observations, confirmed 85 dropdown symbols, confirmed the chart bounds remain inside the panel, and found no console warnings or errors. The offline suite passes 39 tests.
 - Next: Re-run the source-backed evaluation and refresh the report and README.
 - Blockers: The message referenced a new sourced event table, but the only attachment was a dashboard screenshot and contained no event rows; no event was invented or changed.
+
+## Evaluation rerun after dashboard review
+
+- Done: Kept the 10-row audited `data/evaluation/events.csv` unchanged because no new event rows or sources were present in the request or image attachment; TINV remains date type `other`, explicitly not a public announcement.
+- Done: Re-ran evaluation, baselines over 1,000 deterministic random seeds, the 16-cell sensitivity grid, and summary generation without changing z=3.0 or the 60-day reference window.
+- Done: Results remain 1 of 2 events in both reference windows, 0 of 10/20/50 ranked flags, 1,027 flags, 3.607 flags per ticker-year, GIF lead time 21 days, and 0 flags in 1 SOPAT window.
+- Done: Expanded `outputs/evaluation/summary.md` with the full evaluability audit, lead time, count-form metrics, all baselines, the complete sensitivity grid, and the explicit conclusion that the reference does not beat the return-only baseline on recall or precision.
+- Next: Expand the watchlist decision record, then synchronize the report and README.
+- Blockers: New event rows still require the missing sourced table; existing `SOURCE_NEEDED` rows remain excluded.

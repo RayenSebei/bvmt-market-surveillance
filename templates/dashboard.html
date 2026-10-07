@@ -261,10 +261,10 @@
       const top=rows.slice(0,6), max=Math.max(...top.map(r=>Number(r.count)),1);
       return `<div class="bar-list">${top.map(r=>`<div class="bar-row"><span>${esc(String(r.category).replaceAll("_"," "))}</span><div class="bar-track"><div class="bar-fill" style="width:${Number(r.count)/max*100}%"></div></div><strong>${esc(r.count)}</strong></div>`).join("")}</div>`;
     }
-    function renderHeatmap(rows) {
+    function renderHeatmap(rows, denominator) {
       const windows=[20,40,60,120], cutoffs=[2.5,3,3.5,4];
       const map=new Map(rows.map(r=>[`${Number(r.z_cutoff)}-${Number(r.rolling_window)}`,Number(r.recall_30d)]));
-      $("heatmap").innerHTML='<div class="heat-cell heat-head">z / days</div>'+windows.map(w=>`<div class="heat-cell heat-head">${w}</div>`).join("")+cutoffs.map(z=>`<div class="heat-cell heat-head">${z}</div>`+windows.map(w=>{const v=map.get(`${z}-${w}`)??0;return `<div class="heat-cell ${v>=.5?"score-50":"score-0"}">${Math.round(v*100)}%</div>`;}).join("")).join("");
+      $("heatmap").innerHTML='<div class="heat-cell heat-head">z / days</div>'+windows.map(w=>`<div class="heat-cell heat-head">${w}</div>`).join("")+cutoffs.map(z=>`<div class="heat-cell heat-head">${z}</div>`+windows.map(w=>{const v=map.get(`${z}-${w}`)??0;return `<div class="heat-cell ${v>=.5?"score-50":"score-0"}">${Math.round(v*denominator)} of ${denominator}</div>`;}).join("")).join("");
     }
     async function loadStock(ticker) {
       if (!ticker) { $("stock-chart").innerHTML='<div class="empty">Select a ticker to load its history.</div>'; return; }
@@ -308,7 +308,7 @@
       $("eval-recall").textContent=denom?`${Math.round((metrics.recall_30d||0)*denom)} of ${denom}`:"—";
       $("eval-events").textContent=denom||"—"; $("eval-load").textContent=metrics.flags_per_ticker_year?.toFixed(2)||"—"; $("eval-negative").textContent=metrics.negative_control_flags_30d??"—";
       const baselines=value(8)||[]; $("baseline-body").innerHTML=baselines.length?baselines.map(r=>`<tr><td>${esc(String(r.method).replaceAll("_"," "))}</td><td>${Math.round(r.flag_count)}</td><td>${Number(r.flags_per_ticker_year).toFixed(2)}</td><td>${(Number(r.recall_30d)*denom).toFixed(Number(r.recall_30d)*denom%1?2:0)} of ${denom}</td><td>${Number(r.precision_at_20).toFixed(4)}</td></tr>`).join(""):'<tr><td colspan="5">No baseline results.</td></tr>';
-      renderHeatmap(value(9)||[]);
+      renderHeatmap(value(9)||[],denom);
       const events=value(10)||[]; $("events-body").innerHTML=events.length?events.map(r=>`<tr><td><strong>${esc(r.ticker)}</strong></td><td class="mono">${esc(r.event_date||"SOURCE_NEEDED")}</td><td>${esc(r.event_date_type)}</td><td>${esc(r.confidence)}</td><td><span class="badge ${String(r.evaluable).toLowerCase()==="true"?"yes":"no"}">${String(r.evaluable).toLowerCase()==="true"?"Yes":"No"}</span></td><td>${esc(r.evaluable_reason)}</td></tr>`).join(""):'<tr><td colspan="6">No event audit available.</td></tr>';
     }
     $("anomaly-search").addEventListener("input",renderAnomalies); $("risk-filter").addEventListener("change",renderAnomalies);
