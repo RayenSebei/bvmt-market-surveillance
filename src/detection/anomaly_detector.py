@@ -1,11 +1,11 @@
 """
 Phase 1 — Volume & Price Anomaly Detector for BVMT market surveillance.
 
-This is NOT a fraud detector in the legal sense — it's a statistical
-screening tool, the same kind of approach real exchanges/regulators use
+This is a statistical screening tool, not a legal finding. It uses the
+same kind of approach real exchanges and regulators use
 (SEC, ESMA, FINRA market surveillance systems): flag abnormal patterns
 that historically correlate with manipulation/insider-trading cases, so
-a human can investigate further. It does not prove fraud on its own.
+a human can investigate further. It does not establish wrongdoing.
 
 Two signals computed per ticker, per day:
   1. Volume anomaly: rolling z-score of volume vs trailing baseline.
@@ -24,7 +24,7 @@ to auto-distinguish explained vs unexplained spikes.
 
 Usage:
     python src/detection/anomaly_detector.py
-Reads bvmt_data/_all_tickers_combined.csv, writes:
+Reads bvmt_data/_all_tickers_full.csv, writes:
     bvmt_data/anomaly_flags.csv      (every flagged ticker/date)
     bvmt_data/anomaly_summary.csv    (one row per ticker, flag counts)
 """
@@ -34,7 +34,7 @@ import os
 import numpy as np
 import pandas as pd
 
-DATA_PATH = os.path.join("bvmt_data", "_all_tickers_combined.csv")
+DATA_PATH = os.path.join("bvmt_data", "_all_tickers_full.csv")
 OUT_FLAGS = os.path.join("bvmt_data", "anomaly_flags.csv")
 OUT_SUMMARY = os.path.join("bvmt_data", "anomaly_summary.csv")
 

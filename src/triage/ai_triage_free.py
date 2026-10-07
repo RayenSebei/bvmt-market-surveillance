@@ -1,92 +1,58 @@
-"""
-AI-assisted triage layer for the BVMT market surveillance watchlist —
-Using Groq's free API (completely free, 30 requests/minute, no credit card required).
+"""Optional Groq-assisted triage for the BVMT statistical watchlist.
 
-This does NOT replace the quantitative pipeline (spike/decay detectors,
-news matching, index cross-check) — it's an additional layer that reads
-the structured evidence you've already computed and writes a short,
-human-readable judgement to help you prioritize manual research.
-
-IMPORTANT: treat its output as a draft opinion to assist YOUR review, not
-a verdict. The model has no information beyond the numbers you give it,
-can be wrong, and should never be quoted as "AI confirmed this is
-suspicious" in any writeup. Frame it as "AI-assisted triage suggested X,
-pending manual verification."
-
-Groq Free Tier Limits:
-    - 30 requests per minute
-    - Completely free, no credit card needed
-    - Models available: llama-3.3-70b, mixtral-8x7b, gemma2-9b
-
-Reads:
-    bvmt_data/watchlist_refined.csv
-Writes:
-    bvmt_data/watchlist_ai_assessed.csv
-
-Usage:
-    python src/triage/ai_triage_free.py
+The model receives only already-computed screening evidence. Its output is a
+draft prioritisation aid for human review, never a verdict. If configuration
+or the service is unavailable, this module leaves the existing output intact.
 """
 
-import os
+from __future__ import annotations
+
 import json
+import os
 import time
+from pathlib import Path
+from typing import Any
+
 import pandas as pd
-from dotenv import load_dotenv
-from openai import OpenAI
+
+try:
+    from dotenv import load_dotenv
+except ImportError:
+    def load_dotenv() -> bool:
+        env_path = Path(".env")
+        if not env_path.exists():
+            return False
+        for line in env_path.read_text(encoding="utf-8").splitlines():
+            stripped = line.strip()
+            if not stripped or stripped.startswith("#") or "=" not in stripped:
+                continue
+            name, value = stripped.split("=", 1)
+            os.environ.setdefault(name.strip(), value.strip().strip("\"'"))
+        return True
 
 load_dotenv()
-GROQ_API_KEY = os.getenv("GROQ_API_KEY") or os.getenv("OPENAI_API_KEY")
+MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
+OUT_DIR = Path("bvmt_data")
+IN_PATH = OUT_DIR / "watchlist_refined.csv"
+OUT_PATH = OUT_DIR / "watchlist_ai_assessed.csv"
+PAUSE_SECONDS = 3
+VALID_ASSESSMENTS = {"likely_noise", "worth_investigating", "uncertain"}
+MAX_COMPLETION_TOKENS = 1500
+MAX_LIVE_CALLS = 40
 
-if not GROQ_API_KEY:
-    raise SystemExit(
-        "Missing API key. Set GROQ_API_KEY in your .env file (or OPENAI_API_KEY as a fallback)."
-    )
+SYSTEM_PROMPT = """You assist a student market-surveillance research tool for
+the Tunis Stock Exchange. Assess only the quantitative evidence supplied.
+You are not a regulator and cannot confirm wrongdoing. Return JSON with keys
+assessment (likely_noise, worth_investigating, or uncertain) and reasoning
+(one or two plain-language sentences citing the supplied numbers). Be
+conservative, do not invent explanations, and treat repeated thin-trading
+flags as possible liquidity noise."""
 
-client = OpenAI(
-    base_url="https://api.groq.com/openai/v1",
-    api_key=GROQ_API_KEY,
-)
 
-MODEL = "llama-3.3-70b-versatile"
-OUT_DIR = "bvmt_data"
-IN_PATH = os.path.join(OUT_DIR, "watchlist_refined.csv")
-OUT_PATH = os.path.join(OUT_DIR, "watchlist_ai_assessed.csv")
-
-PAUSE_SECONDS = 3  # 30 req/min -> 2 seconds between calls, padded to 3 for safety
-
-SYSTEM_PROMPT = """You are assisting a student building a market-surveillance \
-research tool for the Tunis Stock Exchange (BVMT). You will be given the \
-quantitative signal behind one flagged trading anomaly (volume/price \
-z-scores, or a liquidity-decline ratio) for one stock, plus whether any \
-matching company news was found nearby and whether the move coincided \
-with a broad market move.
-
-Your job is ONLY to assess plausibility based on the numbers given. You \
-have no information beyond what's provided, you are not a financial \
-regulator, and you cannot confirm fraud. Respond with STRICT JSON only, \
-no other text, in this exact shape:
-{"assessment": "likely_noise" | "worth_investigating" | "uncertain",
- "reasoning": "<one or two sentences, plain language, citing the specific \
-numbers that drove your judgement>"}
-
-Guidance:
-- Very high z-scores (>5) on otherwise illiquid/rarely-flagged stocks are \
-often just a side effect of thin trading, not necessarily meaningful.
-- A pattern of REPEATED flags for the same ticker over years suggests \
-chronic illiquidity noise, not a one-off event.
-- Genuinely worth flagging: large, isolated moves (high excess_return, \
-low co_flagged_count) on tickers that are NOT chronic offenders, with no \
-news and no market-wide explanation.
-- Be conservative. When uncertain, say so — do not invent explanations \
-or make accusations.
-"""
-
-def build_user_prompt(row, repeat_count):
+def build_user_prompt(row: Any, repeat_count: int) -> str:
     fields = {
-        "ticker": row.get("symbole"),
-        "company_name": row.get("ticker_name"),
-        "date": str(row.get("date")),
-        "source_detector": row.get("source"),
+        "ticker": row.get("symbole"), "company_name": row.get("ticker_name"),
+        "date": str(row.get("date")), "source_detector": row.get("source"),
         "volume_zscore": row.get("volume_zscore"),
         "return_zscore": row.get("return_zscore"),
         "decline_ratio": row.get("decline_ratio"),
@@ -97,81 +63,119 @@ def build_user_prompt(row, repeat_count):
     }
     return "Assess this flagged anomaly:\n" + json.dumps(fields, default=str, indent=2)
 
-def assess_row(row, repeat_count, max_retries=3):
-    user_prompt = build_user_prompt(row, repeat_count)
 
+def parse_json_response(text: str) -> dict[str, str]:
+    """Extract the first valid assessment object from a possibly noisy reply."""
+    decoder = json.JSONDecoder()
+    for index, character in enumerate(text):
+        if character != "{":
+            continue
+        try:
+            value, _ = decoder.raw_decode(text[index:])
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(value, dict):
+            continue
+        assessment = value.get("assessment")
+        reasoning = value.get("reasoning")
+        if assessment in VALID_ASSESSMENTS and isinstance(reasoning, str) and reasoning.strip():
+            return {"assessment": assessment, "reasoning": reasoning.strip()}
+    raise ValueError("response did not contain a valid assessment JSON object")
+
+
+def create_client(api_key: str):
+    from openai import OpenAI
+    return OpenAI(base_url="https://api.groq.com/openai/v1", api_key=api_key)
+
+
+def assess_row(
+    row: Any,
+    repeat_count: int,
+    client: Any,
+    max_retries: int = 3,
+    call_budget: dict[str, int] | None = None,
+) -> tuple[str, str]:
+    user_prompt = build_user_prompt(row, repeat_count)
+    last_error = "unknown error"
     for attempt in range(max_retries):
         try:
-            resp = client.chat.completions.create(
+            if call_budget is not None:
+                if call_budget["remaining"] <= 0:
+                    raise RuntimeError("live-call budget exhausted")
+                call_budget["remaining"] -= 1
+            response = client.chat.completions.create(
                 model=MODEL,
-                max_tokens=300,
+                max_completion_tokens=MAX_COMPLETION_TOKENS,
+                reasoning_effort="low",
+                response_format={"type": "json_object"},
                 messages=[
                     {"role": "system", "content": SYSTEM_PROMPT},
                     {"role": "user", "content": user_prompt},
                 ],
             )
-            text = resp.choices[0].message.content.strip()
-            text = text.replace("```json", "").replace("```", "").strip()
-            parsed = json.loads(text)
-            return parsed.get("assessment"), parsed.get("reasoning")
-        except Exception as e:
-            wait = 20 * (attempt + 1) if "429" in str(e) else 2 * (attempt + 1)
-            print(f"  retry {attempt + 1}/{max_retries} for {row.get('symbole')}: {e} "
-                  f"(waiting {wait}s)")
-            time.sleep(wait)
+            content = response.choices[0].message.content or ""
+            if not content.strip():
+                raise ValueError("model returned empty content")
+            parsed = parse_json_response(content)
+            return parsed["assessment"], parsed["reasoning"]
+        except Exception as exc:
+            last_error = f"{type(exc).__name__}: {exc}"
+            if attempt + 1 < max_retries:
+                wait = 20 * (attempt + 1) if "429" in str(exc) else 2 * (attempt + 1)
+                print(f"  retry {attempt + 1}/{max_retries} for {row.get('symbole')} (waiting {wait}s)")
+                time.sleep(wait)
+    raise RuntimeError(f"AI triage failed after {max_retries} attempts: {last_error}")
 
-    return "error", "Failed to get a valid response after retries."
+
+def main() -> int:
+    api_key = os.getenv("GROQ_API_KEY")
+    if not api_key:
+        print("AI triage skipped: GROQ_API_KEY is not configured; existing output preserved.")
+        return 0
+    if not IN_PATH.exists():
+        print(f"AI triage skipped: input file not found: {IN_PATH}; existing output preserved.")
+        return 0
+    try:
+        client = create_client(api_key)
+    except Exception as exc:
+        print(f"AI triage skipped: client unavailable ({type(exc).__name__}); existing output preserved.")
+        return 0
+    frame = pd.read_csv(IN_PATH)
+    if len(frame) > MAX_LIVE_CALLS:
+        print(
+            f"AI triage limited to the first {MAX_LIVE_CALLS} of {len(frame)} rows "
+            "in existing watchlist order."
+        )
+        frame = frame.head(MAX_LIVE_CALLS).copy()
+    repeat_counts = frame["symbole"].value_counts()
+    call_budget = {"remaining": MAX_LIVE_CALLS}
+    assessments: list[str] = []
+    reasonings: list[str] = []
+    print(f"AI triage: {len(frame)} rows using model {MODEL}")
+    try:
+        for index, row in frame.iterrows():
+            symbol = row.get("symbole")
+            print(f"[{index + 1}/{len(frame)}] Assessing {symbol}")
+            assessment, reasoning = assess_row(
+                row,
+                int(repeat_counts.get(symbol, 1)),
+                client,
+                call_budget=call_budget,
+            )
+            assessments.append(assessment)
+            reasonings.append(reasoning)
+            if index + 1 < len(frame):
+                time.sleep(PAUSE_SECONDS)
+    except Exception as exc:
+        print(f"AI triage skipped: {exc}; existing output preserved.")
+        return 0
+    frame["ai_assessment"] = assessments
+    frame["ai_reasoning"] = reasonings
+    OUT_DIR.mkdir(exist_ok=True)
+    frame.to_csv(OUT_PATH, index=False)
+    print(f"AI triage saved: {OUT_PATH}")
+    return 0
+
 
 if __name__ == "__main__":
-    print("=" * 70)
-    print("AI TRIAGE WITH GROQ FREE API")
-    print("=" * 70)
-    print(f"Model: {MODEL}")
-    print(f"Rate Limit: 30 requests/minute (waiting {PAUSE_SECONDS}s between calls)")
-    print("=" * 70)
-    
-    if not os.path.exists(IN_PATH):
-        print(f"ERROR: Input file not found: {IN_PATH}")
-        print("Make sure you've run the main pipeline first to generate watchlist_refined.csv")
-        raise SystemExit(1)
-
-    df = pd.read_csv(IN_PATH)
-    print(f"\nLoaded {len(df)} watchlist rows.")
-    print(f"This will take roughly {len(df) * PAUSE_SECONDS / 60:.0f} minutes.\n")
-
-    repeat_counts = df["symbole"].value_counts()
-
-    assessments, reasonings = [], []
-    for i, row in df.iterrows():
-        symbole = row.get("symbole")
-        print(f"[{i + 1}/{len(df)}] Assessing {symbole}...")
-        assessment, reasoning = assess_row(row, int(repeat_counts.get(symbole, 1)))
-        assessments.append(assessment)
-        reasonings.append(reasoning)
-        time.sleep(PAUSE_SECONDS)
-
-    df["ai_assessment"] = assessments
-    df["ai_reasoning"] = reasonings
-    
-    os.makedirs(OUT_DIR, exist_ok=True)
-    df.to_csv(OUT_PATH, index=False)
-
-    print("\n" + "=" * 70)
-    print("SUMMARY")
-    print("=" * 70)
-    print(df["ai_assessment"].value_counts().to_string())
-    print(f"\nSaved: {OUT_PATH}")
-
-    print("\nTop 'worth_investigating' rows:")
-    top = df[df["ai_assessment"] == "worth_investigating"]
-    if len(top) > 0:
-        cols = [c for c in ["symbole", "ticker_name", "date", "ai_reasoning"] if c in top.columns]
-        print(top[cols].to_string(index=False))
-    else:
-        print("  None found.")
-
-    print("\n" + "=" * 70)
-    print("REMINDER: these are AI-assisted draft judgements based only on the")
-    print("numbers provided, not verified conclusions. Manually review before")
-    print("citing any of these as findings.")
-    print("=" * 70)
+    raise SystemExit(main())

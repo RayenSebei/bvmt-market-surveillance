@@ -11,14 +11,20 @@ cookie set when you GET the page. So for each chunk we:
 
 import io
 import os
+import re
 import time
 from datetime import datetime, timedelta
+from pathlib import Path
 
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 
 BASE_URL = "https://www.ilboursa.com/marches/download/{ticker}"
+TICKER_FILE_PATTERN = re.compile(r"^[A-Z0-9]+\.csv$")
+PRICE_COLUMNS = [
+    "ticker_name", "symbole", "date", "ouverture", "haut", "bas", "cloture", "volume",
+]
 
 HEADERS = {
     "User-Agent": (
@@ -180,6 +186,27 @@ def download_full_history(ticker, start_date, end_date, chunk_days=89, pause=1.5
     return combined, failed_ranges
 
 
+def rebuild_combined_from_individual_files(out_dir, output_name="_all_tickers_combined.csv"):
+    """Rebuild the combined file from every valid uppercase ticker CSV on disk."""
+    directory = Path(out_dir)
+    frames = []
+    for path in sorted(directory.glob("*.csv")):
+        if not TICKER_FILE_PATTERN.fullmatch(path.name):
+            continue
+        frame = pd.read_csv(path)
+        if list(frame.columns) != PRICE_COLUMNS:
+            raise ValueError(f"Unexpected ticker schema in {path}")
+        if frame.empty or set(frame["symbole"].astype(str)) != {path.stem}:
+            raise ValueError(f"Ticker contents do not match filename: {path}")
+        frames.append(frame)
+    if not frames:
+        raise ValueError(f"No individual ticker CSVs found in {directory}")
+    master = pd.concat(frames, ignore_index=True)
+    master = master.sort_values(["symbole", "date"]).reset_index(drop=True)
+    master.to_csv(directory / output_name, index=False)
+    return master
+
+
 if __name__ == "__main__":
     OUT_DIR = "bvmt_data"
     os.makedirs(OUT_DIR, exist_ok=True)
@@ -197,7 +224,6 @@ if __name__ == "__main__":
     else:
         print(f"Discovered {len(tickers)} tickers.")
 
-    all_data = []
     all_failures = []
     for code, name in tickers:
         out_path = os.path.join(OUT_DIR, f"{code}.csv")
@@ -213,16 +239,16 @@ if __name__ == "__main__":
 
         df.insert(0, "ticker_name", name)
         df.to_csv(out_path, index=False)
-        all_data.append(df)
         print(f"  Saved {len(df)} rows to {out_path}")
 
         for f_start, f_end in failed_ranges:
             all_failures.append((code, f_start.date(), f_end.date()))
 
-    if all_data:
-        master = pd.concat(all_data, ignore_index=True)
-        master.to_csv(os.path.join(OUT_DIR, "_all_tickers_combined.csv"), index=False)
-        print(f"\nDone. Combined file has {len(master)} rows across {len(all_data)} tickers.")
+    master = rebuild_combined_from_individual_files(OUT_DIR)
+    print(
+        f"\nDone. Combined file has {len(master)} rows across "
+        f"{master['symbole'].nunique()} tickers."
+    )
 
     if all_failures:
         fail_path = os.path.join(OUT_DIR, "_failed_chunks.csv")

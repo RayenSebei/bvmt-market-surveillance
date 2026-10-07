@@ -1,0 +1,11 @@
+event_id,ticker,first_trading_date,last_trading_date,days_from_last_trade_to_event,has_30d_window_coverage,has_60d_window_coverage
+TINV-2025,TINV,2021-06-17,2026-06-17,-254.0,True,True
+UADH-2026,UADH,2021-06-17,2026-03-23,1.0,True,True
+TSI-unknown,TSI,,,,False,False
+CGF-unknown,CGF,,,,False,False
+UBCI-unknown,UBCI,2021-06-17,2026-06-17,,False,False
+GIF-2024-radiation,GIF,2021-06-17,2024-10-22,3.0,True,True
+LSTR-2024-bankruptcy,LSTR,2021-06-17,2024-07-22,1.0,True,True
+SERVI-2024-bankruptcy,SERVI,2021-06-17,2023-11-30,42.0,False,True
+MIP-2024-exploratory,MIP,2021-07-27,2024-07-29,7.0,True,True
+SOPAT-2023-buyout,SOPAT,2021-06-18,2023-10-31,-42.0,True,True
