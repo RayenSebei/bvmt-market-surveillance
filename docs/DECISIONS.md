@@ -6,3 +6,5 @@
 - Phase 2: Made analysis-only execution the default and required the explicit `--with-scrape` flag for all network scrapers.
 - Phase 2: Ordered classification before watchlist refinement so refinement always uses the current run, and preserved the last AI output whenever Groq or its client is unavailable.
 - Phase 2: Used bounded dependency versions rather than unverified exact future versions; no packages were downloaded because network access was restricted to one Groq check.
+- Integrity audit: Defined protected raw data case-sensitively as `<TICKER>.csv` matching `^[A-Z0-9]+\.csv$`, every `news_*.csv`, and the two `_all_*_combined.csv` files; the earlier 179 count used PowerShell's case-insensitive `-match` and incorrectly included lowercase `watchlist.csv`, while corrected `-cmatch` gives 178 protected files plus nine derived CSVs = 187 total.
+- Integrity audit: `watchlist_refined.csv` changed from 107 stale rows to 12 because the old artifact did not correspond to the current 12-row `watchlist.csv`; classification now runs before refinement, with no detector or refinement parameter change, so the refined output is regenerated from the current input.
