@@ -154,3 +154,15 @@
 - Done: Added a file-based unit test proving both a pre-existing ticker and a newly present ticker are included. The scraper was not run, no network was used, and no raw file changed.
 - Next: Snapshot canonical data to `../bvmt_snapshot2`, adopt `_all_tickers_full.csv` in the analysis-only pipeline, archive the 60-symbol evaluation, and regenerate all derived outputs for 85 symbols.
 - Blockers: None.
+
+## Adopted 85-symbol delivered universe
+
+- Done: Created `../bvmt_snapshot2` before regeneration and verified all 188 copied files by SHA-256.
+- Done: Added the full-universe build as the first analysis step, switched the detector, decay analysis, refinement, validation, evaluation, and dashboard reads to `_all_tickers_full.csv`, and kept `_all_tickers_combined.csv` untouched.
+- Done: Archived the prior 60-symbol evaluation under `outputs/evaluation_60symbol/`; `outputs/evaluation/` now contains the 85-symbol delivered evaluation. Shared-symbol flags still agree.
+- Done: Ran the default analysis pipeline with scraping and AI disabled, then ran the separately authorized Groq triage for all 17 refined rows. It used 17 calls, produced 8 `likely_noise`, 8 `worth_investigating`, and 1 `uncertain` draft assessments, with no empty reasoning.
+- Done: Derived row counts changed as follows: anomaly flags 1,027 → 1,454; classified anomalies 1,027 → 1,454; anomaly summary 58 → 83; watchlist 12 → 17; refined watchlist 12 → 17; decay flags 8 → 15; decay classification 8 → 15; AI-assessed watchlist 12 → 17.
+- Done: Headline evaluation is 1 of 2 primary-window events, 1 of 3 secondary-window events, and 0 of 20 top-ranked flags; detector settings remain z=3.0 and rolling window=60.
+- Done: Full offline suite passes 44 tests, and all 178 protected raw files match `../bvmt_snapshot2`.
+- Next: Add the exact precision-ranking rule, the top-20/illiquidity table, and the plain-language interpretation.
+- Blockers: None.

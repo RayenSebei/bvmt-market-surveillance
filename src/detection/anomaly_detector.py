@@ -24,7 +24,7 @@ to auto-distinguish explained vs unexplained spikes.
 
 Usage:
     python src/detection/anomaly_detector.py
-Reads bvmt_data/_all_tickers_combined.csv, writes:
+Reads bvmt_data/_all_tickers_full.csv, writes:
     bvmt_data/anomaly_flags.csv      (every flagged ticker/date)
     bvmt_data/anomaly_summary.csv    (one row per ticker, flag counts)
 """
@@ -34,7 +34,7 @@ import os
 import numpy as np
 import pandas as pd
 
-DATA_PATH = os.path.join("bvmt_data", "_all_tickers_combined.csv")
+DATA_PATH = os.path.join("bvmt_data", "_all_tickers_full.csv")
 OUT_FLAGS = os.path.join("bvmt_data", "anomaly_flags.csv")
 OUT_SUMMARY = os.path.join("bvmt_data", "anomaly_summary.csv")
 

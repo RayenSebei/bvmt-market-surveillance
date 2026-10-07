@@ -97,8 +97,8 @@ def main(output_dir=OUTPUT_DIR, title="Evaluation Summary") -> int:
     target_cells = int(np.isclose(sensitivity["recall_30d"], target_recall, equal_nan=False).sum())
     zero_cells = int(np.isclose(sensitivity["recall_30d"], 0, equal_nan=False).sum())
     coverage_section = ""
-    comparison_path = OUTPUT_DIR.parent / "evaluation_full" / "universe_comparison.csv"
-    audit_path = OUTPUT_DIR.parent / "evaluation_full" / "coverage_audit.csv"
+    comparison_path = OUTPUT_DIR / "universe_comparison.csv"
+    audit_path = OUTPUT_DIR / "coverage_audit.csv"
     if output_dir == OUTPUT_DIR and comparison_path.exists() and audit_path.exists():
         comparison = pd.read_csv(comparison_path)
         audit = pd.read_csv(audit_path)

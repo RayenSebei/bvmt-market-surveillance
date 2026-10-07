@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[2]
-DATA_PATH = ROOT / "bvmt_data" / "_all_tickers_combined.csv"
+DATA_PATH = ROOT / "bvmt_data" / "_all_tickers_full.csv"
 FLAGS_PATH = ROOT / "bvmt_data" / "anomaly_flags.csv"
 EVENTS_PATH = ROOT / "data" / "evaluation" / "events.csv"
 CONFIG_PATH = Path(__file__).with_name("config.json")

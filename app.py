@@ -132,7 +132,7 @@ def index():
 def api_status():
     """Pipeline health + last scrape info."""
     files = {
-        "tickers": (DATA_DIR / "_all_tickers_combined.csv").exists(),
+        "tickers": (DATA_DIR / "_all_tickers_full.csv").exists(),
         "news": (DATA_DIR / "_all_news_combined.csv").exists(),
         "anomaly_flags": (DATA_DIR / "anomaly_flags.csv").exists(),
         "anomaly_classified": (DATA_DIR / "anomaly_classified.csv").exists(),
@@ -164,7 +164,7 @@ def api_scrape_status():
 @app.route("/api/kpis")
 def api_kpis():
     """Summary KPIs for the top bar."""
-    tickers_df = load_csv("_all_tickers_combined.csv")
+    tickers_df = load_csv("_all_tickers_full.csv")
     news_df    = load_csv("_all_news_combined.csv")
     flags_df   = load_csv("anomaly_flags.csv")
     classified = load_csv("anomaly_classified.csv")
@@ -377,7 +377,7 @@ def api_stock(ticker):
 
     if df.empty:
         # Try combined file
-        combined = load_csv("_all_tickers_combined.csv")
+        combined = load_csv("_all_tickers_full.csv")
         if not combined.empty and "symbole" in combined.columns:
             df = combined[combined["symbole"].str.upper() == ticker].copy()
 
@@ -417,7 +417,7 @@ def api_stock(ticker):
 def api_tickers():
     """List of all available ticker symbols."""
     tickers = {}
-    combined = load_csv("_all_tickers_combined.csv")
+    combined = load_csv("_all_tickers_full.csv")
     if not combined.empty and "symbole" in combined.columns:
         for _, row in combined.drop_duplicates("symbole").iterrows():
             symbol = str(row["symbole"]).strip().upper()

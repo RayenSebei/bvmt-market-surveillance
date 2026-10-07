@@ -29,7 +29,7 @@ with the known March 2026 suspension.
 
 Usage:
     python src/detection/decay_detector.py
-Reads bvmt_data/_all_tickers_combined.csv, writes:
+Reads bvmt_data/_all_tickers_full.csv, writes:
     bvmt_data/decay_flags.csv
 """
 
@@ -37,7 +37,7 @@ import os
 
 import pandas as pd
 
-DATA_PATH = os.path.join("bvmt_data", "_all_tickers_combined.csv")
+DATA_PATH = os.path.join("bvmt_data", "_all_tickers_full.csv")
 OUT_PATH = os.path.join("bvmt_data", "decay_flags.csv")
 
 EXCLUDE_TICKERS = ["TBIDX"]  # index, not a stock

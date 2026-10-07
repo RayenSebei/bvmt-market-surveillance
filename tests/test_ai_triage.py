@@ -55,3 +55,25 @@ def test_assess_row_retries_empty_content(monkeypatch):
     )
     assert result == ("uncertain", "Limited evidence.")
     assert len(calls) == 2
+
+
+def test_assess_row_never_exceeds_shared_live_call_budget(monkeypatch):
+    calls = []
+
+    def create(**kwargs):
+        calls.append(kwargs)
+        return SimpleNamespace(
+            choices=[SimpleNamespace(message=SimpleNamespace(content=""))]
+        )
+
+    client = SimpleNamespace(
+        chat=SimpleNamespace(completions=SimpleNamespace(create=create))
+    )
+    monkeypatch.setattr(ai_triage_free.time, "sleep", lambda _seconds: None)
+    budget = {"remaining": 1}
+    with pytest.raises(RuntimeError, match="live-call budget exhausted"):
+        ai_triage_free.assess_row(
+            {"symbole": "TEST"}, 1, client, max_retries=3, call_budget=budget
+        )
+    assert len(calls) == 1
+    assert budget["remaining"] == 0

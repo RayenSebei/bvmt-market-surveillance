@@ -1,7 +1,14 @@
 symbole,ticker_name,baseline_volume,recent_volume,decline_ratio,last_active_date,days_since_active,status,matched_headline,matched_news_date,category
 SITS,SITS,472778,8360,0.0176827178929645,2026-06-15,2,UNEXPLAINED,,,
-PLTU,PLACEMENTS DE TUNISIE - SICAF,40255,6652,0.1652465532232021,2026-06-10,7,UNEXPLAINED,,,
-SOTEM,SOTEMAIL,172,2742,15.94186046511628,2026-01-02,166,UNEXPLAINED,,,
+BL,BEST LEASE,12325196,264258,0.0214404703990102,2026-06-17,0,UNEXPLAINED,,,
+ARTES,ARTES,4619874,626334,0.1355738273381481,2026-06-17,0,EXPLAINED,Des revenus en hausse et un bénéfice solide pour le groupe ARTES en 2025,2026-06-17,earnings_results
+PLTU,PLTU,40255,6652,0.1652465532232021,2026-06-10,7,UNEXPLAINED,,,
+AL,AIR LIQUIDE TUNISIE,53226,9143,0.1717769511141171,2026-06-17,0,UNEXPLAINED,,,
+AETEC,AETECH,23766,12267,0.5161575359757637,2026-01-23,145,UNEXPLAINED,,,
+SOTEM,SOTEM,172,2742,15.94186046511628,2026-01-02,166,UNEXPLAINED,,,
+ADWYA,ADWYA,0,0,,2022-12-08,1287,EXPLAINED,"ADWYA : L'Offre Publique de Retrait sera ouverte le 30 novembre à 5,950 dinars l'action",2022-11-25,buyout_opr
+AMS,AMS,0,0,,2023-07-05,1078,EXPLAINED,Mise en vente judiciaire des AMS avec une mise à prix de 65 millions de dinars,2023-07-13,bankruptcy_distress
+CREAL,CEREALIS,0,0,,2022-12-08,1287,EXPLAINED,Power Brands monte à 95% au capital de CEREALIS,2022-12-12,other_news
 GIF,GIF FILTER,0,0,,2024-10-22,603,EXPLAINED,La Bourse de Tunis décide la radiation de la société GIF FILTER,2024-11-12,delisting_radiation
 LSTR,ELECTROSTAR,0,0,,2024-07-22,695,EXPLAINED,"En cessation de paiement, le Tribunal déclare la faillite de la société ELECTROSTAR",2024-07-24,bankruptcy_distress
 MIP,MIP,0,0,,2024-07-29,688,EXPLAINED,La société MIP a réalisé un chiffre d'affaires de 800 dinars en 2022,2024-08-01,earnings_results

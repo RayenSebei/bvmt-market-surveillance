@@ -1,0 +1,9 @@
+file,before_60_symbol,after_85_symbol,change
+anomaly_flags.csv,1027,1454,427
+anomaly_classified.csv,1027,1454,427
+anomaly_summary.csv,58,83,25
+watchlist.csv,12,17,5
+watchlist_refined.csv,12,17,5
+decay_flags.csv,8,15,7
+decay_classified.csv,8,15,7
+watchlist_ai_assessed.csv,12,17,5

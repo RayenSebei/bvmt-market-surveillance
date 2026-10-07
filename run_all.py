@@ -10,6 +10,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 SCRAPE_STEPS = ["src/scraping/scrape_ilboursa.py", "src/scraping/scrape_news.py"]
+BUILD_STEPS = ["src/evaluation/build_full_universe.py"]
 ANALYSIS_STEPS = [
     "src/detection/anomaly_detector.py",
     "src/detection/decay_detector.py",
@@ -37,7 +38,10 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def selected_steps(with_scrape: bool = False, skip_ai: bool = False) -> list[str]:
-    steps = [*SCRAPE_STEPS, *ANALYSIS_STEPS] if with_scrape else list(ANALYSIS_STEPS)
+    steps = (
+        [*SCRAPE_STEPS, *BUILD_STEPS, *ANALYSIS_STEPS]
+        if with_scrape else [*BUILD_STEPS, *ANALYSIS_STEPS]
+    )
     if skip_ai:
         steps.remove("src/triage/ai_triage_free.py")
     return steps

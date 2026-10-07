@@ -16,9 +16,9 @@ DATA_DIR = ROOT / "bvmt_data"
 COMBINED_PATH = DATA_DIR / "_all_tickers_combined.csv"
 FULL_PATH = DATA_DIR / "_all_tickers_full.csv"
 EVENTS_PATH = ROOT / "data" / "evaluation" / "events.csv"
-REFERENCE_DIR = ROOT / "outputs" / "evaluation"
-OUTPUT_DIR = ROOT / "outputs" / "evaluation_full"
-REFERENCE_FLAGS_PATH = DATA_DIR / "anomaly_flags.csv"
+ARCHIVE_DIR = ROOT / "outputs" / "evaluation_60symbol"
+OUTPUT_DIR = ROOT / "outputs" / "evaluation"
+REFERENCE_FLAGS_PATH = ARCHIVE_DIR / "anomaly_flags.csv"
 EXPECTED_COLUMNS = [
     "ticker_name", "symbole", "date", "ouverture", "haut", "bas", "cloture", "volume",
 ]
@@ -86,7 +86,7 @@ def build_full_universe() -> tuple[pd.DataFrame, pd.DataFrame, list[str]]:
         raise ValueError("Invalid individual ticker data: " + " | ".join(fatal))
 
     missing = sorted(set(frames) - combined_symbols)
-    full = pd.concat([combined] + [frames[symbol] for symbol in missing], ignore_index=True)
+    full = pd.concat([frames[symbol] for symbol in sorted(frames)], ignore_index=True)
     full = full.sort_values(["symbole", "date"]).reset_index(drop=True)
     if full.duplicated(["symbole", "date"]).any():
         raise ValueError("Derived full universe contains duplicate symbol/date rows")
@@ -117,7 +117,7 @@ def flags_agree_on_shared_symbols(full_flags: pd.DataFrame) -> bool:
     if reference.shape != candidate.shape or list(reference.columns) != list(candidate.columns):
         return False
     exact_columns = [
-        "symbole", "ticker_name", "date", "volume", "volume_anomaly",
+        "symbole", "date", "volume", "volume_anomaly",
         "price_anomaly", "combined_anomaly",
     ]
     if not reference[exact_columns].equals(candidate[exact_columns]):
@@ -142,8 +142,8 @@ def count_text(value: float, denominator: int, noun: str) -> str:
 def comparison_table(shared_agreement: bool) -> pd.DataFrame:
     rows = []
     for label, directory, data_path in [
-        ("60-symbol reference", REFERENCE_DIR, COMBINED_PATH),
-        ("85-symbol full universe", OUTPUT_DIR, FULL_PATH),
+        ("60-symbol archive", ARCHIVE_DIR, COMBINED_PATH),
+        ("85-symbol delivered universe", OUTPUT_DIR, FULL_PATH),
     ]:
         metrics = pd.read_csv(directory / "metrics.csv").set_index("metric")["value"]
         precision = pd.read_csv(directory / "precision_at_k.csv").set_index("k")
@@ -173,9 +173,13 @@ def write_coverage_note(audit: pd.DataFrame, missing: list[str], shared_agreemen
     )
     individual_symbols = set(audit["symbol"])
     for symbol in ["UBCI", "CGF", "TSI", "TINV", "UADH"]:
+        unavailable = (
+            "; not in the dataset and cannot be evaluated"
+            if symbol in {"CGF", "TSI"} else ""
+        )
         named.append(
             f"- {symbol}: individual file {'yes' if symbol in individual_symbols else 'no'}; "
-            f"60-symbol combined {'yes' if symbol in combined_symbols else 'no'}."
+            f"60-symbol combined {'yes' if symbol in combined_symbols else 'no'}{unavailable}."
         )
     note = f"""# Coverage audit
 
@@ -191,7 +195,7 @@ def write_coverage_note(audit: pd.DataFrame, missing: list[str], shared_agreemen
 
 ## Repository-supported cause
 
-`src/scraping/scrape_ilboursa.py` skips a symbol when its individual CSV already exists, but appends only newly downloaded frames to `all_data` and then overwrites `_all_tickers_combined.csv` from `all_data`. The 25 omitted files are therefore the existing files skipped by that run, not invalid rows. No scraper or raw file was changed or run for this audit.
+The earlier `src/scraping/scrape_ilboursa.py` skipped a symbol when its individual CSV already existed, but appended only newly downloaded frames to `all_data` and then overwrote `_all_tickers_combined.csv` from `all_data`. The 25 omitted files were therefore existing files skipped by that run, not invalid rows. The code now rebuilds from all individual ticker files; no scraper was run for this audit.
 """
     (OUTPUT_DIR / "coverage_audit.md").write_text(note, encoding="utf-8")
 
@@ -209,7 +213,7 @@ def main() -> int:
         OUTPUT_DIR / "universe_comparison.csv", index=False
     )
     write_coverage_note(audit, missing, shared_agreement)
-    report.main(REFERENCE_DIR)
+    report.main(OUTPUT_DIR)
     print(
         f"Built {FULL_PATH.name}: {len(full)} rows, {full['symbole'].nunique()} symbols; "
         f"missing={len(missing)}; shared_flags_agree={shared_agreement}"

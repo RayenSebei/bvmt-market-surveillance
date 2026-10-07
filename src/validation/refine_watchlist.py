@@ -23,7 +23,7 @@ Tags each row MARKET_WIDE or COMPANY_SPECIFIC and writes a sharper,
 re-prioritized watchlist.
 
 Reads:
-    bvmt_data/_all_tickers_combined.csv  (for the Tunindex/PX1 series)
+    bvmt_data/_all_tickers_full.csv      (for the Tunindex/PX1 series)
     bvmt_data/anomaly_flags.csv          (for co-flagged ticker counts)
     bvmt_data/watchlist.csv
 Writes:
@@ -39,7 +39,7 @@ import numpy as np
 import pandas as pd
 
 OUT_DIR = "bvmt_data"
-COMBINED_PATH = os.path.join(OUT_DIR, "_all_tickers_combined.csv")
+COMBINED_PATH = os.path.join(OUT_DIR, "_all_tickers_full.csv")
 ANOMALY_FLAGS_PATH = os.path.join(OUT_DIR, "anomaly_flags.csv")
 WATCHLIST_PATH = os.path.join(OUT_DIR, "watchlist.csv")
 OUT_PATH = os.path.join(OUT_DIR, "watchlist_refined.csv")

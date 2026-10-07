@@ -16,4 +16,4 @@
 
 ## Repository-supported cause
 
-`src/scraping/scrape_ilboursa.py` skipped a symbol when its individual CSV already existed, but appended only newly downloaded frames to `all_data` and then overwrote `_all_tickers_combined.csv` from `all_data`. The 25 omitted files are therefore existing files skipped by that run, not invalid rows. The code now rebuilds from all uppercase individual ticker CSVs; no scraper or raw file was changed or run for this audit.
+The earlier `src/scraping/scrape_ilboursa.py` skipped a symbol when its individual CSV already existed, but appended only newly downloaded frames to `all_data` and then overwrote `_all_tickers_combined.csv` from `all_data`. The 25 omitted files were therefore existing files skipped by that run, not invalid rows. The code now rebuilds from all individual ticker files; no scraper was run for this audit.

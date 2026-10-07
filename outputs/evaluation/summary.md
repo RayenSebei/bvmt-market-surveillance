@@ -31,9 +31,9 @@ This is a case-study-level evaluation, not a statistical performance estimate. T
 - Primary recall: **1 of 2 events**.
 - Secondary recall: **1 of 3 events**.
 - Ranked known-event matches at k=10, 20, 50: **0 of 10 flags, 0 of 20 flags, 0 of 50 flags**, respectively. This underestimates real precision because most relevant events are not labeled.
-- Flag load: **1027 flags**, or **3.607 flags per ticker-year**.
+- Flag load: **1454 flags**, or **3.681 flags per ticker-year**.
 - Negative-control behavior: **0 flags in 1 SOPAT window**.
-- The fixed z=3.0, 60-day reference cell independently reports **1027 flags** and **1 of 2 events**.
+- The fixed z=3.0, 60-day reference cell independently reports **1454 flags** and **1 of 2 events**.
 
 ### Lead time for each hit
 
@@ -43,35 +43,35 @@ This is a case-study-level evaluation, not a statistical performance estimate. T
 
 | Method | Flags | Flags/ticker-year | Recall -30/+5 | Recall -60/+5 | Precision@20 | SOPAT-window flags |
 |---|---:|---:|---|---|---|---|
-| reference_union | 1027 | 3.607 | 1 of 2 events | 1 of 3 events | 0 of 20 flags | 0 flags in 1 window |
-| volume_zscore_only | 140 | 0.492 | 0 of 2 events | 0 of 3 events | 0 of 20 flags | 0 flags in 1 window |
-| absolute_return_only | 903 | 3.171 | 1 of 2 events | 1 of 3 events | 0 of 20 flags | 0 flags in 1 window |
-| random_same_count_mean_1000_seeds | 1027 | 3.607 | 0.492 of 2 events on average | 0.929 of 3 events on average | 0.008 of 20 flags on average | 0.600 flags in 1 window on average |
+| reference_union | 1454 | 3.681 | 1 of 2 events | 1 of 3 events | 0 of 20 flags | 0 flags in 1 window |
+| volume_zscore_only | 206 | 0.521 | 0 of 2 events | 0 of 3 events | 0 of 20 flags | 0 flags in 1 window |
+| absolute_return_only | 1269 | 3.212 | 1 of 2 events | 1 of 3 events | 0 of 20 flags | 0 flags in 1 window |
+| random_same_count_mean_1000_seeds | 1454 | 3.681 | 0.483 of 2 events on average | 0.908 of 3 events on average | 0.008 of 20 flags on average | 0.548 flags in 1 window on average |
 
-The reference detector does **not** beat the absolute-return-only baseline on recall or precision: both match 1 of 2 events in the primary window, 1 of 3 events in the secondary window, and 0 of 20 flags at k=20, while the reference produces 1,027 flags versus 903. It matches more events than the volume-only baseline, but at a much higher flag load. The random method keeps the reference number of flags per ticker and averages 1,000 deterministic seeds; its non-integer event and SOPAT counts are averages, not observed cases.
+The reference detector does **not** beat the absolute-return-only baseline on recall or precision: both match 1 of 2 events in the primary window, 1 of 3 events in the secondary window, and 0 of 20 flags at k=20, while the reference produces 1,454 flags versus 1,269. It matches more events than the volume-only baseline, but at a much higher flag load. The random method keeps the reference number of flags per ticker and averages 1,000 deterministic seeds; its non-integer event and SOPAT counts are averages, not observed cases.
 
 ## Sensitivity grid
 
 | Z cutoff | Rolling window | Flags | Flags/ticker-year | Primary recall |
 |---:|---:|---:|---:|---|
-| 2.5 | 20 | 1779 | 6.248 | 1 of 2 events |
-| 2.5 | 40 | 1862 | 6.540 | 1 of 2 events |
-| 2.5 | 60 | 1806 | 6.343 | 1 of 2 events |
-| 2.5 | 120 | 1755 | 6.164 | 1 of 2 events |
-| 3 | 20 | 1010 | 3.547 | 1 of 2 events |
-| 3 | 40 | 1047 | 3.677 | 1 of 2 events |
-| 3 | 60 | 1027 | 3.607 | 1 of 2 events |
-| 3 | 120 | 986 | 3.463 | 1 of 2 events |
-| 3.5 | 20 | 625 | 2.195 | 1 of 2 events |
-| 3.5 | 40 | 648 | 2.276 | 1 of 2 events |
-| 3.5 | 60 | 617 | 2.167 | 1 of 2 events |
-| 3.5 | 120 | 569 | 1.998 | 0 of 2 events |
-| 4 | 20 | 395 | 1.387 | 1 of 2 events |
-| 4 | 40 | 420 | 1.475 | 1 of 2 events |
-| 4 | 60 | 371 | 1.303 | 1 of 2 events |
-| 4 | 120 | 329 | 1.155 | 0 of 2 events |
+| 2.5 | 20 | 2532 | 6.410 | 1 of 2 events |
+| 2.5 | 40 | 2673 | 6.767 | 1 of 2 events |
+| 2.5 | 60 | 2577 | 6.524 | 1 of 2 events |
+| 2.5 | 120 | 2488 | 6.298 | 1 of 2 events |
+| 3 | 20 | 1414 | 3.580 | 1 of 2 events |
+| 3 | 40 | 1474 | 3.731 | 1 of 2 events |
+| 3 | 60 | 1454 | 3.681 | 1 of 2 events |
+| 3 | 120 | 1392 | 3.524 | 1 of 2 events |
+| 3.5 | 20 | 867 | 2.195 | 1 of 2 events |
+| 3.5 | 40 | 909 | 2.301 | 1 of 2 events |
+| 3.5 | 60 | 857 | 2.169 | 1 of 2 events |
+| 3.5 | 120 | 795 | 2.013 | 0 of 2 events |
+| 4 | 20 | 552 | 1.397 | 1 of 2 events |
+| 4 | 40 | 582 | 1.473 | 1 of 2 events |
+| 4 | 60 | 518 | 1.311 | 1 of 2 events |
+| 4 | 120 | 473 | 1.197 | 0 of 2 events |
 
-14 of 16 sensitivity cells match 1 of 2 events; 2 of 16 match 0 of 2 events. Flag load ranges from 329 to 1862. No cell was selected to improve the labeled-event result.
+14 of 16 sensitivity cells match 1 of 2 events; 2 of 16 match 0 of 2 events. Flag load ranges from 473 to 2673. No cell was selected to improve the labeled-event result.
 
 
 ## Universe coverage audit
@@ -80,8 +80,8 @@ The combined file contains 60 symbols while 85 valid individual ticker files exi
 
 | Universe | Symbols | Rows | Flags | Flags/ticker-year | Primary recall | Secondary recall | Precision@20 |
 |---|---:|---:|---:|---:|---|---|---|
-| 60-symbol reference | 60 | 44,531 | 1,027 | 3.607 | 1 of 2 events | 1 of 3 events | 0 of 20 flags |
-| 85-symbol full universe | 85 | 61,812 | 1,454 | 3.681 | 1 of 2 events | 1 of 3 events | 0 of 20 flags |
+| 60-symbol archive | 60 | 44,531 | 1,027 | 3.607 | 1 of 2 events | 1 of 3 events | 0 of 20 flags |
+| 85-symbol delivered universe | 85 | 61,812 | 1,454 | 3.681 | 1 of 2 events | 1 of 3 events | 0 of 20 flags |
 
 The OHLCV rows and detector flags agree on all 60 shared symbols. The established 60-symbol run remains the reference; the 85-symbol run is a separately generated coverage comparison.
 

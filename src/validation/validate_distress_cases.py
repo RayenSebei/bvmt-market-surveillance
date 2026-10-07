@@ -32,7 +32,7 @@ import pandas as pd
 
 from src.detection.decay_detector import load_data, monthly_spotlight
 
-DATA_PATH = os.path.join("bvmt_data", "_all_tickers_combined.csv")
+DATA_PATH = os.path.join("bvmt_data", "_all_tickers_full.csv")
 EVENTS_PATH = os.path.join("bvmt_data", "labeled_events.csv")
 
 # Labeled ground-truth events. event_date = the date the market-facing

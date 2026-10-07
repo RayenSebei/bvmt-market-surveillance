@@ -38,6 +38,7 @@ OUT_PATH = OUT_DIR / "watchlist_ai_assessed.csv"
 PAUSE_SECONDS = 3
 VALID_ASSESSMENTS = {"likely_noise", "worth_investigating", "uncertain"}
 MAX_COMPLETION_TOKENS = 1500
+MAX_LIVE_CALLS = 40
 
 SYSTEM_PROMPT = """You assist a student market-surveillance research tool for
 the Tunis Stock Exchange. Assess only the quantitative evidence supplied.
@@ -87,11 +88,21 @@ def create_client(api_key: str):
     return OpenAI(base_url="https://api.groq.com/openai/v1", api_key=api_key)
 
 
-def assess_row(row: Any, repeat_count: int, client: Any, max_retries: int = 3) -> tuple[str, str]:
+def assess_row(
+    row: Any,
+    repeat_count: int,
+    client: Any,
+    max_retries: int = 3,
+    call_budget: dict[str, int] | None = None,
+) -> tuple[str, str]:
     user_prompt = build_user_prompt(row, repeat_count)
     last_error = "unknown error"
     for attempt in range(max_retries):
         try:
+            if call_budget is not None:
+                if call_budget["remaining"] <= 0:
+                    raise RuntimeError("live-call budget exhausted")
+                call_budget["remaining"] -= 1
             response = client.chat.completions.create(
                 model=MODEL,
                 max_completion_tokens=MAX_COMPLETION_TOKENS,
@@ -130,7 +141,14 @@ def main() -> int:
         print(f"AI triage skipped: client unavailable ({type(exc).__name__}); existing output preserved.")
         return 0
     frame = pd.read_csv(IN_PATH)
+    if len(frame) > MAX_LIVE_CALLS:
+        print(
+            f"AI triage limited to the first {MAX_LIVE_CALLS} of {len(frame)} rows "
+            "in existing watchlist order."
+        )
+        frame = frame.head(MAX_LIVE_CALLS).copy()
     repeat_counts = frame["symbole"].value_counts()
+    call_budget = {"remaining": MAX_LIVE_CALLS}
     assessments: list[str] = []
     reasonings: list[str] = []
     print(f"AI triage: {len(frame)} rows using model {MODEL}")
@@ -138,7 +156,12 @@ def main() -> int:
         for index, row in frame.iterrows():
             symbol = row.get("symbole")
             print(f"[{index + 1}/{len(frame)}] Assessing {symbol}")
-            assessment, reasoning = assess_row(row, int(repeat_counts.get(symbol, 1)), client)
+            assessment, reasoning = assess_row(
+                row,
+                int(repeat_counts.get(symbol, 1)),
+                client,
+                call_budget=call_budget,
+            )
             assessments.append(assessment)
             reasonings.append(reasoning)
             if index + 1 < len(frame):
