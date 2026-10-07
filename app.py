@@ -391,7 +391,7 @@ def api_stock(ticker):
     flags = load_csv("anomaly_classified.csv")
     anomaly_dates = set()
     if not flags.empty and "symbole" in flags.columns:
-        tf = flags[flags["symbole"].str.upper() == ticker]
+        tf = flags[flags["symbole"].str.upper() == ticker].copy()
         if not tf.empty:
             tf["date"] = pd.to_datetime(tf["date"], errors="coerce")
             va = tf["volume_anomaly"].astype(str).str.strip().str.lower() == "true"

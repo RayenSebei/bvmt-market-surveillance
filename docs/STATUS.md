@@ -184,3 +184,13 @@
 - Done: Replaced the user-facing verdict banner with “not a legal finding.” Missing page captures are an unlinked TODO list at the end of the report; all three retained image links exist.
 - Next: Run the complete final test suite, protected-raw hash audit, real-data API smoke test, and repository consistency checks.
 - Blockers: Five dashboard page screenshots remain TODOs for the user to add.
+
+## Final verification of 85-symbol delivery
+
+- Done: Full offline suite passes 45 tests.
+- Done: SHA-256 audit confirms all 178 protected raw CSVs are identical to `../bvmt_snapshot2`; `_all_tickers_combined.csv`, `_all_news_combined.csv`, all uppercase ticker files, and all `news_*.csv` remain untouched.
+- Done: Real-data Flask smoke test returns HTTP 200 for all 19 routes with the scrape trigger mocked; `/api/tickers` returns exactly 85 symbols.
+- Done: Removed the only smoke-test warning by copying the selected ticker frame before date conversion; behavior is unchanged.
+- Done: No scraper ran, `.env` was untouched, and nothing was pushed.
+- Next: None. Delivery is complete.
+- Blockers: Five optional dashboard page screenshots remain on the report TODO list.
