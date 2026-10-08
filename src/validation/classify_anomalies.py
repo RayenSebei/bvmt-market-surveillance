@@ -1,16 +1,14 @@
 """
-FINAL PHASE — Classify every anomaly flag as EXPLAINED or UNEXPLAINED by
-cross-referencing against the news data, and produce a prioritized
-watchlist. This is the actual deliverable of the whole system: instead of
-thousands of raw statistical flags nobody can manually check, you get a
-short list of anomalies with NO corresponding public news nearby — the
-genuinely worth-investigating cases.
+FINAL PHASE — Add retrospective local-news context to every anomaly flag
+and produce a prioritized watchlist. News proximity is not proof that a
+headline caused a price move, and absence of a local match is not evidence
+of misconduct.
 
 Logic:
   - For every spike-detector flag (anomaly_flags.csv), search the flagged
     ticker's news for any headline within +/-7 calendar days. Found ->
-    EXPLAINED (tag with the matching headline + category). Not found ->
-    UNEXPLAINED.
+    NEWS_MATCH_FOUND (tag with the closest headline, date, timing and
+    category). Not found -> NO_LOCAL_MATCH.
   - For every decay-detector flag (decay_flags.csv), search for news
     within +/-60 days of the ticker's last active trading date (a wider
     window since "going dark" is a slower-moving story than a single-day
@@ -48,6 +46,8 @@ NEWS_PATH = os.path.join(OUT_DIR, "_all_news_combined.csv")
 
 ANOMALY_WINDOW_DAYS = 7   # calendar days around a flagged date to search for news
 DECAY_WINDOW_DAYS = 60    # wider window for decay tickers (slower-moving stories)
+NEWS_MATCH_FOUND = "NEWS_MATCH_FOUND"
+NO_LOCAL_MATCH = "NO_LOCAL_MATCH"
 
 # Keyword categories, checked in this priority order against lowercased headlines.
 CATEGORIES = [
@@ -105,17 +105,26 @@ def classify_anomalies(anomaly_df, news_df):
 
         out = row.to_dict()
         if match is not None:
-            out["status"] = "EXPLAINED"
+            gap_days = int(match["gap_days"])
+            out["status"] = NEWS_MATCH_FOUND
             out["matched_headline"] = match["headline"]
             out["matched_news_date"] = match["news_date"].date()
-            out["gap_days"] = int(match["gap_days"])  # positive = news came AFTER the anomaly
+            out["gap_days"] = gap_days  # positive = news came AFTER the anomaly
             out["category"] = classify_headline(match["headline"])
+            out["news_available_as_of_flag"] = gap_days <= 0
+            out["post_event_news_context"] = gap_days > 0
+            out["news_match_timing"] = (
+                "AVAILABLE_AS_OF_FLAG" if gap_days <= 0 else "POST_EVENT_CONTEXT"
+            )
         else:
-            out["status"] = "UNEXPLAINED"
+            out["status"] = NO_LOCAL_MATCH
             out["matched_headline"] = None
             out["matched_news_date"] = None
             out["gap_days"] = None
             out["category"] = None
+            out["news_available_as_of_flag"] = False
+            out["post_event_news_context"] = False
+            out["news_match_timing"] = "NO_LOCAL_MATCH"
         results.append(out)
 
     return pd.DataFrame(results)
@@ -129,24 +138,39 @@ def classify_decay(decay_df, news_df):
 
         out = row.to_dict()
         if pd.isna(last_active):
-            out["status"] = "UNEXPLAINED"
+            out["status"] = NO_LOCAL_MATCH
             out["matched_headline"] = None
             out["matched_news_date"] = None
+            out["gap_days"] = None
             out["category"] = None
+            out["news_available_as_of_flag"] = False
+            out["post_event_news_context"] = False
+            out["news_match_timing"] = "NO_LOCAL_MATCH"
             results.append(out)
             continue
 
         match = find_nearby_news(news_df, symbole, last_active, DECAY_WINDOW_DAYS)
         if match is not None:
-            out["status"] = "EXPLAINED"
+            gap_days = int(match["gap_days"])
+            out["status"] = NEWS_MATCH_FOUND
             out["matched_headline"] = match["headline"]
             out["matched_news_date"] = match["news_date"].date()
+            out["gap_days"] = gap_days
             out["category"] = classify_headline(match["headline"])
+            out["news_available_as_of_flag"] = gap_days <= 0
+            out["post_event_news_context"] = gap_days > 0
+            out["news_match_timing"] = (
+                "AVAILABLE_AS_OF_FLAG" if gap_days <= 0 else "POST_EVENT_CONTEXT"
+            )
         else:
-            out["status"] = "UNEXPLAINED"
+            out["status"] = NO_LOCAL_MATCH
             out["matched_headline"] = None
             out["matched_news_date"] = None
+            out["gap_days"] = None
             out["category"] = None
+            out["news_available_as_of_flag"] = False
+            out["post_event_news_context"] = False
+            out["news_match_timing"] = "NO_LOCAL_MATCH"
         results.append(out)
 
     return pd.DataFrame(results)
@@ -154,13 +178,13 @@ def classify_decay(decay_df, news_df):
 
 def build_watchlist(anomaly_classified, decay_classified):
     spike_watch = anomaly_classified[
-        (anomaly_classified["status"] == "UNEXPLAINED")
+        (anomaly_classified["status"] == NO_LOCAL_MATCH)
         & (anomaly_classified["combined_anomaly"] == True)  # noqa: E712
     ].copy()
     spike_watch["source"] = "spike_detector"
     spike_watch["priority"] = 1
 
-    decay_watch = decay_classified[decay_classified["status"] == "UNEXPLAINED"].copy()
+    decay_watch = decay_classified[decay_classified["status"] == NO_LOCAL_MATCH].copy()
     decay_watch["source"] = "decay_detector"
     decay_watch["priority"] = 2
 
@@ -200,33 +224,33 @@ if __name__ == "__main__":
     print("=" * 70)
 
     n_total = len(anomaly_classified)
-    n_explained = (anomaly_classified["status"] == "EXPLAINED").sum()
-    n_unexplained = n_total - n_explained
+    n_matched = (anomaly_classified["status"] == NEWS_MATCH_FOUND).sum()
+    n_unmatched = n_total - n_matched
     print(f"\nSPIKE DETECTOR: {n_total} flagged rows")
-    print(f"  Explained:   {n_explained} ({n_explained / n_total * 100:.1f}%)")
-    print(f"  Unexplained: {n_unexplained} ({n_unexplained / n_total * 100:.1f}%)")
+    print(f"  Local news match: {n_matched} ({n_matched / n_total * 100:.1f}%)")
+    print(f"  No local match:   {n_unmatched} ({n_unmatched / n_total * 100:.1f}%)")
 
     n_combined = (anomaly_classified["combined_anomaly"] == True).sum()  # noqa: E712
-    n_combined_unexplained = (
+    n_combined_unmatched = (
         (anomaly_classified["combined_anomaly"] == True)  # noqa: E712
-        & (anomaly_classified["status"] == "UNEXPLAINED")
+        & (anomaly_classified["status"] == NO_LOCAL_MATCH)
     ).sum()
     print(f"  Combined anomalies (highest priority): {n_combined} total, "
-          f"{n_combined_unexplained} UNEXPLAINED")
+          f"{n_combined_unmatched} with NO_LOCAL_MATCH")
 
-    print("\nExplained category breakdown (spike detector):")
-    cat_counts = anomaly_classified[anomaly_classified["status"] == "EXPLAINED"]["category"].value_counts()
+    print("\nMatched-news category breakdown (spike detector):")
+    cat_counts = anomaly_classified[anomaly_classified["status"] == NEWS_MATCH_FOUND]["category"].value_counts()
     print(cat_counts.to_string())
 
     n_decay_total = len(decay_classified)
-    n_decay_explained = (decay_classified["status"] == "EXPLAINED").sum()
+    n_decay_matched = (decay_classified["status"] == NEWS_MATCH_FOUND).sum()
     print(f"\nDECAY DETECTOR: {n_decay_total} flagged tickers")
-    print(f"  Explained:   {n_decay_explained}")
-    print(f"  Unexplained: {n_decay_total - n_decay_explained}")
+    print(f"  Local news match: {n_decay_matched}")
+    print(f"  No local match:   {n_decay_total - n_decay_matched}")
 
     print("\n" + "=" * 70)
-    print(f"FINAL WATCHLIST: {len(watchlist)} genuinely unexplained anomalies")
-    print("(no matching news found nearby — these are worth manual research)")
+    print(f"FINAL WATCHLIST: {len(watchlist)} flags without a local news match")
+    print("(prioritization for manual research, not evidence of misconduct)")
     print("=" * 70)
     cols_to_show = [c for c in [
         "symbole", "ticker_name", "date", "source",

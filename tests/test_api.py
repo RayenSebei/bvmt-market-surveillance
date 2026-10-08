@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import pandas as pd
 import pytest
 
 import app as dashboard
@@ -61,7 +62,7 @@ def test_anomaly_search_filters_and_paginates(client):
     payload = response.get_json()
     assert payload["total"] == 1
     assert payload["page_size"] == 1
-    assert payload["rows"][0]["news_status"] == "No news nearby"
+    assert payload["rows"][0]["news_status"] == "No local news match"
 
 
 def test_stock_range_is_optional_and_flag_details_are_additive(client):
@@ -83,3 +84,20 @@ def test_anomaly_detail_returns_window_news_and_prices(client):
     assert payload["flag"]["symbole"] == "AAA"
     assert payload["prices"][-1]["date"] == "2025-01-02"
     assert payload["news"][0]["headline"] == "Alpha results"
+
+
+def test_anomaly_record_distinguishes_post_event_context():
+    row = pd.Series({
+        "symbole": "AAA",
+        "date": "2025-01-10",
+        "status": "NEWS_MATCH_FOUND",
+        "matched_news_date": "2025-01-11",
+        "matched_headline": "Later context",
+        "gap_days": 1,
+        "news_available_as_of_flag": False,
+        "post_event_news_context": True,
+    })
+    record = dashboard.anomaly_record(row)
+    assert record["news_status"] == "Post-event news context"
+    assert record["news_available_as_of_flag"] is False
+    assert record["post_event_news_context"] is True

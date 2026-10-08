@@ -52,6 +52,8 @@ CORS(app)
 DATA_DIR = Path(os.environ.get("DATA_DIR", "./bvmt_data"))
 EVALUATION_DIR = Path(os.environ.get("EVALUATION_DIR", "./outputs/evaluation"))
 TICKER_FILE_PATTERN = re.compile(r"^[A-Z0-9]+$")
+NEWS_MATCH_STATUSES = {"NEWS_MATCH_FOUND", "EXPLAINED"}
+NO_MATCH_STATUSES = {"NO_LOCAL_MATCH", "UNEXPLAINED"}
 
 # ── SCRAPER SCRIPT PATH ──────────────────────────────────────────────────────
 # Point this to your existing scraper/pipeline entry point
@@ -94,6 +96,14 @@ def load_evaluation_csv(filename: str) -> pd.DataFrame:
 
 def is_true(value) -> bool:
     return str(value).strip().lower() == "true"
+
+
+def has_news_match(value) -> bool:
+    return str(value).strip().upper() in NEWS_MATCH_STATUSES
+
+
+def has_no_local_match(value) -> bool:
+    return str(value).strip().upper() in NO_MATCH_STATUSES
 
 
 def number(value, digits=2, integer=False):
@@ -164,7 +174,28 @@ def anomaly_record(row, headline_urls=None, date_urls=None):
         abs(number(row.get("return_zscore")) or 0),
     )
     status = str(safe_val(row.get("status"), "")).upper()
-    nearby = status == "EXPLAINED"
+    nearby = has_news_match(status)
+    gap_days = number(row.get("gap_days"), integer=True)
+    explicit_as_of = row.get("news_available_as_of_flag")
+    explicit_post = row.get("post_event_news_context")
+    available_as_of = (
+        is_true(explicit_as_of)
+        if explicit_as_of is not None and not pd.isna(explicit_as_of)
+        else nearby and gap_days is not None and gap_days <= 0
+    )
+    post_event = (
+        is_true(explicit_post)
+        if explicit_post is not None and not pd.isna(explicit_post)
+        else nearby and gap_days is not None and gap_days > 0
+    )
+    if available_as_of:
+        news_status = "News available by flag date"
+    elif post_event:
+        news_status = "Post-event news context"
+    elif nearby:
+        news_status = "News match; timing unavailable"
+    else:
+        news_status = "No local news match"
     return {
         "symbole": symbol,
         "ticker_name": safe_val(row.get("ticker_name"), symbol),
@@ -179,10 +210,13 @@ def anomaly_record(row, headline_urls=None, date_urls=None):
         "risk": risk_level(max_z),
         "status": status,
         "news_nearby": nearby,
-        "news_status": "News nearby" if nearby else "No news nearby",
+        "news_status": news_status,
+        "news_available_as_of_flag": bool(available_as_of),
+        "post_event_news_context": bool(post_event),
+        "news_match_timing": str(safe_val(row.get("news_match_timing"), "")).strip(),
         "matched_headline": headline,
         "matched_news_date": matched_date,
-        "gap_days": number(row.get("gap_days"), integer=True),
+        "gap_days": gap_days,
         "category": str(safe_val(row.get("category"), "")).strip(),
         "news_url": headline_urls.get((symbol, headline), "") or date_urls.get((symbol, matched_date), ""),
     }
@@ -293,15 +327,14 @@ def api_kpis():
             pri_col = recent["price_anomaly"].astype(str).str.strip().str.lower() if "price_anomaly" in recent.columns else pd.Series(dtype=str)
             flagged_30d = int(((col == "true") | (vol_col == "true") | (pri_col == "true")).sum())
 
-    # EXPLAINED & UNEXPLAINED count
-    explained = 0
-    unexplained = 0
+    news_match_count = 0
+    no_local_match_count = 0
     high_risk_count = 0
     if not classified.empty:
         if "status" in classified.columns:
             st_col = classified["status"].astype(str).str.upper()
-            explained = int((st_col.str.contains("EXPLAINED") & ~st_col.str.contains("UNEXPLAINED")).sum())
-            unexplained = int(st_col.str.contains("UNEXPLAINED").sum())
+            news_match_count = int(st_col.isin(NEWS_MATCH_STATUSES).sum())
+            no_local_match_count = int(st_col.isin(NO_MATCH_STATUSES).sum())
         
         # High risk: abs z_score >= 4.0
         vz = classified["volume_zscore"].abs() if "volume_zscore" in classified.columns else pd.Series(0, index=classified.index)
@@ -311,7 +344,7 @@ def api_kpis():
 
     total_classified = len(classified) if not classified.empty else 0
     total_anomalies = total_classified if total_classified > 0 else (len(flags_df) if not flags_df.empty else 0)
-    triage_rate = round(explained / total_classified * 100, 1) if total_classified else 0
+    triage_rate = round(news_match_count / total_classified * 100, 1) if total_classified else 0
 
     return jsonify({
         "n_tickers": n_tickers,
@@ -319,11 +352,13 @@ def api_kpis():
         "flagged_30d": flagged_30d,
         "triage_rate": triage_rate,
         "total_classified": total_classified,
-        "explained": explained,
-        "news_nearby_count": explained,
+        "explained": news_match_count,
+        "news_nearby_count": news_match_count,
+        "news_match_count": news_match_count,
         "total_anomalies": total_anomalies,
         "high_risk_count": high_risk_count,
-        "unexplained_count": unexplained,
+        "unexplained_count": no_local_match_count,
+        "no_local_match_count": no_local_match_count,
         "last_scrape": scrape_state.get("last_scrape") or datetime.now().strftime("%Y-%m-%d %H:%M"),
         "data_start": data_start,
         "data_end": data_end,
@@ -369,9 +404,9 @@ def api_anomalies_search():
         df = df[text.str.lower().str.contains(ticker, regex=False)]
     status = request.args.get("status", "").strip().lower()
     if status in {"nearby", "news_nearby"}:
-        df = df[df.get("status", "").astype(str).str.upper() == "EXPLAINED"]
+        df = df[df.get("status", "").astype(str).str.upper().isin(NEWS_MATCH_STATUSES)]
     elif status in {"none", "no_news"}:
-        df = df[df.get("status", "").astype(str).str.upper() == "UNEXPLAINED"]
+        df = df[df.get("status", "").astype(str).str.upper().isin(NO_MATCH_STATUSES)]
     signal = request.args.get("signal", "").strip().lower()
     if signal:
         df = df[df.apply(lambda row: signal in signal_type(row).lower(), axis=1)]
@@ -716,7 +751,10 @@ def api_watchlist():
         "decline_ratio": number(row.get("decline_ratio"), 4),
         "last_active_date": safe_val(row.get("last_active_date"), "not available"),
         "days_since_active": number(row.get("days_since_active"), integer=True),
-        "news_status": "News nearby" if str(row.get("status", "")).upper() == "EXPLAINED" else "No news nearby",
+        "news_status": (
+            "News match found" if has_news_match(row.get("status", ""))
+            else "No local news match"
+        ),
     } for _, row in decay.iterrows()]
     return jsonify({"rows": rows, "total": len(rows), "decay": decay_rows, "decay_total": len(decay_rows)})
 
@@ -739,7 +777,10 @@ def api_overview():
         "monthly": monthly.to_dict(orient="records"),
         "top_tickers": top.fillna("").to_dict(orient="records"),
         "recent": [anomaly_record(row, headline_urls, date_urls) for _, row in recent.iterrows()],
-        "split": {"nearby": int((status == "EXPLAINED").sum()), "none": int((status == "UNEXPLAINED").sum())},
+        "split": {
+            "nearby": int(status.isin(NEWS_MATCH_STATUSES).sum()),
+            "none": int(status.isin(NO_MATCH_STATUSES).sum()),
+        },
     })
 
 
