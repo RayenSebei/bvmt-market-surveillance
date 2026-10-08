@@ -197,7 +197,7 @@ def signal_type(row) -> str:
     return "Unknown"
 
 
-def risk_level(z) -> str:
+def signal_intensity(z) -> str:
     if z is None:
         return "Unknown"
     if abs(float(z)) >= 4.0:
@@ -205,6 +205,11 @@ def risk_level(z) -> str:
     if abs(float(z)) >= 2.5:
         return "Medium"
     return "Low"
+
+
+def risk_level(z) -> str:
+    """Deprecated compatibility alias for the non-probabilistic intensity band."""
+    return signal_intensity(z)
 
 
 def news_lookup():
@@ -275,7 +280,8 @@ def anomaly_record(row, headline_urls=None, date_urls=None):
         "return_zscore": number(row.get("return_zscore")),
         "max_zscore": round(max_z, 2),
         "signal": signal_type(row),
-        "risk": risk_level(max_z),
+        "signal_intensity": signal_intensity(max_z),
+        "risk": signal_intensity(max_z),
         "status": status,
         "news_nearby": nearby,
         "news_status": news_status,
@@ -428,7 +434,7 @@ def api_kpis():
 
     news_match_count = 0
     no_local_match_count = 0
-    high_risk_count = 0
+    high_intensity_count = 0
     if not classified.empty:
         if "status" in classified.columns:
             st_col = classified["status"].astype(str).str.upper()
@@ -439,7 +445,7 @@ def api_kpis():
         vz = classified["volume_zscore"].abs() if "volume_zscore" in classified.columns else pd.Series(0, index=classified.index)
         rz = classified["return_zscore"].abs() if "return_zscore" in classified.columns else pd.Series(0, index=classified.index)
         max_z = pd.concat([vz, rz], axis=1).max(axis=1)
-        high_risk_count = int((max_z >= 4.0).sum())
+        high_intensity_count = int((max_z >= 4.0).sum())
 
     total_classified = len(classified) if not classified.empty else 0
     total_anomalies = total_classified if total_classified > 0 else (len(flags_df) if not flags_df.empty else 0)
@@ -455,7 +461,8 @@ def api_kpis():
         "news_nearby_count": news_match_count,
         "news_match_count": news_match_count,
         "total_anomalies": total_anomalies,
-        "high_risk_count": high_risk_count,
+        "high_intensity_count": high_intensity_count,
+        "high_risk_count": high_intensity_count,
         "unexplained_count": no_local_match_count,
         "no_local_match_count": no_local_match_count,
         "last_scrape": scrape_state.get("last_run"),
@@ -507,42 +514,66 @@ def api_anomalies_search():
         text = df.get("symbole", "").astype(str) + " " + df.get("ticker_name", "").astype(str)
         df = df[text.str.lower().str.contains(ticker, regex=False)]
     status = request.args.get("status", "").strip().lower()
+    if status and status not in {"nearby", "news_nearby", "none", "no_news"}:
+        return jsonify({"error": "Invalid status filter"}), 400
     if status in {"nearby", "news_nearby"}:
         df = df[df.get("status", "").astype(str).str.upper().isin(NEWS_MATCH_STATUSES)]
     elif status in {"none", "no_news"}:
         df = df[df.get("status", "").astype(str).str.upper().isin(NO_MATCH_STATUSES)]
     signal = request.args.get("signal", "").strip().lower()
+    if signal and signal not in {"volume", "price"}:
+        return jsonify({"error": "Invalid signal filter"}), 400
     if signal:
         df = df[df.apply(lambda row: signal in signal_type(row).lower(), axis=1)]
     category = request.args.get("category", "").strip().lower()
     if category:
         df = df[df.get("category", "").fillna("").astype(str).str.lower() == category]
-    date_from = pd.to_datetime(request.args.get("date_from"), errors="coerce")
-    date_to = pd.to_datetime(request.args.get("date_to"), errors="coerce")
+    raw_date_from = request.args.get("date_from", "").strip()
+    raw_date_to = request.args.get("date_to", "").strip()
+    date_from = pd.to_datetime(raw_date_from, format="%Y-%m-%d", errors="coerce")
+    date_to = pd.to_datetime(raw_date_to, format="%Y-%m-%d", errors="coerce")
+    if raw_date_from and pd.isna(date_from):
+        return jsonify({"error": "date_from must use YYYY-MM-DD"}), 400
+    if raw_date_to and pd.isna(date_to):
+        return jsonify({"error": "date_to must use YYYY-MM-DD"}), 400
+    if pd.notna(date_from) and pd.notna(date_to) and date_from > date_to:
+        return jsonify({"error": "date_from must not be after date_to"}), 400
     if pd.notna(date_from):
         df = df[df["date"] >= date_from]
     if pd.notna(date_to):
         df = df[df["date"] <= date_to]
-    min_z = number(request.args.get("min_z"))
+    raw_min_z = request.args.get("min_z", "").strip()
+    try:
+        min_z = float(raw_min_z) if raw_min_z else None
+    except ValueError:
+        return jsonify({"error": "min_z must be a non-negative number"}), 400
+    if min_z is not None and (not math.isfinite(min_z) or min_z < 0):
+        return jsonify({"error": "min_z must be a non-negative number"}), 400
     if min_z is not None:
         df = df[df["max_zscore"] >= min_z]
-    risk = request.args.get("risk", "").strip().title()
-    if risk:
-        df = df[df["max_zscore"].map(risk_level) == risk]
+    intensity = request.args.get("intensity", request.args.get("risk", "")).strip().title()
+    if intensity and intensity not in {"High", "Medium", "Low"}:
+        return jsonify({"error": "Invalid signal intensity filter"}), 400
+    if intensity:
+        df = df[df["max_zscore"].map(signal_intensity) == intensity]
 
     sort = request.args.get("sort", "z")
+    if sort not in {"z", "date", "ticker"}:
+        return jsonify({"error": "Invalid sort"}), 400
     if sort == "date":
         df = df.sort_values(["date", "symbole"], ascending=[False, True])
     elif sort == "ticker":
         df = df.sort_values(["symbole", "date"], ascending=[True, False])
     else:
-        df = df.sort_values(["max_zscore", "date"], ascending=[False, False])
+        df = df.sort_values(
+            ["max_zscore", "date", "symbole"], ascending=[False, False, True]
+        )
     total = len(df)
     try:
         page = max(1, int(request.args.get("page", 1)))
         page_size = min(5000, max(1, int(request.args.get("page_size", 25))))
     except ValueError:
-        page, page_size = 1, 25
+        return jsonify({"error": "page and page_size must be integers"}), 400
     start = (page - 1) * page_size
     page_df = df.iloc[start:start + page_size]
     _, headline_urls, date_urls = news_lookup()

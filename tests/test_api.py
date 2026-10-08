@@ -146,6 +146,7 @@ def test_anomaly_search_filters_and_paginates(client):
     assert payload["total"] == 1
     assert payload["page_size"] == 1
     assert payload["rows"][0]["news_status"] == "No local news match"
+    assert payload["rows"][0]["signal_intensity"] == "High"
 
 
 def test_stock_range_is_optional_and_flag_details_are_additive(client):
@@ -184,3 +185,20 @@ def test_anomaly_record_distinguishes_post_event_context():
     assert record["news_status"] == "Post-event news context"
     assert record["news_available_as_of_flag"] is False
     assert record["post_event_news_context"] is True
+
+
+@pytest.mark.parametrize("query", [
+    "date_from=not-a-date",
+    "date_from=2025-02-01&date_to=2025-01-01",
+    "min_z=-1",
+    "min_z=not-a-number",
+    "sort=unknown",
+    "status=explained",
+    "signal=combined",
+    "intensity=critical",
+    "page=one",
+])
+def test_anomaly_search_rejects_invalid_query_values(client, query):
+    response = client.get(f"/api/anomalies/search?{query}")
+    assert response.status_code == 400
+    assert response.get_json()["error"]
