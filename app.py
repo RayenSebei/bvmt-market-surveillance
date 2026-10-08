@@ -20,6 +20,7 @@ import pandas as pd
 from flask import Flask, jsonify, render_template, request
 from flask_cors import CORS
 from flask.json.provider import DefaultJSONProvider
+from src.evaluation.provenance import MANIFEST_PATH, verify_manifest
 
 
 class NaNSafeJSONProvider(DefaultJSONProvider):
@@ -306,10 +307,12 @@ def api_status():
         "anomaly_summary": (DATA_DIR / "anomaly_summary.csv").exists(),
         "evaluation": (EVALUATION_DIR / "metrics.csv").exists(),
     }
+    evaluation_freshness = verify_manifest(MANIFEST_PATH)
     return jsonify({
         "files": files,
         "scraper": scrape_state,
-        "data_dir": str(DATA_DIR)
+        "data_dir": str(DATA_DIR),
+        "evaluation_freshness": evaluation_freshness,
     })
 
 
@@ -429,6 +432,7 @@ def api_kpis():
         "news_as_of": news_as_of,
         "data_start": data_start,
         "data_end": data_end,
+        "evaluation_freshness": verify_manifest(MANIFEST_PATH),
     })
 
 

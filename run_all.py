@@ -20,6 +20,13 @@ ANALYSIS_STEPS = [
     "src/triage/ai_triage_free.py",
     "src/validation/validate_distress_cases.py",
 ]
+EVALUATION_STEPS = [
+    "src/evaluation/evaluate.py",
+    "src/evaluation/baselines.py",
+    "src/evaluation/sensitivity.py",
+    "src/evaluation/report.py",
+    "src/evaluation/provenance.py",
+]
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -31,18 +38,21 @@ def build_parser() -> argparse.ArgumentParser:
         help="refresh market/news data before analysis (requires network access)",
     )
     parser.add_argument(
-        "--skip-ai", action="store_true",
-        help="skip the optional Groq-assisted triage step",
+        "--with-ai", action="store_true",
+        help="explicitly enable optional live Groq-assisted triage",
     )
+    parser.add_argument("--skip-ai", action="store_true", help=argparse.SUPPRESS)
     return parser
 
 
-def selected_steps(with_scrape: bool = False, skip_ai: bool = False) -> list[str]:
+def selected_steps(
+    with_scrape: bool = False, with_ai: bool = False, skip_ai: bool = False
+) -> list[str]:
     steps = (
-        [*SCRAPE_STEPS, *BUILD_STEPS, *ANALYSIS_STEPS]
-        if with_scrape else [*BUILD_STEPS, *ANALYSIS_STEPS]
+        [*SCRAPE_STEPS, *BUILD_STEPS, *ANALYSIS_STEPS, *EVALUATION_STEPS]
+        if with_scrape else [*BUILD_STEPS, *ANALYSIS_STEPS, *EVALUATION_STEPS]
     )
-    if skip_ai:
+    if skip_ai or not with_ai:
         steps.remove("src/triage/ai_triage_free.py")
     return steps
 
@@ -63,11 +73,15 @@ def run_script(script: str, position: int, total: int) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    steps = selected_steps(with_scrape=args.with_scrape, skip_ai=args.skip_ai)
+    steps = selected_steps(
+        with_scrape=args.with_scrape,
+        with_ai=args.with_ai,
+        skip_ai=args.skip_ai,
+    )
     mode = "scrape + analysis" if args.with_scrape else "analysis only (existing data)"
     print("BVMT Market Surveillance Pipeline")
     print(f"Mode: {mode}")
-    print(f"AI triage: {'disabled' if args.skip_ai else 'enabled when configured'}")
+    print(f"AI triage: {'explicitly enabled' if args.with_ai and not args.skip_ai else 'disabled'}")
     try:
         for position, script in enumerate(steps, start=1):
             run_script(script, position, len(steps))

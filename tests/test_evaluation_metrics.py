@@ -2,6 +2,7 @@ import pandas as pd
 
 from src.evaluation.evaluate import event_hits, precision_at_k, ranked_flags
 from src.evaluation.report import count_text, ratio_text
+from src.evaluation.sensitivity import parameter_flags
 
 
 def test_event_metrics_have_known_answers():
@@ -45,3 +46,18 @@ def test_ranking_score_ties_and_illiquidity_are_deterministic():
     assert ranked.set_index("symbole")["illiquid"].to_dict() == {
         "AAA": True, "BBB": False, "CCC": False,
     }
+
+
+def test_sensitivity_window_requires_its_full_prior_history():
+    def trading(volumes):
+        return pd.DataFrame({
+            "symbole": ["AAA"] * len(volumes),
+            "date": pd.date_range("2025-01-01", periods=len(volumes)),
+            "cloture": [10.0] * len(volumes),
+            "volume": volumes,
+        })
+
+    before_sixty = parameter_flags(trading([100] * 59 + [100_000]), 60, 3.0)
+    after_sixty = parameter_flags(trading([100] * 60 + [100_000]), 60, 3.0)
+    assert before_sixty.empty
+    assert len(after_sixty) == 1
