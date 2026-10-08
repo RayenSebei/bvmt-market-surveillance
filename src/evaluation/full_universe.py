@@ -95,7 +95,11 @@ def build_full_universe() -> tuple[pd.DataFrame, pd.DataFrame, list[str]]:
 
 
 def run_full_detector() -> pd.DataFrame:
-    trading = load_data(str(FULL_PATH))
+    trading = load_data(
+        str(FULL_PATH),
+        ohlc_policy="raw",
+        quality_log_path=OUTPUT_DIR / "anomaly_data_quality.csv",
+    )
     signals = compute_signals(trading)
     flags, ticker_summary = summarize(signals)
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
