@@ -6,12 +6,15 @@ No fake data. All endpoints serve real scraped files.
 
 import os
 import json
+import hmac
 import math
 import re
+import sys
 import threading
 import subprocess
 from datetime import datetime, timedelta
 from pathlib import Path
+from urllib.parse import urlparse
 
 import pandas as pd
 from flask import Flask, jsonify, render_template, request
@@ -46,7 +49,19 @@ def safe_val(v, fallback=None):
 app = Flask(__name__)
 app.json_provider_class = NaNSafeJSONProvider
 app.json = NaNSafeJSONProvider(app)
-CORS(app)
+
+
+def env_true(name: str, default: bool = False) -> bool:
+    value = os.environ.get(name)
+    return default if value is None else value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+cors_origins = [
+    origin.strip() for origin in os.environ.get("BVMT_CORS_ORIGINS", "").split(",")
+    if origin.strip()
+]
+if cors_origins:
+    CORS(app, resources={r"/api/*": {"origins": cors_origins}})
 
 # ── DATA DIRECTORY ──────────────────────────────────────────────────────────
 DATA_DIR = Path(os.environ.get("DATA_DIR", "./bvmt_data"))
@@ -58,6 +73,11 @@ NO_MATCH_STATUSES = {"NO_LOCAL_MATCH", "UNEXPLAINED"}
 # ── SCRAPER SCRIPT PATH ──────────────────────────────────────────────────────
 # Point this to your existing scraper/pipeline entry point
 SCRAPER_SCRIPT = os.environ.get("SCRAPER_SCRIPT", "./scraper/run_pipeline.py")
+app.config.update(
+    PIPELINE_API_ENABLED=env_true("BVMT_ENABLE_PIPELINE_API"),
+    PIPELINE_NETWORK_SCRAPE_ENABLED=env_true("BVMT_ENABLE_NETWORK_SCRAPE"),
+    PIPELINE_API_TOKEN=os.environ.get("BVMT_PIPELINE_API_TOKEN", ""),
+)
 
 # ── SCRAPE STATE ─────────────────────────────────────────────────────────────
 scrape_state = {
@@ -66,6 +86,7 @@ scrape_state = {
     "last_status": "never",
     "log": []
 }
+scrape_lock = threading.Lock()
 
 
 def load_csv(filename: str, **kwargs) -> pd.DataFrame:
@@ -96,6 +117,19 @@ def load_evaluation_csv(filename: str) -> pd.DataFrame:
 
 def is_true(value) -> bool:
     return str(value).strip().lower() == "true"
+
+
+def safe_http_url(value) -> str:
+    """Return only absolute HTTP(S) URLs suitable for an external link."""
+    candidate = str(safe_val(value, "")).strip()
+    parsed = urlparse(candidate)
+    if parsed.scheme.lower() not in {"http", "https"} or not parsed.netloc:
+        return ""
+    return candidate
+
+
+def valid_ticker(ticker: str) -> bool:
+    return bool(TICKER_FILE_PATTERN.fullmatch(ticker.strip().upper()))
 
 
 def has_news_match(value) -> bool:
@@ -152,7 +186,7 @@ def news_lookup():
         symbol = str(item.get("symbole", "")).strip().upper()
         headline = str(safe_val(item.get("headline"), "")).strip()
         date = item.get("parsed_date")
-        url = str(safe_val(item.get("url"), "")).strip()
+        url = safe_http_url(item.get("url"))
         if symbol and headline:
             by_headline[(symbol, headline)] = url
         if symbol and pd.notna(date) and url:
@@ -222,18 +256,20 @@ def anomaly_record(row, headline_urls=None, date_urls=None):
     }
 
 
-def run_scraper_background():
-    """Run the pipeline scraper in a background thread."""
+def run_scraper_background(mode: str):
+    """Run an explicitly authorized pipeline mode in a background thread."""
     global scrape_state
-    scrape_state["running"] = True
-    scrape_state["log"] = []
-    scrape_state["last_status"] = "running"
     try:
+        command = [sys.executable, SCRAPER_SCRIPT]
+        if mode == "scrape":
+            command.append("--with-scrape")
         result = subprocess.run(
-            ["python", SCRAPER_SCRIPT],
+            command,
             capture_output=True, text=True, timeout=300
         )
-        scrape_state["log"] = result.stdout.splitlines()[-30:]
+        output = result.stdout.splitlines()[-20:]
+        errors = [f"stderr: {line}" for line in result.stderr.splitlines()[-10:]]
+        scrape_state["log"] = [f"mode={mode}", *output, *errors]
         scrape_state["last_status"] = "success" if result.returncode == 0 else "error"
     except FileNotFoundError:
         scrape_state["last_status"] = "error"
@@ -245,8 +281,9 @@ def run_scraper_background():
         scrape_state["last_status"] = "error"
         scrape_state["log"] = [str(e)]
     finally:
-        scrape_state["running"] = False
-        scrape_state["last_run"] = datetime.now().isoformat()
+        with scrape_lock:
+            scrape_state["running"] = False
+            scrape_state["last_run"] = datetime.now().astimezone().isoformat()
 
 
 # ── API ROUTES ────────────────────────────────────────────────────────────────
@@ -278,12 +315,33 @@ def api_status():
 
 @app.route("/api/scrape", methods=["POST"])
 def api_scrape():
-    """Trigger a background scrape. Called when dashboard loads."""
-    if scrape_state["running"]:
-        return jsonify({"message": "Scraper already running", "state": scrape_state})
-    t = threading.Thread(target=run_scraper_background, daemon=True)
+    """Run an explicitly enabled and authenticated analysis pipeline job."""
+    if not app.config["PIPELINE_API_ENABLED"]:
+        return jsonify({"error": "Pipeline execution API is disabled"}), 404
+    expected = str(app.config.get("PIPELINE_API_TOKEN", ""))
+    if not expected:
+        return jsonify({"error": "Pipeline execution API is not configured"}), 503
+    authorization = request.headers.get("Authorization", "")
+    supplied = authorization[7:] if authorization.startswith("Bearer ") else ""
+    if not supplied or not hmac.compare_digest(supplied, expected):
+        return jsonify({"error": "Unauthorized"}), 401
+    payload = request.get_json(silent=True) or {}
+    mode = str(payload.get("mode", "")).strip().lower()
+    if mode not in {"analysis", "scrape"}:
+        return jsonify({"error": "mode must be 'analysis' or 'scrape'"}), 400
+    if mode == "scrape" and not app.config["PIPELINE_NETWORK_SCRAPE_ENABLED"]:
+        return jsonify({"error": "Network scraping is disabled"}), 403
+    with scrape_lock:
+        if scrape_state["running"]:
+            return jsonify({"message": "Pipeline already running", "state": scrape_state}), 409
+        scrape_state.update({
+            "running": True,
+            "last_status": "running",
+            "log": [f"mode={mode}", f"requested_at={datetime.now().astimezone().isoformat()}"],
+        })
+    t = threading.Thread(target=run_scraper_background, args=(mode,), daemon=True)
     t.start()
-    return jsonify({"message": "Scraper started", "state": scrape_state})
+    return jsonify({"message": f"{mode} pipeline started", "state": scrape_state}), 202
 
 
 @app.route("/api/scrape/status")
@@ -308,6 +366,11 @@ def api_kpis():
         if dates.notna().any():
             data_start = dates.min().strftime("%Y-%m-%d")
             data_end = dates.max().strftime("%Y-%m-%d")
+    news_as_of = ""
+    if not news_df.empty and "date_str" in news_df.columns:
+        news_dates = pd.to_datetime(news_df["date_str"], format="%d/%m/%y", errors="coerce")
+        if news_dates.notna().any():
+            news_as_of = news_dates.max().strftime("%Y-%m-%d")
 
     # Flagged = combined_anomaly == True in the most recent 30 days of *scraped* data.
     # Anchored to the latest date actually present in the data, not datetime.now(),
@@ -359,7 +422,11 @@ def api_kpis():
         "high_risk_count": high_risk_count,
         "unexplained_count": no_local_match_count,
         "no_local_match_count": no_local_match_count,
-        "last_scrape": scrape_state.get("last_scrape") or datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "last_scrape": scrape_state.get("last_run"),
+        "pipeline_last_run_at": scrape_state.get("last_run"),
+        "dashboard_checked_at": datetime.now().astimezone().isoformat(),
+        "data_as_of": data_end,
+        "news_as_of": news_as_of,
         "data_start": data_start,
         "data_end": data_end,
     })
@@ -452,6 +519,8 @@ def api_anomalies_search():
 @app.route("/api/anomaly/<ticker>/<date>")
 def api_anomaly_detail(ticker, date):
     ticker = ticker.strip().upper()
+    if not valid_ticker(ticker):
+        return jsonify({"error": "Invalid ticker"}), 400
     target = pd.to_datetime(date, format="%Y-%m-%d", errors="coerce")
     if pd.isna(target):
         return jsonify({"error": "Invalid date"}), 400
@@ -473,7 +542,7 @@ def api_anomaly_detail(ticker, date):
             nearby_news.append({
                 "date": item["parsed_date"].strftime("%Y-%m-%d") if pd.notna(item["parsed_date"]) else "",
                 "headline": safe_val(item.get("headline"), "not available"),
-                "url": safe_val(item.get("url"), ""),
+                "url": safe_http_url(item.get("url")),
                 "gap_days": number(item.get("gap_days"), integer=True),
             })
     prices = load_csv(f"{ticker}.csv")
@@ -539,6 +608,8 @@ def api_news_recent():
         limit = 30
     ticker = request.args.get("ticker", "").strip().upper()
     if ticker:
+        if not valid_ticker(ticker):
+            return jsonify({"error": "Invalid ticker"}), 400
         df = df[df.get("symbole", "").astype(str).str.upper() == ticker]
     df["parsed_date"] = pd.to_datetime(df["date_str"], format="%d/%m/%y", errors="coerce")
     df = df.sort_values("parsed_date", ascending=False)
@@ -568,7 +639,7 @@ def api_news_recent():
             "date":      row.get("date_str", ""),
             "time":      row.get("time_str", ""),
             "headline":  row.get("headline", ""),
-            "url":       row.get("url", ""),
+            "url":       safe_http_url(row.get("url")),
             "ticker_name": names.get(str(row.get("symbole", "")).upper(), str(row.get("symbole", ""))),
             "linked_flag_date": linked.get((str(row.get("symbole", "")).upper(), str(row.get("headline", ""))), ""),
         })
@@ -581,6 +652,8 @@ def api_news_by_ticker():
     ticker = request.args.get("ticker", "").upper()
     if not ticker:
         return jsonify([])
+    if not valid_ticker(ticker):
+        return jsonify({"error": "Invalid ticker"}), 400
 
     df = load_csv("_all_news_combined.csv")
     if df.empty:
@@ -597,7 +670,7 @@ def api_news_by_ticker():
             "date":     row.get("date_str", ""),
             "time":     row.get("time_str", ""),
             "headline": row.get("headline", ""),
-            "url":      row.get("url", ""),
+            "url":      safe_http_url(row.get("url")),
         })
     return jsonify(records)
 
@@ -605,7 +678,9 @@ def api_news_by_ticker():
 @app.route("/api/stock/<ticker>")
 def api_stock(ticker):
     """OHLCV history. Default remains the last 252 trading days."""
-    ticker = ticker.upper()
+    ticker = ticker.strip().upper()
+    if not valid_ticker(ticker):
+        return jsonify({"error": "Invalid ticker"}), 400
     df = load_csv(f"{ticker}.csv")
 
     if df.empty:
@@ -810,4 +885,5 @@ def api_evaluation_events():
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=False)
+    host = os.environ.get("HOST", "127.0.0.1")
+    app.run(host=host, port=port, debug=False)

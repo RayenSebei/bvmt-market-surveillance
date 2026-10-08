@@ -68,6 +68,12 @@ python app.py
 
 Then open `http://127.0.0.1:5000`.
 
+The dashboard is read-only by default, binds to loopback, and does not expose a
+pipeline trigger. If a controlled execution API is explicitly required, set
+`BVMT_ENABLE_PIPELINE_API=true` and a strong `BVMT_PIPELINE_API_TOKEN`. Network
+scraping additionally requires `BVMT_ENABLE_NETWORK_SCRAPE=true`; do not expose
+this local development server directly to the internet.
+
 Run the offline tests:
 
 ```bash
