@@ -16,6 +16,10 @@ INPUT_PATHS = (
     "data/evaluation/events.csv",
     "src/detection/anomaly_detector.py",
     "src/evaluation/config.json",
+    "src/evaluation/evaluate.py",
+    "src/evaluation/baselines.py",
+    "src/evaluation/sensitivity.py",
+    "src/evaluation/report.py",
 )
 OUTPUT_PATHS = (
     "outputs/evaluation/metrics.csv",

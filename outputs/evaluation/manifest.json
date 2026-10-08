@@ -1,0 +1,27 @@
+{
+  "detector_policy": {
+    "current_observation_excluded_from_baseline": true,
+    "minimum_valid_prior_observations": 60,
+    "ohlc_policy": "raw"
+  },
+  "generated_at_utc": "2026-10-08T19:40:25.841687+00:00",
+  "inputs": {
+    "bvmt_data/_all_tickers_full.csv": "b3d99bbba9ce245d8c83b42f55a2503c26a6433c2524b9295a58fb7bfba03dee",
+    "bvmt_data/anomaly_flags.csv": "391345e8bd1fd656a8bafb34916a561d3ea9207891857447234a7d9ffe2da754",
+    "data/evaluation/events.csv": "e32ed154662758a91b632e4bb18586e50ad41c44b14253d65cee3b80f6c5c874",
+    "src/detection/anomaly_detector.py": "a362ea0a797c19d86701d2fe726797c65a7e45b26cb5e5a2876af637fe345a2d",
+    "src/evaluation/baselines.py": "d42599c7fa64eb2837e32f22f94c359c524cb1c8d3cd314bc20b1850b5a2cd62",
+    "src/evaluation/config.json": "3a2d8460ab35e047f783581d3fb9d657e1e39687c5aaf39b0741192e3ef46878",
+    "src/evaluation/evaluate.py": "9b5f6db9409100415ab79ada1ef964c7085496b99c9aed0b9d32182fa5345224",
+    "src/evaluation/report.py": "738f51e9f5dc684318e1504057e424da84a1d3bf423aed625a0d31a98593f468",
+    "src/evaluation/sensitivity.py": "d4430fd5c80a9f6d2b371409dc2eed46e32c513ebb8f08837c13892f8d0f03df"
+  },
+  "outputs": {
+    "outputs/evaluation/baseline_comparison.csv": "9ffcf0281c0645939dc067d61a478edeea76736e65716342ad5f428003d2168f",
+    "outputs/evaluation/events_table.csv": "a7ed7a119015f9de600456beaeee686e7c9386fe12289fd944008d5e8217ad72",
+    "outputs/evaluation/metrics.csv": "1db20feeb0917d27222122343d340f172d753073766f6f820f65816780f0addb",
+    "outputs/evaluation/sensitivity.csv": "be6707c32455ebc5484031c2b2568df896e80680782f55add717243d4190c18e",
+    "outputs/evaluation/summary.md": "2f30be6a698a3370d7ddb901780c9cd4d767f3c44cb300f058dea899f7313832"
+  },
+  "schema_version": 1
+}
