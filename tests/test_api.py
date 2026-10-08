@@ -97,6 +97,41 @@ def test_kpi_timestamps_do_not_fabricate_pipeline_run(client):
     assert payload["dashboard_checked_at"]
 
 
+def test_stale_ai_watchlist_is_not_used(monkeypatch):
+    refined = pd.DataFrame({
+        "symbole": ["AAA"], "date": ["2025-01-01"], "source": ["spike_detector"],
+        "status": ["NO_LOCAL_MATCH"], "volume_zscore": [4.0],
+    })
+    assessed = refined.copy()
+    assessed["date"] = "2024-12-31"
+    assessed["ai_assessment"] = "worth_investigating"
+
+    def fake_load(name, **_kwargs):
+        return assessed.copy() if name == "watchlist_ai_assessed.csv" else refined.copy()
+
+    monkeypatch.setattr(dashboard, "load_csv", fake_load)
+    current, fresh = dashboard.load_current_watchlist()
+    assert fresh is False
+    assert current.equals(refined)
+
+
+def test_matching_ai_watchlist_is_used(monkeypatch):
+    refined = pd.DataFrame({
+        "symbole": ["AAA"], "date": ["2025-01-01"], "source": ["spike_detector"],
+        "status": ["NO_LOCAL_MATCH"], "volume_zscore": [4.0],
+    })
+    assessed = refined.copy()
+    assessed["ai_assessment"] = "uncertain"
+
+    def fake_load(name, **_kwargs):
+        return assessed.copy() if name == "watchlist_ai_assessed.csv" else refined.copy()
+
+    monkeypatch.setattr(dashboard, "load_csv", fake_load)
+    current, fresh = dashboard.load_current_watchlist()
+    assert fresh is True
+    assert current.iloc[0]["ai_assessment"] == "uncertain"
+
+
 @pytest.mark.parametrize("ticker", ["BIAT", "BNA"])
 def test_stock_endpoint_reads_individual_ticker_files(client, ticker):
     response = client.get(f"/api/stock/{ticker}")

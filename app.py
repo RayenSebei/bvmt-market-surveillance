@@ -70,6 +70,10 @@ EVALUATION_DIR = Path(os.environ.get("EVALUATION_DIR", "./outputs/evaluation"))
 TICKER_FILE_PATTERN = re.compile(r"^[A-Z0-9]+$")
 NEWS_MATCH_STATUSES = {"NEWS_MATCH_FOUND", "EXPLAINED"}
 NO_MATCH_STATUSES = {"NO_LOCAL_MATCH", "UNEXPLAINED"}
+WATCHLIST_FRESHNESS_COLUMNS = (
+    "symbole", "date", "source", "priority", "status", "volume_zscore",
+    "return_zscore", "combined_anomaly", "matched_news_date", "matched_headline",
+)
 
 # ── SCRAPER SCRIPT PATH ──────────────────────────────────────────────────────
 # Point this to your existing scraper/pipeline entry point
@@ -131,6 +135,35 @@ def safe_http_url(value) -> str:
 
 def valid_ticker(ticker: str) -> bool:
     return bool(TICKER_FILE_PATTERN.fullmatch(ticker.strip().upper()))
+
+
+def watchlist_rows_match(refined: pd.DataFrame, assessed: pd.DataFrame) -> bool:
+    """Return whether an AI-assessed copy was derived from the current queue."""
+    if refined.empty or assessed.empty or len(refined) != len(assessed):
+        return False
+    columns = [
+        column for column in WATCHLIST_FRESHNESS_COLUMNS
+        if column in refined.columns and column in assessed.columns
+    ]
+    if not {"symbole", "date"}.issubset(columns):
+        return False
+    sort_columns = [column for column in ("symbole", "date", "source") if column in columns]
+
+    def normalized(frame: pd.DataFrame) -> pd.DataFrame:
+        result = frame[columns].copy()
+        for column in columns:
+            result[column] = result[column].fillna("").astype(str)
+        return result.sort_values(sort_columns).reset_index(drop=True)
+
+    return normalized(refined).equals(normalized(assessed))
+
+
+def load_current_watchlist() -> tuple[pd.DataFrame, bool]:
+    refined = load_csv("watchlist_refined.csv")
+    assessed = load_csv("watchlist_ai_assessed.csv")
+    if watchlist_rows_match(refined, assessed):
+        return assessed, True
+    return refined, False
 
 
 def has_news_match(value) -> bool:
@@ -558,14 +591,19 @@ def api_anomaly_detail(ticker, date):
         prices["date"] = pd.to_datetime(prices.get("date"), errors="coerce")
         prices = prices[prices["date"].between(target - timedelta(days=30), target + timedelta(days=30))].sort_values("date")
         chart = [{"date": row["date"].strftime("%Y-%m-%d"), "cloture": number(row.get("cloture"), 3)} for _, row in prices.iterrows() if pd.notna(row["date"])]
-    watch = load_csv("watchlist_ai_assessed.csv")
+    watch, ai_output_fresh = load_current_watchlist()
     watch_item = None
     if not watch.empty:
         watch["parsed_date"] = pd.to_datetime(watch.get("date"), errors="coerce")
         found = watch[(watch.get("symbole", "").astype(str).str.upper() == ticker) & (watch["parsed_date"] == target)]
         if not found.empty:
             row = found.iloc[0]
-            watch_item = {"tag": safe_val(row.get("tag"), "not available"), "ai_assessment": safe_val(row.get("ai_assessment"), "not available"), "ai_reasoning": safe_val(row.get("ai_reasoning"), "not available")}
+            watch_item = {
+                "tag": safe_val(row.get("tag"), "not available"),
+                "ai_assessment": safe_val(row.get("ai_assessment"), "not available"),
+                "ai_reasoning": safe_val(row.get("ai_reasoning"), "not available"),
+                "ai_output_fresh": ai_output_fresh,
+            }
     return jsonify({"flag": flag, "news": nearby_news, "prices": chart, "watchlist": watch_item})
 
 
@@ -796,9 +834,7 @@ def api_news_categories():
 @app.route("/api/watchlist")
 def api_watchlist():
     """Read-only refined triage queue and volume-decay cases."""
-    refined = load_csv("watchlist_ai_assessed.csv")
-    if refined.empty:
-        refined = load_csv("watchlist_refined.csv")
+    refined, ai_output_fresh = load_current_watchlist()
     assessment = request.args.get("assessment", "").strip().lower()
     tag = request.args.get("tag", "").strip().upper()
     if not refined.empty:
@@ -835,7 +871,13 @@ def api_watchlist():
             else "No local news match"
         ),
     } for _, row in decay.iterrows()]
-    return jsonify({"rows": rows, "total": len(rows), "decay": decay_rows, "decay_total": len(decay_rows)})
+    return jsonify({
+        "rows": rows,
+        "total": len(rows),
+        "decay": decay_rows,
+        "decay_total": len(decay_rows),
+        "ai_output_fresh": ai_output_fresh,
+    })
 
 
 @app.route("/api/overview")
