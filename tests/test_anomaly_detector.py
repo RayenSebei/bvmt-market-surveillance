@@ -67,15 +67,24 @@ def test_volume_signal_starts_after_sixty_prior_observations():
     assert bool(result.iloc[-1]["volume_anomaly"])
 
 
-def test_return_signal_requires_sixty_valid_prior_returns():
+@pytest.mark.parametrize(
+    ("valid_prior_returns", "expect_score"),
+    [(59, False), (60, True), (61, True)],
+)
+def test_return_signal_requires_sixty_valid_prior_returns(
+    valid_prior_returns, expect_score
+):
     closes = [10.0]
-    for _ in range(60):
+    for _ in range(valid_prior_returns):
         closes.append(closes[-1] * 1.001)
     closes.append(closes[-1] * 1.50)
     result = compute_signals(series([100] * len(closes), closes=closes))
-    assert pd.isna(result.iloc[-2]["return_zscore"])
-    assert pd.notna(result.iloc[-1]["return_zscore"])
-    assert bool(result.iloc[-1]["price_anomaly"])
+    if expect_score:
+        assert pd.notna(result.iloc[-1]["return_zscore"])
+        assert bool(result.iloc[-1]["price_anomaly"])
+    else:
+        assert pd.isna(result.iloc[-1]["return_zscore"])
+        assert not bool(result.iloc[-1]["price_anomaly"])
 
 
 def test_gap_delays_return_baseline_until_sixty_valid_returns():
@@ -84,6 +93,32 @@ def test_gap_delays_return_baseline_until_sixty_valid_returns():
     closes = np.linspace(10, 11, len(dates))
     result = compute_signals(series([100] * len(dates), closes=closes, dates=dates))
     assert pd.isna(result.iloc[-1]["return_zscore"])
+
+
+def test_gap_inside_baseline_does_not_blank_next_sixty_rows():
+    dates = list(pd.date_range("2025-01-01", periods=35, freq="D"))
+    dates += list(pd.date_range("2025-03-01", periods=35, freq="D"))
+    closes = [10.0]
+    for _ in range(len(dates) - 1):
+        closes.append(closes[-1] * 1.001)
+    result = compute_signals(series([100] * len(dates), closes=closes, dates=dates))
+    assert pd.isna(result.iloc[35]["daily_return"])
+    assert pd.notna(result.iloc[-1]["return_zscore"])
+
+
+def test_future_return_does_not_change_prior_return_score():
+    closes = [10.0]
+    for _ in range(61):
+        closes.append(closes[-1] * 1.001)
+    base = series([100] * len(closes), closes=closes)
+    future = series(
+        [100],
+        closes=[closes[-1] * 4],
+        dates=[pd.Timestamp("2025-03-04")],
+    )
+    before = compute_signals(base).iloc[-1]
+    after = compute_signals(pd.concat([base, future], ignore_index=True)).iloc[-2]
+    assert after["return_zscore"] == pytest.approx(before["return_zscore"])
 
 
 def test_default_raw_ohlc_policy_is_transparent_and_non_mutating():

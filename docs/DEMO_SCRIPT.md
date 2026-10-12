@@ -2,80 +2,58 @@
 
 ## Before the demo
 
-Run `python app.py` and open `http://127.0.0.1:5000`. Do not run the scraper during the presentation.
+Run `python app.py`, open `http://127.0.0.1:5000`, and click **Start guided tour** on Case Studies if you want the built-in prompts. Do not scrape during the presentation.
 
-## 0:00–0:35 — Introduce the project
+## 0:00–0:40 — Purpose and coverage
 
-Say: “This is a statistical screening tool for the Tunisian stock market. It finds unusual price or volume activity and organizes it for human review. The banner is important: a flag is not a verdict.”
+Say: “This is a statistical screening tool for human review, not a fraud verdict. It covers 85 symbols, 67,035 price observations through 12 October 2026, and 12,498 deduplicated news records.”
 
-Point out the local data period, the 85 covered tickers, and the visible disclaimer.
+## 0:40–1:25 — Overview
 
-## 0:35–1:15 — Overview
+Say: “The reference detector produced 1,414 statistical flags, including 21 where price and volume were both unusual. The calendar opens any day directly in the filtered queue, and the radar compares volume and return z-scores.”
 
-Click **Overview**.
+Press **Ctrl+K** and jump to a ticker to demonstrate the command palette.
 
-Say: “The overview shows the full 85-symbol dataset and 1,454 statistical flags. The charts have labelled axes and are rendered locally, so the dashboard does not depend on an external chart service.”
+## 1:25–2:10 — Anomaly Feed
 
-## 1:15–1:55 — Anomaly Feed
+Say: “This is the complete 1,414-row review queue. Filters, sorting, pagination, and CSV export all operate on the real generated results. A headline is context, not proof of cause.”
 
-Click **Anomaly Feed**.
+Open a row and point out the z-scores, as-of headline, later context, source link, and ±7-day news list.
 
-Say: “This is the complete 1,454-row review queue. I can filter, sort, paginate, and export the current result. This row has news nearby; the timing and source are visible here, but nearby news is context, not proof of cause.”
+## 2:10–2:55 — Stock Search
 
-Click a row with **News nearby**, open the drawer, and point to both plain-English z-score descriptions, the ±7-day news list, and the reminder about cause.
+Say: “The stock view supports line and candlestick modes, drag-to-zoom, volume, and a separate z-score panel with the reference threshold lines. Red markers reopen the same evidence drawer.”
 
-## 1:55–2:30 — Stock Search
+## 2:55–3:25 — Watchlist and Playground
 
-Click **Stock Search** and select a ticker.
+Say: “The refined queue has 16 rows and there are 16 separate volume-decay cases. The Detector Playground reads the precomputed sensitivity grid live, but it is exploratory and does not change the reference detector.”
 
-Say: “This page puts a signal back into its price history. Price and volume use separate labelled axes, the range buttons change the requested history, and hovering shows OHLCV plus the daily change.”
+## 3:25–4:30 — Evaluation and Case Studies
 
-Click a red marker and say: “The same contextual drawer opens from the chart, so the reviewer never loses the link between a signal and its source data.”
+Say: “The fixed primary window is 30 days before through five days after an event. All three sourced positives are now evaluable, and the reference detector hits 1 of 3. GIF is the hit; LSTR and SERVI are misses.”
 
-## 2:30–3:00 — Watchlist
+Continue: “The denominator changed from two to three only because newly downloaded SERVI prices now extend through 8 January 2024, three days before its event. SERVI was not evaluated before. No threshold, window, floor, or event date was tuned.”
 
-Click **Watchlist**.
+Say: “The return-only baseline also hits 1 of 3; volume-only hits 0 of 3. SOPAT is the negative control with zero flags in its primary window. Three events are a case study, not an accuracy estimate.”
 
-Say: “The refined queue contains 17 rows. The colour chips are draft opinions from an external model, never findings, and the reasoning remains expandable for human review. Below it are 15 separate volume-decay cases.”
+## 4:30–5:00 — Close
 
-## 3:00–3:20 — Pipeline Status
-
-Click **Pipeline Status**.
-
-Say: “This page shows which generated files are available. The dashboard does not start scraping. The safe default command runs analysis from existing local data, and a network refresh needs an explicit option.”
-
-## 3:20–4:35 — Evaluation
-
-Click **Evaluation**.
-
-Say: “The event window was fixed before calculation: 30 days before to 5 days after, with a secondary 60-day view. Three positive events have sources, but only two have enough trading data. The reference detector matches 1 of 2 events.”
-
-Continue: “The return-only baseline also matches 1 of 2, while the volume-only baseline matches 0 of 2. SOPAT is the negative control and has 0 flags in its primary window. With only two evaluable positives, this is a case study, not a performance estimate.”
-
-Point to the event audit and say: “TINV, UADH, TSI, CGF, and UBCI are marked `SOURCE_NEEDED` and excluded. I did not move the TINV date, even though its detector flags occur after the stored date.”
-
-## 4:35–5:00 — Close
-
-Say: “The main contribution is a complete and honest workflow: transparent rules, safe data handling, offline tests, source-aware evaluation, and a dashboard for review. The next step would be a larger independently sourced event set and an untouched future test period.”
+Say: “The contribution is an auditable workflow: incremental collection, preserved source rows, transparent rules, time-aware news context, portable provenance hashes, offline tests, and a dashboard designed for human review.”
 
 ## Likely questions
 
-### 1. Why did you use z-scores?
+### Is 1 of 3 an accuracy score?
 
-They are simple to explain and show how unusual one observation is compared with that ticker’s recent history. I also use log volume, standard-deviation floors, and gap exclusion to reduce common problems.
+No. Three events are much too few, and the label set is incomplete. It is reported only as a sourced case-study result.
 
-### 2. Does 1 of 2 events mean the detector is 50% accurate?
+### Why did SERVI enter the denominator?
 
-No. The denominator is far too small. I report “1 of 2 events” and call it a case-study result, not a general accuracy estimate.
+The October refresh downloaded four January 2024 SERVI observations through 8 January. That created window coverage for the 11 January event. SERVI is a miss; the detector was not tuned.
 
-### 3. Why is precision at 20 equal to 0 of 20?
+### Why is precision at 20 zero?
 
-None of the top 20 ranked flags falls near the few eligible labeled events. The label set is incomplete, so this measure can miss relevant but unlabeled events; it still shows that ranking quality needs more study.
+None of the 20 largest scores is inside a fixed positive-event window. Incomplete event labels mean that does not prove those flags are false positives.
 
-### 4. What does the AI model decide?
+### What did the new-row quality audit find?
 
-It does not decide a case. It writes a draft `worth_investigating` or `likely_noise` opinion with reasoning for a human reviewer. If the API fails, the pipeline keeps the previous output and continues safely.
-
-### 5. Why did the refined watchlist shrink from 107 rows to 12?
-
-The 107-row file was stale and did not match the current 12-row watchlist. The pipeline order was corrected so classification runs before refinement. No detector threshold or refinement parameter was changed.
+It listed 140 rows without modifying them: 134 zero-volume rows, five daily moves above 15%, and one OHLC inconsistency. Four large-return rows are flags; no zero-volume or OHLC-inconsistent row is flagged.

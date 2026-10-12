@@ -30,20 +30,26 @@ OUTPUT_PATHS = (
 )
 
 
+TEXT_SUFFIXES = {".csv", ".json", ".md", ".py", ".txt"}
+
+
 def file_sha256(path: Path) -> str | None:
+    """Hash text with canonical LF endings so manifests travel across OSes."""
     if not path.is_file():
         return None
     digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
+    content = path.read_bytes()
+    if path.suffix.lower() in TEXT_SUFFIXES:
+        content = content.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    digest.update(content)
     return digest.hexdigest()
 
 
 def build_manifest(root: Path = ROOT) -> dict:
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "hash_mode": "sha256_text_lf_normalized",
         "detector_policy": {
             "minimum_valid_prior_observations": 60,
             "ohlc_policy": "raw",

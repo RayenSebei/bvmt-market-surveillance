@@ -113,7 +113,7 @@ def main(output_dir=OUTPUT_DIR, title="Evaluation Summary") -> int:
         coverage_section = f"""
 ## Universe coverage audit
 
-The older combined file contains 60 symbols while 85 valid individual ticker files exist. The 25 omitted symbols are **{missing}**. The derived 85-symbol file contains 61,812 source rows; the current detector excludes TBIDX and known-incomplete PLTU. No scraper or protected source file was changed or run.
+The historical 60-symbol combined file omitted 25 symbols: **{missing}**. The refreshed 85-symbol file contains 67,035 source rows through 2026-10-12; the current detector excludes TBIDX and known-incomplete PLTU. The incremental refresh preserved every pre-snapshot source row.
 
 The archived 60-symbol evaluation used the earlier 20-observation warm-up and silent close clamping. It is retained only as historical provenance and is **not directly comparable** to the corrected 60-valid-observation, raw-OHLC reference reported here.
 """
@@ -160,7 +160,7 @@ Precision@k ranks every reference flag by **`max(abs(volume_zscore), abs(return_
 |---:|---|---|---:|---|
 {chr(10).join(top20_lines)}
 
-The **0 of 20** result means none of these 20 highest-scoring flags falls inside the fixed -30/+5-day window around either of the 2 source-backed positive events with primary-window coverage. It does not establish that the 20 flags are false positives: the repository event list is intentionally small and incomplete.
+The **0 of 20** result means none of these 20 highest-scoring flags falls inside the fixed -30/+5-day windows around the {denominator} source-backed positive events with primary-window coverage. It does not establish that the 20 flags are false positives: the repository event list is intentionally small and incomplete.
 
 ## Baseline comparison
 
@@ -168,7 +168,7 @@ The **0 of 20** result means none of these 20 highest-scoring flags falls inside
 |---|---:|---:|---|---|---|---|
 {chr(10).join(baseline_lines)}
 
-The reference detector does **not** beat the absolute-return-only baseline on recall or precision: both match {ratio_text(reference_baseline.recall_30d, denominator)} in the primary window, {ratio_text(reference_baseline.recall_60d, denominator60)} in the secondary window, and {count_text(reference_baseline.precision_at_20, 20, 'flags')} at k=20, while the reference produces {int(reference_baseline.flag_count):,} flags versus {int(return_baseline.flag_count):,}. It also does not improve recall over the volume-only baseline in this tiny event set. The random method keeps the reference number of flags per ticker and averages 1,000 deterministic seeds; its non-integer event and SOPAT counts are averages, not observed cases.
+The reference detector does **not** beat the absolute-return-only baseline on recall or precision: both match {ratio_text(reference_baseline.recall_30d, denominator)} in the primary window, {ratio_text(reference_baseline.recall_60d, denominator60)} in the secondary window, and {count_text(reference_baseline.precision_at_20, 20, 'flags')} at k=20, while the reference produces {int(reference_baseline.flag_count):,} flags versus {int(return_baseline.flag_count):,}. It does improve recall over the volume-only baseline in this tiny event set. The random method keeps the reference number of flags per ticker and averages 1,000 deterministic seeds; its non-integer event and SOPAT counts are averages, not observed cases.
 
 ## Sensitivity grid
 

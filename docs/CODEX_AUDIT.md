@@ -1,5 +1,7 @@
 # BVMT Market Surveillance — independent repository audit and Codex implementation brief
 
+> **Historical audit snapshot:** all counts and dates below describe the superseded pre-October-2026 state. Current figures are in `REPORT.md`.
+
 **Reviewed snapshot:** user-uploaded `bvmt-market-surveillance-master (2).zip`, dated October 7, 2026.  This review covers the uploaded snapshot, not unverified changes made after it.
 
 **Goal:** a defensible academic statistical screening tool and a high-quality, responsive analyst dashboard. **Never** represent statistical anomalies or AI assessments as confirmed fraud, misconduct, or calibrated fraud risk. Retain clear non-affiliation disclosures.

@@ -1,4 +1,3 @@
-import json
 from pathlib import Path
 import shutil
 import uuid
@@ -42,3 +41,11 @@ def test_invalid_manifest_is_reported_without_exception(writable_tree):
     path = writable_tree / "manifest.json"
     path.write_text("not json", encoding="utf-8")
     assert provenance.verify_manifest(path, writable_tree)["mismatches"] == ["manifest_invalid"]
+
+
+def test_text_hash_is_stable_across_lf_and_crlf(writable_tree):
+    path = writable_tree / "portable.csv"
+    path.write_bytes(b"a,b\n1,2\n")
+    lf_hash = provenance.file_sha256(path)
+    path.write_bytes(b"a,b\r\n1,2\r\n")
+    assert provenance.file_sha256(path) == lf_hash

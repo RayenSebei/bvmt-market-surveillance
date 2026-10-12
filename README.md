@@ -6,12 +6,12 @@ A reproducible statistical screening project for the Bourse de Valeurs Mobilièr
 
 ## What is included
 
-- An 85-symbol delivered analysis dataset with 61,812 source observations covering 17 June 2021 to 17 June 2026.
+- An 85-symbol analysis dataset with 67,035 source observations covering 17 June 2021 to 12 October 2026.
 - A transparent rolling z-score detector for volume and returns.
 - News cross-reference, rule-based classification, and watchlist refinement.
 - Optional Groq-assisted triage whose output is a draft opinion for human review.
 - A source-audited, case-study-level evaluation with fixed event windows, simple baselines, sensitivity reporting, and a negative control.
-- A seven-page, responsive Flask dashboard with native SVG charts and an offline pytest suite.
+- An eight-page, responsive Flask dashboard with native SVG charts and an offline pytest suite.
 
 ## Dashboard v2
 
@@ -19,8 +19,9 @@ A reproducible statistical screening project for the Bourse de Valeurs Mobilièr
 - Full Anomaly Feed with server-side filters, sorting, pagination, CSV export, and contextual detail drawers.
 - Stock Search with price and volume axes, OHLCV hover tooltips, range controls, and clickable flag markers.
 - News Feed with ticker/category filters and links from matched headlines back to flag detail.
-- Watchlist with 14 current refined cases and 15 volume-decay cases; older AI drafts are hidden when their source queue is stale.
+- Watchlist with 16 current refined cases and 16 volume-decay cases; older AI drafts are hidden when their source queue is stale.
 - Help/glossary, keyboard-friendly drawers, loading/error states, responsive layouts, and an optional saved dark theme.
+- Ctrl+K page/ticker navigation, a clickable flag calendar, surveillance radar, candlesticks, z-score panel, drag zoom, detector playground, and guided GIF/LSTR case studies.
 
 ![Dashboard overview](docs/screenshots/overview.png)
 ![Stock Search with labelled price and volume panels](docs/screenshots/stock-search.png)
@@ -129,21 +130,24 @@ docs/DEMO_SCRIPT.md          five-minute presentation guide
 
 The evaluation window was fixed before calculation: 30 calendar days before through 5 days after an event, with a secondary 60-day lookback. The evaluation date is the earliest public suspension, court ruling, or first announcement in the stored evidence; original labels and later dates remain visible.
 
-- 3 source-backed positive events; 2 have trading data in the primary window and 3 in the secondary window.
-- Reference detector: 0 of 2 evaluable events in the primary window and 0 of 3 events in the secondary window.
-- 947 flags, equal to 2.397 flags per observed ticker-year.
-- 14 refined-watchlist rows. The prior 17-row Groq output belongs to the superseded queue and is not shown as current.
+- 3 source-backed positive events; all 3 now have trading data in both evaluation windows.
+- Reference detector: 1 of 3 evaluable events in both the primary and secondary windows.
+- 1,414 flags, equal to 3.369 flags per observed ticker-year.
+- 16 refined-watchlist rows. The prior 17-row Groq output belongs to the superseded queue and is not shown as current.
 - Precision at 10, 20, and 50: 0 of 10, 0 of 20, and 0 of 50 flags near a labeled event.
 - SOPAT negative control: 0 flags in the primary window.
-- Volume-only and return-only baselines also match 0 of 2 primary-window events.
-- No corrected reference flag matches an evaluable positive event in either fixed window.
-- The reference does not beat the return-only baseline on recall or precision and produces 176 more flags.
+- The volume-only baseline matches 0 of 3 events; the return-only baseline matches 1 of 3.
+- The GIF flag on 2024-10-22 is the single sourced-event hit, three days before suspension.
+- LSTR is a miss. SERVI is also a miss and is newly evaluable—not newly tuned—because the refresh downloaded SERVI observations through 2024-01-08, three days before its event.
+- The reference does not beat the return-only baseline on recall or precision and produces 177 more flags.
 
 These are case-study results, not a statistical performance estimate. See [outputs/evaluation/summary.md](outputs/evaluation/summary.md) and [docs/REPORT.md](docs/REPORT.md).
 
+The news refresh reconciles exactly: the canonical pre-refresh combined file had 11,850 unique rows, and 648 additions produced 12,498. A former 11,944 count included 94 rows from the excluded `news_GIF_test.csv` test artifact. The 2026-10-12 price session was retained after confirming the scrape completed after the exchange session and that its 62-symbol coverage matches recent full sessions. A read-only audit of all newly scraped OHLC violations, zero-volume rows, and greater-than-15% returns is available at [docs/NEW_SCRAPE_ROW_AUDIT.csv](docs/NEW_SCRAPE_ROW_AUDIT.csv).
+
 ## Limitations
 
-- Only 3 positive events have repository sources, and only 2 are evaluable in the primary window.
+- Only 3 positive events have repository sources; all are now evaluable, which is still far too small for a performance estimate.
 - TINV, UADH, TSI, CGF, and UBCI remain `SOURCE_NEEDED` and are excluded from headline metrics. CGF and TSI have no ticker files, are not in the dataset, and cannot be evaluated.
 - Labels are incomplete, so the reported precision measure undercounts unknown relevant events.
 - There is no independent test set; reference parameters were chosen before this evaluation, and the sensitivity grid is reporting only.
@@ -157,7 +161,6 @@ These are case-study results, not a statistical performance estimate. See [outpu
 - [Project report](docs/REPORT.md)
 - [Demo script](docs/DEMO_SCRIPT.md)
 - [Evaluation summary](outputs/evaluation/summary.md)
-- [Full-universe coverage audit](outputs/evaluation/coverage_audit.md)
 - [Engineering decisions](docs/DECISIONS.md)
 - [Delivery status](docs/STATUS.md)
 

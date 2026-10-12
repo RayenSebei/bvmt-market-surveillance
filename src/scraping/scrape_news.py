@@ -1,180 +1,226 @@
-"""
-Phase 2 — Scrape per-ticker news/disclosure timelines from ilboursa.com.
+"""Incrementally merge per-symbol ilboursa news archives."""
 
-Each ticker has a dedicated news archive page, e.g.:
-    https://www.ilboursa.com/marches/news_valeur?s=GIF
+from __future__ import annotations
 
-This gives dated headlines (results announcements, court rulings, BVMT
-decisions, capital increases, etc.) per company — the closest practical
-proxy for "was there public information on this date" without needing
-BVMT's JavaScript-heavy avis-decisions page (which couldn't be inspected
-from outside due to client-side rendering).
-
-WHY THIS MATTERS: this is what finally lets the anomaly/decay detectors
-auto-classify a flagged date as EXPLAINED (matching news exists nearby —
-like SOPAT's buyout, or GIF's bankruptcy ruling) vs UNEXPLAINED (no news
-found at all — the genuinely suspicious case, like Tuninvest's pre-results
-buying). Without this, every flag needs manual research, which doesn't scale.
-
-Usage:
-    python src/scraping/scrape_news.py
-"""
-
-import os
+import argparse
 import re
 import time
+from pathlib import Path
 
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 
-from src.scraping.scrape_ilboursa import HEADERS
+try:
+    from src.scraping.scrape_ilboursa import (
+        HEADERS,
+        atomic_write_csv,
+        discover_tickers,
+        ticker_inventory,
+    )
+except ModuleNotFoundError:  # direct ``python src/scraping/scrape_news.py``
+    from scrape_ilboursa import (  # type: ignore[no-redef]
+        HEADERS,
+        atomic_write_csv,
+        discover_tickers,
+        ticker_inventory,
+    )
 
 NEWS_URL = "https://www.ilboursa.com/marches/news_valeur"
-OUT_DIR = "bvmt_data"
-DATE_PATTERN = re.compile(r"(\d{2}/\d{2}/\d{2,4})")
+BASE_URL = "https://www.ilboursa.com/marches/"
+NEWS_COLUMNS = ["date_str", "time_str", "headline", "url"]
+NEWS_KEY = ["date_str", "headline", "url"]
+NEWS_FILE_PATTERN = re.compile(r"^news_([A-Z0-9]+)\.csv$")
 
 
 def fetch_news_page(session, ticker, page=1):
     params = {"s": ticker}
     if page > 1:
-        params["p"] = page  # confirmed from real pagination markup
-    resp = session.get(NEWS_URL, params=params, timeout=15)
-    resp.raise_for_status()
-    return resp.text, resp.status_code
+        params["p"] = page
+    response = session.get(NEWS_URL, params=params, timeout=30)
+    response.raise_for_status()
+    return response.text
 
 
-BASE_URL = "https://www.ilboursa.com/marches/"
+def fetch_news_page_with_retry(session, ticker, page, retries=3, pause=1.5):
+    last_error = "unknown error"
+    for attempt in range(1, retries + 1):
+        try:
+            return fetch_news_page(session, ticker, page), None
+        except requests.RequestException as exc:
+            last_error = str(exc)
+        if attempt < retries:
+            time.sleep(pause * attempt)
+    return None, {"ticker": ticker, "page": page, "reason": last_error}
 
 
 def parse_news_items(html):
-    """
-    Confirmed structure from real page source:
-        <span class="sp1">12/11/24 09:34</span>
-        <a href="slug-of-article_49247">Headline text</a><br />
-    Date and headline are siblings — date in span.sp1, headline in the
-    immediately-following <a> tag. href is a relative slug under /marches/.
-    """
     soup = BeautifulSoup(html, "html.parser")
     items = []
-
     for span in soup.find_all("span", class_="sp1"):
-        date_raw = span.get_text(strip=True)  # format: "DD/MM/YY HH:MM"
-        parts = date_raw.split(" ", 1)
-        date_str = parts[0] if parts else None
-        time_str = parts[1] if len(parts) > 1 else None
-
-        a = span.find_next_sibling("a")
-        if a is None:
+        raw = span.get_text(strip=True)
+        parts = raw.split(" ", 1)
+        anchor = span.find_next_sibling("a")
+        if anchor is None or not anchor.get("href", ""):
             continue
-
-        headline = a.get_text(strip=True)
-        href = a.get("href", "")
-        if not href:
-            continue
-
-        full_url = href if href.startswith("http") else BASE_URL + href
+        href = anchor.get("href", "")
         items.append({
-            "date_str": date_str,
-            "time_str": time_str,
-            "headline": headline,
-            "url": full_url,
+            "date_str": parts[0] if parts else "",
+            "time_str": parts[1] if len(parts) > 1 else "",
+            "headline": anchor.get_text(strip=True),
+            "url": href if href.startswith("http") else BASE_URL + href,
         })
-
     return items
 
 
-def scrape_ticker_news(session, ticker, max_pages=30, pause=1.5):
-    all_items = []
-    seen_urls = set()
+def normalize_news(frame: pd.DataFrame, symbol: str) -> pd.DataFrame:
+    result = frame.copy()
+    missing = sorted(set(NEWS_COLUMNS) - set(result.columns))
+    if missing:
+        raise ValueError(f"{symbol}: missing news columns {missing}")
+    result = result[NEWS_COLUMNS].fillna("")
+    parsed = pd.to_datetime(result["date_str"], format="%d/%m/%y", errors="coerce")
+    parsed = parsed.fillna(
+        pd.to_datetime(result["date_str"], format="%d/%m/%Y", errors="coerce")
+    )
+    if parsed.isna().any() or result["headline"].astype(str).str.strip().eq("").any():
+        raise ValueError(f"{symbol}: invalid news date or empty headline")
+    result["_parsed_date"] = parsed
+    result = result.drop_duplicates(NEWS_KEY, keep="first")
+    return result.sort_values(["_parsed_date", "time_str"], ascending=[False, False]).drop(columns="_parsed_date").reset_index(drop=True)
 
+
+def load_existing_news(path: Path, symbol: str) -> pd.DataFrame:
+    if not path.exists():
+        return pd.DataFrame(columns=NEWS_COLUMNS)
+    return normalize_news(pd.read_csv(path), symbol)
+
+
+def news_keys(frame: pd.DataFrame) -> set[tuple[str, str, str]]:
+    return set(frame[NEWS_KEY].astype(str).itertuples(index=False, name=None))
+
+
+def scrape_incremental_ticker_news(
+    session,
+    ticker: str,
+    existing: pd.DataFrame,
+    max_pages: int = 30,
+    pause: float = 1.5,
+) -> tuple[pd.DataFrame, list[dict]]:
+    known = news_keys(existing)
+    collected, failures = [], []
     for page in range(1, max_pages + 1):
-        print(f"  [{ticker}] fetching news page {page}...")
-        try:
-            html, status = fetch_news_page(session, ticker, page=page)
-        except Exception as e:
-            print(f"  [{ticker}] request failed on page {page}: {e}")
+        html, failure = fetch_news_page_with_retry(session, ticker, page, pause=pause)
+        if failure is not None:
+            failures.append(failure)
             break
-
         items = parse_news_items(html)
-        new_items = [it for it in items if it["url"] not in seen_urls]
-
-        if not new_items:
-            if page == 1:
-                debug_path = os.path.join(OUT_DIR, f"debug_{ticker}_page1.html")
-                with open(debug_path, "w", encoding="utf-8") as f:
-                    f.write(html)
-                print(f"  [{ticker}] ZERO items found on page 1 (status {status}, "
-                      f"{len(html)} chars). Raw HTML saved to {debug_path} for inspection.")
-                print(f"  First 500 chars of response:\n{html[:500]}")
-            else:
-                print(f"  [{ticker}] no new items on page {page} — stopping "
-                      f"(reached end of this ticker's news history).")
+        if not items:
             break
-
-        for it in new_items:
-            seen_urls.add(it["url"])
-        all_items.extend(new_items)
+        page_frame = normalize_news(pd.DataFrame(items), ticker)
+        unseen = page_frame[
+            ~page_frame[NEWS_KEY].astype(str).apply(tuple, axis=1).isin(known)
+        ]
+        if not unseen.empty:
+            collected.append(unseen)
+            known.update(news_keys(unseen))
+        if len(unseen) == 0 and not existing.empty:
+            break
         time.sleep(pause)
+    if not collected:
+        return pd.DataFrame(columns=NEWS_COLUMNS), failures
+    return normalize_news(pd.concat(collected, ignore_index=True), ticker), failures
 
-    return all_items
+
+def merge_news(existing: pd.DataFrame, incoming: pd.DataFrame, symbol: str) -> tuple[pd.DataFrame, int]:
+    before = news_keys(existing)
+    merged = normalize_news(pd.concat([existing, incoming], ignore_index=True), symbol)
+    return merged, len(news_keys(merged) - before)
+
+
+def news_symbols(data_dir: Path) -> set[str]:
+    result = set()
+    for path in data_dir.glob("news_*.csv"):
+        match = NEWS_FILE_PATTERN.fullmatch(path.name)
+        if match:
+            result.add(match.group(1))
+    return result
+
+
+def rebuild_combined_news(data_dir: Path) -> pd.DataFrame:
+    frames = []
+    for symbol in sorted(news_symbols(data_dir)):
+        frame = load_existing_news(data_dir / f"news_{symbol}.csv", symbol)
+        if frame.empty:
+            continue
+        frame.insert(0, "symbole", symbol)
+        frames.append(frame)
+    if not frames:
+        raise ValueError("No per-symbol news files are available")
+    combined = pd.concat(frames, ignore_index=True)
+    combined = combined.drop_duplicates(["symbole", *NEWS_KEY], keep="first")
+    parsed = pd.to_datetime(combined["date_str"], format="%d/%m/%y", errors="coerce")
+    parsed = parsed.fillna(pd.to_datetime(combined["date_str"], format="%d/%m/%Y", errors="coerce"))
+    combined["_parsed_date"] = parsed
+    combined = combined.sort_values(["_parsed_date", "time_str"], ascending=[False, False]).drop(columns="_parsed_date")
+    atomic_write_csv(combined, data_dir / "_all_news_combined.csv")
+    return combined.reset_index(drop=True)
+
+
+def incremental_news_update(data_dir: Path, pause: float = 1.5) -> pd.DataFrame:
+    session = requests.Session()
+    session.headers.update(HEADERS)
+    discovered = discover_tickers(session)
+    inventory = dict(ticker_inventory(data_dir, discovered))
+    for symbol in news_symbols(data_dir):
+        inventory.setdefault(symbol, symbol)
+    failures, rows = [], []
+    symbols = sorted(inventory)
+    for position, symbol in enumerate(symbols, start=1):
+        print(f"[{position}/{len(symbols)}] Updating news for {symbol}...", flush=True)
+        path = data_dir / f"news_{symbol}.csv"
+        existing = load_existing_news(path, symbol)
+        incoming, ticker_failures = scrape_incremental_ticker_news(
+            session, symbol, existing, pause=pause
+        )
+        failures.extend(ticker_failures)
+        merged, added = merge_news(existing, incoming, symbol)
+        if added or (not path.exists() and not merged.empty):
+            atomic_write_csv(merged, path)
+        rows.append({
+            "ticker": symbol,
+            "items_before": len(existing),
+            "items_added": added,
+            "status": "failed" if ticker_failures and incoming.empty else "updated",
+        })
+        print(f"  {symbol}: +{added} news items", flush=True)
+    atomic_write_csv(
+        pd.DataFrame(failures, columns=["ticker", "page", "reason"]),
+        data_dir / "_failed_news_pages.csv",
+    )
+    combined = rebuild_combined_news(data_dir)
+    report = pd.DataFrame(rows)
+    print(
+        f"News update: {int(report['items_added'].sum())} items added; "
+        f"{int(report['items_added'].gt(0).sum())} tickers updated; "
+        f"{int(report['status'].eq('failed').sum())} failed."
+    )
+    print(f"Combined news: {len(combined)} unique symbol/date/headline/url rows.")
+    return report
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--data-dir", type=Path, default=Path("bvmt_data"))
+    parser.add_argument("--pause", type=float, default=1.5)
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = build_parser().parse_args(argv)
+    incremental_news_update(args.data_dir, args.pause)
+    return 0
 
 
 if __name__ == "__main__":
-    os.makedirs(OUT_DIR, exist_ok=True)
-    session = requests.Session()
-    session.headers.update(HEADERS)
-
-    test_ticker = "GIF"
-    print(f"Testing news scraper on {test_ticker}...\n")
-    test_items = scrape_ticker_news(session, test_ticker)
-
-    test_df = pd.DataFrame(test_items)
-    test_out = os.path.join(OUT_DIR, f"news_{test_ticker}_test.csv")
-    test_df.to_csv(test_out, index=False)
-    print(f"\nFound {len(test_items)} news items for {test_ticker}. Saved to {test_out}")
-
-    if len(test_items) < 15:
-        print("\nFewer items than expected from the known GIF timeline (~20).")
-        print("Check the test CSV before trusting a full run — stopping here.")
-    else:
-        print("\nLooks right — proceeding to scrape ALL discovered tickers.")
-        print("=" * 60)
-
-        from src.scraping.scrape_ilboursa import discover_tickers
-        tickers = discover_tickers(session)
-        if not tickers:
-            print("Ticker discovery failed — falling back to price data tickers.")
-            combined_path = os.path.join(OUT_DIR, "_all_tickers_combined.csv")
-            if os.path.exists(combined_path):
-                existing = pd.read_csv(combined_path)
-                tickers = [(t, t) for t in existing["symbole"].unique()]
-
-        all_news = []
-        for code, name in tickers:
-            out_path = os.path.join(OUT_DIR, f"news_{code}.csv")
-            if os.path.exists(out_path):
-                print(f"Skipping {code} ({name}) — already scraped.")
-                existing = pd.read_csv(out_path)
-                existing.insert(0, "symbole", code)
-                all_news.append(existing)
-                continue
-
-            print(f"\nScraping news for {code} ({name})...")
-            items = scrape_ticker_news(session, code)
-            if not items:
-                print(f"  No news found for {code}, skipping.")
-                continue
-
-            df = pd.DataFrame(items)
-            df.to_csv(out_path, index=False)
-            df.insert(0, "symbole", code)
-            all_news.append(df)
-            print(f"  Saved {len(df)} items to {out_path}")
-
-        if all_news:
-            master = pd.concat(all_news, ignore_index=True)
-            master_path = os.path.join(OUT_DIR, "_all_news_combined.csv")
-            master.to_csv(master_path, index=False)
-            print(f"\nDone. Combined news file: {len(master)} items "
-                  f"across {len(all_news)} tickers -> {master_path}")
+    raise SystemExit(main())

@@ -24,15 +24,17 @@ def client(monkeypatch):
 
 
 @pytest.mark.parametrize("method,path", [
-    ("get", "/"), ("get", "/wallstreet"), ("get", "/v2"),
+    ("get", "/"),
     ("get", "/api/status"),
-    ("get", "/api/scrape/status"), ("get", "/api/kpis"),
+    ("get", "/api/kpis"),
     ("get", "/api/anomalies"), ("get", "/api/anomalies/timeline"),
     ("get", "/api/anomalies/search"), ("get", "/api/anomaly/AAA/2025-01-02"),
     ("get", "/api/news/recent"), ("get", "/api/news/by_ticker?ticker=AAA"),
     ("get", "/api/stock/AAA"), ("get", "/api/tickers"),
     ("get", "/api/summary"), ("get", "/api/news/categories"),
     ("get", "/api/watchlist"), ("get", "/api/overview"),
+    ("get", "/api/overview/calendar"), ("get", "/api/overview/radar"),
+    ("get", "/api/playground"), ("get", "/api/case-studies"),
     ("get", "/api/evaluation/metrics"), ("get", "/api/evaluation/baselines"),
     ("get", "/api/evaluation/sensitivity"), ("get", "/api/evaluation/events"),
 ])
@@ -55,6 +57,20 @@ def test_tickers_merge_combined_and_individual_files(client):
 def test_pipeline_execution_is_disabled_by_default(client):
     response = client.post("/api/scrape", json={"mode": "analysis"})
     assert response.status_code == 404
+    assert client.get("/api/scrape/status").status_code == 404
+
+
+def test_pipeline_status_log_requires_bearer_token(client, monkeypatch):
+    monkeypatch.setitem(dashboard.app.config, "PIPELINE_API_ENABLED", True)
+    monkeypatch.setitem(dashboard.app.config, "PIPELINE_API_TOKEN", "test-secret")
+    dashboard.scrape_state["log"] = ["sensitive pipeline detail"]
+
+    assert client.get("/api/scrape/status").status_code == 401
+    response = client.get(
+        "/api/scrape/status", headers={"Authorization": "Bearer test-secret"}
+    )
+    assert response.status_code == 200
+    assert response.get_json()["log"] == ["sensitive pipeline detail"]
 
 
 def test_pipeline_execution_requires_token_and_explicit_mode(client, monkeypatch):
@@ -154,6 +170,23 @@ def test_stock_range_is_optional_and_flag_details_are_additive(client):
     all_rows = client.get("/api/stock/AAA?range=ALL").get_json()
     assert default == all_rows
     assert all_rows[1]["flag"]["signal"] == "Volume + Price"
+    assert "volume_zscore" in all_rows[1]
+    assert "return_zscore" in all_rows[1]
+
+
+def test_calendar_and_radar_endpoints_use_real_flag_rows(client):
+    calendar = client.get("/api/overview/calendar").get_json()
+    radar = client.get("/api/overview/radar").get_json()
+    assert sum(day["count"] for day in calendar) == len(radar)
+    assert {"volume_zscore", "return_zscore", "news_status"} <= set(radar[0])
+
+
+def test_playground_is_read_only_generated_grid(client):
+    payload = client.get("/api/playground?z=3&window=60").get_json()
+    assert payload["flag_count"] == 10
+    assert payload["exploratory"] is True
+    assert payload["changes_reference_detector"] is False
+    assert client.get("/api/playground?z=2.7&window=60").status_code == 400
 
 
 def test_recent_news_optional_limit_and_ticker(client):
