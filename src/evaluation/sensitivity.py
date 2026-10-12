@@ -7,6 +7,7 @@ import pandas as pd
 
 from src.detection.anomaly_detector import (
     MAX_RETURN_GAP_DAYS, MIN_LOG_VOLUME_STD, MIN_RETURN_STD,
+    valid_prior_rolling_stats,
 )
 from src.evaluation.evaluate import (
     OUTPUT_DIR, eligible_positive_events, event_hits, flags_per_ticker_year,
@@ -25,8 +26,10 @@ def parameter_flags(trading: pd.DataFrame, window: int, cutoff: float) -> pd.Dat
         log_volume = np.log1p(group["volume"])
         volume_mean = log_volume.shift(1).rolling(window, min_periods=window).mean()
         volume_std = log_volume.shift(1).rolling(window, min_periods=window).std().clip(lower=MIN_LOG_VOLUME_STD)
-        return_mean = group["daily_return"].shift(1).rolling(window, min_periods=window).mean()
-        return_std = group["daily_return"].shift(1).rolling(window, min_periods=window).std().clip(lower=MIN_RETURN_STD)
+        return_mean, return_std = valid_prior_rolling_stats(
+            group["daily_return"], window
+        )
+        return_std = return_std.clip(lower=MIN_RETURN_STD)
         group["volume_zscore"] = (log_volume - volume_mean) / volume_std
         group["return_zscore"] = (group["daily_return"] - return_mean) / return_std
         frames.append(group[(group["volume_zscore"] > cutoff) | (group["return_zscore"].abs() > cutoff)])

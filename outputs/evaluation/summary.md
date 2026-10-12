@@ -28,45 +28,45 @@ This is a case-study-level evaluation, not a statistical performance estimate. T
 
 ## Reference results
 
-- Primary recall: **0 of 2 events**.
-- Secondary recall: **0 of 3 events**.
+- Primary recall: **1 of 2 events**.
+- Secondary recall: **1 of 3 events**.
 - Ranked known-event matches at k=10, 20, 50: **0 of 10 flags, 0 of 20 flags, 0 of 50 flags**, respectively. This underestimates real precision because most relevant events are not labeled.
-- Flag load: **947 flags**, or **2.397 flags per ticker-year**.
+- Flag load: **1335 flags**, or **3.380 flags per ticker-year**.
 - Negative-control behavior: **0 flags in 1 SOPAT window**.
-- The fixed z=3.0, 60-day reference cell independently reports **947 flags** and **0 of 2 events**.
+- The fixed z=3.0, 60-day reference cell independently reports **1335 flags** and **1 of 2 events**.
 
 ### Lead time for each hit
 
-- No evaluable positive event had a matching flag.
+- **GIF: 3 days to primary date 2024-10-25**; **21 days to secondary date 2024-11-12** (first matching flag 2024-10-22).
 
 ### Ranking and top 20 flags
 
 Precision@k ranks every reference flag by **`max(abs(volume_zscore), abs(return_zscore))`**, highest first. Ties are resolved by earlier date and then ticker symbol. The displayed z-score is that ranking score. This rule was fixed independently of the event labels.
 
-“Illiquid” means the ticker's median daily volume is at or below the 25th percentile across the 83 tickers represented in the delivered reference flag set. The resulting cutoff is **500.0 shares per observed trading day**; this descriptive label does not affect ranking or detection.
+“Illiquid” means the ticker's median daily volume is at or below the 25th percentile across the 83 tickers represented in the delivered reference flag set. The resulting cutoff is **350.0 shares per observed trading day**; this descriptive label does not affect ranking or detection.
 
 | Rank | Ticker | Date | Ranking z-score | Illiquid |
 |---:|---|---|---:|---|
 | 1 | CITY | 2026-04-27 | 21.748 | No |
 | 2 | CITY | 2026-04-28 | 19.703 | No |
-| 3 | PGH | 2021-11-30 | 17.375 | No |
-| 4 | ARTES | 2023-07-31 | 11.690 | No |
-| 5 | ICF | 2022-09-01 | 11.664 | Yes |
-| 6 | SOTET | 2025-07-29 | 11.502 | No |
-| 7 | BNA | 2025-06-17 | 11.060 | No |
-| 8 | ARTES | 2022-07-06 | 11.018 | No |
-| 9 | BIAT | 2024-11-29 | 10.447 | No |
-| 10 | CITY | 2024-07-08 | 9.696 | No |
-| 11 | SMART | 2025-06-19 | 9.049 | No |
-| 12 | STAR | 2025-09-17 | 8.657 | No |
-| 13 | CITY | 2022-07-20 | 8.634 | No |
-| 14 | TJARI | 2021-12-06 | 8.489 | No |
-| 15 | ASSMA | 2026-06-17 | 7.671 | Yes |
-| 16 | ASSAD | 2021-09-29 | 7.542 | No |
-| 17 | SAM | 2023-07-31 | 7.452 | No |
-| 18 | STPAP | 2026-04-27 | 7.398 | No |
-| 19 | TJARI | 2025-04-30 | 7.360 | No |
-| 20 | TPR | 2022-07-27 | 7.228 | No |
+| 3 | BT | 2022-05-10 | 18.594 | No |
+| 4 | PGH | 2021-11-30 | 17.375 | No |
+| 5 | ADWYA | 2022-06-13 | 17.048 | No |
+| 6 | SOMOC | 2025-05-13 | 14.513 | No |
+| 7 | TJARI | 2023-04-05 | 12.246 | No |
+| 8 | SAM | 2023-04-20 | 12.240 | No |
+| 9 | SIPHA | 2023-11-29 | 12.018 | Yes |
+| 10 | STAR | 2025-03-12 | 11.968 | No |
+| 11 | ARTES | 2023-07-31 | 11.690 | No |
+| 12 | ICF | 2022-09-01 | 11.664 | No |
+| 13 | SOTET | 2025-07-29 | 11.502 | No |
+| 14 | BNA | 2025-06-17 | 11.060 | No |
+| 15 | ARTES | 2022-07-06 | 11.018 | No |
+| 16 | BIAT | 2024-11-29 | 10.447 | No |
+| 17 | TINV | 2025-10-22 | 10.300 | Yes |
+| 18 | NBL | 2025-06-11 | 10.010 | No |
+| 19 | CITY | 2024-07-08 | 9.696 | No |
+| 20 | SITS | 2025-10-10 | 9.274 | No |
 
 The **0 of 20** result means none of these 20 highest-scoring flags falls inside the fixed -30/+5-day window around either of the 2 source-backed positive events with primary-window coverage. It does not establish that the 20 flags are false positives: the repository event list is intentionally small and incomplete.
 
@@ -74,35 +74,35 @@ The **0 of 20** result means none of these 20 highest-scoring flags falls inside
 
 | Method | Flags | Flags/ticker-year | Recall -30/+5 | Recall -60/+5 | Precision@20 | SOPAT-window flags |
 |---|---:|---:|---|---|---|---|
-| reference_union | 947 | 2.397 | 0 of 2 events | 0 of 3 events | 0 of 20 flags | 0 flags in 1 window |
+| reference_union | 1335 | 3.380 | 1 of 2 events | 1 of 3 events | 0 of 20 flags | 0 flags in 1 window |
 | volume_zscore_only | 192 | 0.486 | 0 of 2 events | 0 of 3 events | 0 of 20 flags | 0 flags in 1 window |
-| absolute_return_only | 771 | 1.952 | 0 of 2 events | 0 of 3 events | 0 of 20 flags | 0 flags in 1 window |
-| random_same_count_mean_1000_seeds | 947 | 2.397 | 0.059 of 2 events on average | 0.111 of 3 events on average | 0 of 20 flags | 0.315 flags in 1 window on average |
+| absolute_return_only | 1162 | 2.942 | 1 of 2 events | 1 of 3 events | 0 of 20 flags | 0 flags in 1 window |
+| random_same_count_mean_1000_seeds | 1335 | 3.380 | 0.515 of 2 events on average | 0.891 of 3 events on average | 0.007 of 20 flags on average | 0.395 flags in 1 window on average |
 
-The reference detector does **not** beat the absolute-return-only baseline on recall or precision: both match 0 of 2 events in the primary window, 0 of 3 events in the secondary window, and 0 of 20 flags at k=20, while the reference produces 947 flags versus 771. It also does not improve recall over the volume-only baseline in this tiny event set. The random method keeps the reference number of flags per ticker and averages 1,000 deterministic seeds; its non-integer event and SOPAT counts are averages, not observed cases.
+The reference detector does **not** beat the absolute-return-only baseline on recall or precision: both match 1 of 2 events in the primary window, 1 of 3 events in the secondary window, and 0 of 20 flags at k=20, while the reference produces 1,335 flags versus 1,162. It also does not improve recall over the volume-only baseline in this tiny event set. The random method keeps the reference number of flags per ticker and averages 1,000 deterministic seeds; its non-integer event and SOPAT counts are averages, not observed cases.
 
 ## Sensitivity grid
 
 | Z cutoff | Rolling window | Flags | Flags/ticker-year | Primary recall |
 |---:|---:|---:|---:|---|
-| 2.5 | 20 | 2532 | 6.410 | 1 of 2 events |
-| 2.5 | 40 | 1994 | 5.048 | 0 of 2 events |
-| 2.5 | 60 | 1732 | 4.385 | 0 of 2 events |
-| 2.5 | 120 | 1279 | 3.238 | 0 of 2 events |
-| 3 | 20 | 1414 | 3.580 | 1 of 2 events |
-| 3 | 40 | 1091 | 2.762 | 0 of 2 events |
-| 3 | 60 | 947 | 2.397 | 0 of 2 events |
-| 3 | 120 | 709 | 1.795 | 0 of 2 events |
-| 3.5 | 20 | 867 | 2.195 | 1 of 2 events |
-| 3.5 | 40 | 662 | 1.676 | 0 of 2 events |
-| 3.5 | 60 | 540 | 1.367 | 0 of 2 events |
-| 3.5 | 120 | 389 | 0.985 | 0 of 2 events |
-| 4 | 20 | 552 | 1.397 | 1 of 2 events |
-| 4 | 40 | 414 | 1.048 | 0 of 2 events |
-| 4 | 60 | 317 | 0.802 | 0 of 2 events |
-| 4 | 120 | 209 | 0.529 | 0 of 2 events |
+| 2.5 | 20 | 2943 | 7.450 | 1 of 2 events |
+| 2.5 | 40 | 2574 | 6.516 | 1 of 2 events |
+| 2.5 | 60 | 2372 | 6.005 | 1 of 2 events |
+| 2.5 | 120 | 2056 | 5.205 | 1 of 2 events |
+| 3 | 20 | 1680 | 4.253 | 1 of 2 events |
+| 3 | 40 | 1434 | 3.630 | 1 of 2 events |
+| 3 | 60 | 1335 | 3.380 | 1 of 2 events |
+| 3 | 120 | 1148 | 2.906 | 1 of 2 events |
+| 3.5 | 20 | 1039 | 2.630 | 1 of 2 events |
+| 3.5 | 40 | 880 | 2.228 | 1 of 2 events |
+| 3.5 | 60 | 790 | 2.000 | 1 of 2 events |
+| 3.5 | 120 | 653 | 1.653 | 0 of 2 events |
+| 4 | 20 | 670 | 1.696 | 1 of 2 events |
+| 4 | 40 | 571 | 1.445 | 1 of 2 events |
+| 4 | 60 | 470 | 1.190 | 1 of 2 events |
+| 4 | 120 | 381 | 0.964 | 0 of 2 events |
 
-4 of 16 sensitivity cells match 1 of 2 events; 12 of 16 match 0 of 2 events. Flag load ranges from 209 to 2532. No cell was selected to improve the labeled-event result.
+14 of 16 sensitivity cells match 1 of 2 events; 2 of 16 match 0 of 2 events. Flag load ranges from 381 to 2943. No cell was selected to improve the labeled-event result.
 
 
 ## Universe coverage audit

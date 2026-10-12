@@ -154,6 +154,21 @@ def load_data(path, ohlc_policy="raw", quality_log_path=None):
     return df
 
 
+def valid_prior_rolling_stats(
+    values: pd.Series, window: int
+) -> tuple[pd.Series, pd.Series]:
+    """Mean/std of the last ``window`` valid values, excluding the current one."""
+    valid_values = values.dropna()
+    prior_valid_values = valid_values.shift(1)
+    valid_mean = prior_valid_values.rolling(window, min_periods=window).mean()
+    valid_std = prior_valid_values.rolling(window, min_periods=window).std()
+    mean = pd.Series(np.nan, index=values.index, dtype=float)
+    std = pd.Series(np.nan, index=values.index, dtype=float)
+    mean.loc[valid_values.index] = valid_mean
+    std.loc[valid_values.index] = valid_std
+    return mean, std
+
+
 def compute_signals(df):
     results = []
 
@@ -194,13 +209,14 @@ def compute_signals(df):
         roll_std_safe = roll_std.where(roll_std > MIN_LOG_VOLUME_STD, MIN_LOG_VOLUME_STD)
         g["volume_zscore"] = (log_volume - roll_mean) / roll_std_safe.replace(0, np.nan)
 
-        # Return z-score vs trailing rolling window of returns
-        ret_roll_mean = g["daily_return"].shift(1).rolling(
-            VOLUME_ROLLING_WINDOW, min_periods=MIN_HISTORY_DAYS
-        ).mean()
-        ret_roll_std = g["daily_return"].shift(1).rolling(
-            VOLUME_ROLLING_WINDOW, min_periods=MIN_HISTORY_DAYS
-        ).std()
+        # Return z-score vs the most recent valid returns. A NaN introduced for
+        # a long trading gap is not a new observation and must not blank the
+        # next 60 rows. Build the baseline on the compact sequence of valid
+        # returns, still excluding the current return and requiring 60 prior
+        # valid observations. This is a correctness rule, not event tuning.
+        ret_roll_mean, ret_roll_std = valid_prior_rolling_stats(
+            g["daily_return"], VOLUME_ROLLING_WINDOW
+        )
         ret_std_safe = ret_roll_std.where(ret_roll_std > MIN_RETURN_STD, MIN_RETURN_STD)
         g["return_zscore"] = (g["daily_return"] - ret_roll_mean) / ret_std_safe.replace(0, np.nan)
 
