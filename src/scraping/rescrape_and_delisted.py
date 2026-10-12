@@ -68,9 +68,9 @@ def rescrape_gap_tickers(session):
 
         if failed_ranges:
             print(f"  *** {len(failed_ranges)} chunk(s) still failed for {code} after retries:")
-            for f_start, f_end in failed_ranges:
-                print(f"      {f_start.date()} -> {f_end.date()}")
-                all_failures.append((code, f_start.date(), f_end.date()))
+            for failure in failed_ranges:
+                print(f"      {failure['from']} -> {failure['to']}")
+                all_failures.append((code, failure["from"], failure["to"]))
         else:
             print(f"  No failed chunks this time — earlier gap was likely a transient scrape bug, now fixed.")
 
