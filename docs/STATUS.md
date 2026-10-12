@@ -216,5 +216,8 @@
 - Done: Evaluation is 1 of 3 in both fixed windows. GIF is a hit; LSTR and SERVI are misses. SERVI became evaluable solely because newly downloaded data extends through 2024-01-08.
 - Done: Added LF-normalized portable manifest hashing, protected pipeline status logs, time-aware dual news context, and removed stale duplicate evaluation outputs.
 - Done: Added command navigation, calendar filtering, radar scatter, candlesticks, z-score panel, drag zoom, read-only detector playground, GIF/LSTR case studies, motion-safe transitions, and loading states.
-- Verification: final test, compilation, route, browser, screenshot, and manifest results are recorded in the Phase 8 commit and pull request.
+- Verification: 103 automated tests passed in 138.98 seconds; Python compilation, JavaScript syntax, and Python static checks passed.
+- Verification: all 24 enabled real-data GET routes returned HTTP 200, while both protected scrape routes returned HTTP 404 as designed.
+- Verification: all eight dashboard views passed at 1440×900 and 380×844 (16 browser checks total), with zero console warnings or errors; matching desktop and mobile screenshots are saved under `docs/screenshots/`.
+- Verification: the evaluation manifest is fresh with no mismatches, and `.env` remains ignored, untracked, and untouched.
 - Blockers: None.
