@@ -5,13 +5,13 @@ No fake data. All endpoints serve real scraped files.
 """
 
 import os
-import json
 import hmac
 import math
 import re
 import sys
 import threading
 import subprocess
+from functools import lru_cache
 from datetime import datetime, timedelta
 from pathlib import Path
 from urllib.parse import urlparse
@@ -21,6 +21,7 @@ from flask import Flask, jsonify, render_template, request
 from flask_cors import CORS
 from flask.json.provider import DefaultJSONProvider
 from src.evaluation.provenance import MANIFEST_PATH, verify_manifest
+from src.detection.anomaly_detector import compute_signals
 
 
 class NaNSafeJSONProvider(DefaultJSONProvider):
@@ -298,7 +299,6 @@ def anomaly_record(row, headline_urls=None, date_urls=None):
 
 def run_scraper_background(mode: str):
     """Run an explicitly authorized pipeline mode in a background thread."""
-    global scrape_state
     try:
         command = [sys.executable, SCRAPER_SCRIPT]
         if mode == "scrape":
@@ -386,6 +386,15 @@ def api_scrape():
 
 @app.route("/api/scrape/status")
 def api_scrape_status():
+    if not app.config["PIPELINE_API_ENABLED"]:
+        return jsonify({"error": "Pipeline execution API is disabled"}), 404
+    expected = str(app.config.get("PIPELINE_API_TOKEN", ""))
+    if not expected:
+        return jsonify({"error": "Pipeline execution API is not configured"}), 503
+    authorization = request.headers.get("Authorization", "")
+    supplied = authorization[7:] if authorization.startswith("Bearer ") else ""
+    if not supplied or not hmac.compare_digest(supplied, expected):
+        return jsonify({"error": "Unauthorized"}), 401
     return jsonify(scrape_state)
 
 
@@ -765,6 +774,13 @@ def api_stock(ticker):
 
     df["date"] = pd.to_datetime(df["date"], errors="coerce")
     df = df.sort_values("date")
+    signals = compute_signals(df.copy())
+    signal_rows = {}
+    if not signals.empty:
+        signal_rows = {
+            row["date"].strftime("%Y-%m-%d"): row
+            for _, row in signals.iterrows() if pd.notna(row.get("date"))
+        }
     range_value = request.args.get("range", "1Y").upper()
     window = {"3M": 63, "6M": 126, "1Y": 252}.get(range_value, 252)
     if range_value == "ALL":
@@ -789,6 +805,7 @@ def api_stock(ticker):
     records = []
     for _, row in df.iterrows():
         d = str(row["date"].date()) if pd.notna(row["date"]) else ""
+        signal_row = signal_rows.get(d, {})
         records.append({
             "date":      d,
             "ouverture": round(float(row["ouverture"]), 3) if pd.notna(row.get("ouverture")) else None,
@@ -796,6 +813,8 @@ def api_stock(ticker):
             "bas":       round(float(row["bas"]), 3)        if pd.notna(row.get("bas"))       else None,
             "cloture":   round(float(row["cloture"]), 3)   if pd.notna(row.get("cloture"))   else None,
             "volume":    int(row["volume"])                 if pd.notna(row.get("volume"))    else None,
+            "volume_zscore": number(signal_row.get("volume_zscore")),
+            "return_zscore": number(signal_row.get("return_zscore")),
             "anomaly":   d in anomaly_rows,
             "flag":      anomaly_rows.get(d),
         })
@@ -932,6 +951,117 @@ def api_overview():
             "none": int(status.isin(NO_MATCH_STATUSES).sum()),
         },
     })
+
+
+@app.route("/api/overview/calendar")
+def api_overview_calendar():
+    """Daily flag counts for the complete history, used by the calendar view."""
+    flags = load_csv("anomaly_flags.csv")
+    if flags.empty:
+        return jsonify([])
+    flags["date"] = pd.to_datetime(flags.get("date"), errors="coerce")
+    daily = flags.dropna(subset=["date"]).groupby("date").size().reset_index(name="count")
+    daily["date"] = daily["date"].dt.strftime("%Y-%m-%d")
+    return jsonify(daily.to_dict(orient="records"))
+
+
+@app.route("/api/overview/radar")
+def api_overview_radar():
+    """Return every real flag for the volume/return surveillance scatter."""
+    classified = load_csv("anomaly_classified.csv")
+    if classified.empty:
+        return jsonify([])
+    _, headline_urls, date_urls = news_lookup()
+    return jsonify([
+        anomaly_record(row, headline_urls, date_urls)
+        for _, row in classified.iterrows()
+    ])
+
+
+@lru_cache(maxsize=64)
+def cached_playground(z_cutoff: float, rolling_window: int, source_mtime: int) -> dict:
+    """Read a generated sensitivity cell; source_mtime invalidates the cache."""
+    del source_mtime
+    sensitivity = load_evaluation_csv("sensitivity.csv")
+    if sensitivity.empty:
+        return {}
+    z_values = pd.to_numeric(sensitivity.get("z_cutoff"), errors="coerce")
+    windows = pd.to_numeric(sensitivity.get("rolling_window"), errors="coerce")
+    match = sensitivity[(z_values == z_cutoff) & (windows == rolling_window)]
+    if match.empty:
+        return {}
+    row = match.iloc[0]
+    eligible = load_evaluation_csv("metrics.csv")
+    denominator = 0
+    if not eligible.empty:
+        found = eligible[eligible.get("metric") == "eligible_positive_events_30d"]
+        if not found.empty:
+            denominator = int(float(found.iloc[0]["value"]))
+    recall = number(row.get("recall_30d"), 6) or 0
+    return {
+        "z_cutoff": z_cutoff,
+        "rolling_window": rolling_window,
+        "flag_count": number(row.get("flag_count"), integer=True),
+        "flags_per_ticker_year": number(row.get("flags_per_ticker_year"), 3),
+        "event_hits": round(recall * denominator),
+        "event_denominator": denominator,
+        "exploratory": True,
+        "changes_reference_detector": False,
+    }
+
+
+@app.route("/api/playground")
+def api_playground():
+    """Cached, read-only view of the precomputed detector sensitivity grid."""
+    try:
+        z_cutoff = float(request.args.get("z", "3.0"))
+        rolling_window = int(request.args.get("window", "60"))
+    except ValueError:
+        return jsonify({"error": "z and window must be numeric"}), 400
+    if z_cutoff not in {2.5, 3.0, 3.5, 4.0} or rolling_window not in {20, 40, 60, 120}:
+        return jsonify({"error": "Choose a generated sensitivity-grid value"}), 400
+    path = EVALUATION_DIR / "sensitivity.csv"
+    mtime = path.stat().st_mtime_ns if path.exists() else 0
+    result = cached_playground(z_cutoff, rolling_window, mtime)
+    return jsonify(result) if result else (jsonify({"error": "Sensitivity data unavailable"}), 404)
+
+
+@app.route("/api/case-studies")
+def api_case_studies():
+    """Annotated GIF/LSTR case-study inputs from generated evaluation data."""
+    events = load_evaluation_csv("event_results.csv")
+    if events.empty or "ticker" not in events.columns:
+        return jsonify([])
+    studies = []
+    for ticker in ("GIF", "LSTR"):
+        event = events[events.get("ticker", "") == ticker]
+        prices = load_csv(f"{ticker}.csv")
+        if event.empty or prices.empty:
+            continue
+        row = event.iloc[0]
+        event_date = pd.to_datetime(row.get("event_date"), errors="coerce")
+        prices["date"] = pd.to_datetime(prices.get("date"), errors="coerce")
+        prices = prices[
+            prices["date"].between(event_date - timedelta(days=120), event_date + timedelta(days=10))
+        ].sort_values("date")
+        studies.append({
+            "ticker": ticker,
+            "event_name": safe_val(row.get("event_name"), ""),
+            "event_date": event_date.strftime("%Y-%m-%d"),
+            "source": safe_http_url(row.get("source")),
+            "hit_30d": bool(is_true(row.get("hit_30d"))),
+            "matched_flag_date_30d": safe_val(row.get("first_matching_flag_30d"), ""),
+            "lead_days_30d": number(row.get("lead_time_days_30d"), integer=True),
+            "prices": [
+                {
+                    "date": item["date"].strftime("%Y-%m-%d"),
+                    "close": number(item.get("cloture"), 3),
+                    "volume": number(item.get("volume"), integer=True),
+                }
+                for _, item in prices.iterrows() if pd.notna(item.get("date"))
+            ],
+        })
+    return jsonify(studies)
 
 
 @app.route("/api/evaluation/metrics")
