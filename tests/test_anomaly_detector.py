@@ -1,7 +1,8 @@
 import numpy as np
 import pandas as pd
+import pytest
 
-from src.detection.anomaly_detector import compute_signals
+from src.detection.anomaly_detector import apply_ohlc_policy, compute_signals
 
 
 def series(volumes, closes=None, dates=None):
@@ -10,7 +11,8 @@ def series(volumes, closes=None, dates=None):
     dates = pd.date_range("2025-01-01", periods=size, freq="D") if dates is None else dates
     return pd.DataFrame({
         "symbole": "TEST", "ticker_name": "Test Company", "date": dates,
-        "cloture": closes, "bas": closes, "haut": closes, "volume": volumes,
+        "ouverture": closes, "cloture": closes, "bas": closes,
+        "haut": closes, "volume": volumes,
     })
 
 
@@ -50,4 +52,90 @@ def test_future_row_does_not_change_prior_score():
     assert after["volume_zscore"] == pytest.approx(before["volume_zscore"])
 
 
-import pytest
+@pytest.mark.parametrize("prior_observations", [20, 59])
+def test_volume_signal_requires_sixty_prior_observations(prior_observations):
+    result = compute_signals(series([100] * prior_observations + [100_000]))
+    if result.empty:
+        return
+    assert pd.isna(result.iloc[-1]["volume_zscore"])
+    assert not bool(result.iloc[-1]["volume_anomaly"])
+
+
+def test_volume_signal_starts_after_sixty_prior_observations():
+    result = compute_signals(series([100] * 60 + [100_000]))
+    assert pd.notna(result.iloc[-1]["volume_zscore"])
+    assert bool(result.iloc[-1]["volume_anomaly"])
+
+
+@pytest.mark.parametrize(
+    ("valid_prior_returns", "expect_score"),
+    [(59, False), (60, True), (61, True)],
+)
+def test_return_signal_requires_sixty_valid_prior_returns(
+    valid_prior_returns, expect_score
+):
+    closes = [10.0]
+    for _ in range(valid_prior_returns):
+        closes.append(closes[-1] * 1.001)
+    closes.append(closes[-1] * 1.50)
+    result = compute_signals(series([100] * len(closes), closes=closes))
+    if expect_score:
+        assert pd.notna(result.iloc[-1]["return_zscore"])
+        assert bool(result.iloc[-1]["price_anomaly"])
+    else:
+        assert pd.isna(result.iloc[-1]["return_zscore"])
+        assert not bool(result.iloc[-1]["price_anomaly"])
+
+
+def test_gap_delays_return_baseline_until_sixty_valid_returns():
+    dates = list(pd.date_range("2025-01-01", periods=31, freq="D"))
+    dates += list(pd.date_range("2025-03-01", periods=31, freq="D"))
+    closes = np.linspace(10, 11, len(dates))
+    result = compute_signals(series([100] * len(dates), closes=closes, dates=dates))
+    assert pd.isna(result.iloc[-1]["return_zscore"])
+
+
+def test_gap_inside_baseline_does_not_blank_next_sixty_rows():
+    dates = list(pd.date_range("2025-01-01", periods=35, freq="D"))
+    dates += list(pd.date_range("2025-03-01", periods=35, freq="D"))
+    closes = [10.0]
+    for _ in range(len(dates) - 1):
+        closes.append(closes[-1] * 1.001)
+    result = compute_signals(series([100] * len(dates), closes=closes, dates=dates))
+    assert pd.isna(result.iloc[35]["daily_return"])
+    assert pd.notna(result.iloc[-1]["return_zscore"])
+
+
+def test_future_return_does_not_change_prior_return_score():
+    closes = [10.0]
+    for _ in range(61):
+        closes.append(closes[-1] * 1.001)
+    base = series([100] * len(closes), closes=closes)
+    future = series(
+        [100],
+        closes=[closes[-1] * 4],
+        dates=[pd.Timestamp("2025-03-04")],
+    )
+    before = compute_signals(base).iloc[-1]
+    after = compute_signals(pd.concat([base, future], ignore_index=True)).iloc[-2]
+    assert after["return_zscore"] == pytest.approx(before["return_zscore"])
+
+
+def test_default_raw_ohlc_policy_is_transparent_and_non_mutating():
+    frame = series([100] * 60)
+    frame.loc[0, ["bas", "haut", "cloture"]] = [9.0, 10.0, 10.5]
+    processed, issues = apply_ohlc_policy(frame)
+    assert processed.loc[0, "cloture"] == 10.5
+    assert issues.loc[0, "issue_types"] == "CLOSE_ABOVE_HIGH"
+    assert issues.loc[0, "action"] == "retained_raw"
+
+
+def test_legacy_clamp_and_quarantine_policies_are_explicit():
+    frame = series([100] * 60)
+    frame.loc[0, ["bas", "haut", "cloture"]] = [9.0, 10.0, 10.5]
+    clamped, clamp_log = apply_ohlc_policy(frame, "clamp_close")
+    quarantined, quarantine_log = apply_ohlc_policy(frame, "quarantine")
+    assert clamped.loc[0, "cloture"] == 10.0
+    assert clamp_log.loc[0, "action"] == "close_clamped_where_range_valid"
+    assert len(quarantined) == len(frame) - 1
+    assert quarantine_log.loc[0, "action"] == "excluded_from_analysis"
