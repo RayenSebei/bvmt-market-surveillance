@@ -329,8 +329,6 @@ def run_scraper_background(mode: str):
 # ── API ROUTES ────────────────────────────────────────────────────────────────
 
 @app.route("/")
-@app.route("/wallstreet")
-@app.route("/v2")
 def index():
     return render_template("dashboard.html")
 

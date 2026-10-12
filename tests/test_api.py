@@ -24,7 +24,7 @@ def client(monkeypatch):
 
 
 @pytest.mark.parametrize("method,path", [
-    ("get", "/"), ("get", "/wallstreet"), ("get", "/v2"),
+    ("get", "/"),
     ("get", "/api/status"),
     ("get", "/api/scrape/status"), ("get", "/api/kpis"),
     ("get", "/api/anomalies"), ("get", "/api/anomalies/timeline"),
