@@ -882,17 +882,30 @@ def api_news_categories():
 @app.route("/api/watchlist")
 def api_watchlist():
     """Read-only refined triage queue and volume-decay cases."""
+    scope = request.args.get("scope", "queue").strip().lower()
+    if scope not in {"queue", "explained"}:
+        return jsonify({"error": "Invalid watchlist scope"}), 400
+
     refined, ai_output_fresh = load_current_watchlist()
     assessment = request.args.get("assessment", "").strip().lower()
     tag = request.args.get("tag", "").strip().upper()
-    if not refined.empty:
+    if scope == "explained":
+        refined = load_csv("anomaly_classified.csv")
+        ai_output_fresh = False
+        if not refined.empty:
+            status = refined.get("status", pd.Series("", index=refined.index)).astype(str).str.upper()
+            refined = refined[status.isin(NEWS_MATCH_STATUSES)].copy()
+            refined["_date"] = pd.to_datetime(refined.get("date"), errors="coerce")
+            refined = refined.sort_values(["_date", "symbole"], ascending=[False, True])
+    elif not refined.empty:
         if assessment and "ai_assessment" in refined.columns:
             refined = refined[refined["ai_assessment"].fillna("").astype(str).str.lower() == assessment]
         if tag and "tag" in refined.columns:
             refined = refined[refined["tag"].fillna("").astype(str).str.upper() == tag]
+    _, headline_urls, date_urls = news_lookup()
     rows = []
     for _, row in refined.iterrows():
-        item = anomaly_record(row)
+        item = anomaly_record(row, headline_urls, date_urls)
         item.update({
             "priority": number(row.get("priority"), integer=True),
             "tag": safe_val(row.get("tag"), "not available"),
@@ -922,6 +935,7 @@ def api_watchlist():
     return jsonify({
         "rows": rows,
         "total": len(rows),
+        "scope": scope,
         "decay": decay_rows,
         "decay_total": len(decay_rows),
         "ai_output_fresh": ai_output_fresh,

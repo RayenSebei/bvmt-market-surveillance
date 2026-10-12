@@ -148,6 +148,40 @@ def test_matching_ai_watchlist_is_used(monkeypatch):
     assert current.iloc[0]["ai_assessment"] == "uncertain"
 
 
+def test_watchlist_explained_scope_returns_only_news_matches(client, monkeypatch):
+    classified = pd.DataFrame({
+        "symbole": ["AAA", "BBB"],
+        "ticker_name": ["Alpha", "Beta"],
+        "date": ["2025-01-02", "2025-01-03"],
+        "status": ["NEWS_MATCH_FOUND", "NO_LOCAL_MATCH"],
+        "volume_zscore": [4.2, 3.5],
+        "return_zscore": [1.0, 4.1],
+        "volume_anomaly": [True, False],
+        "price_anomaly": [False, True],
+        "matched_headline": ["Alpha update", ""],
+        "matched_news_date": ["2025-01-02", ""],
+        "gap_days": [0, None],
+        "category": ["company_update", ""],
+    })
+
+    original_load = dashboard.load_csv
+
+    def fake_load(name, **kwargs):
+        if name == "anomaly_classified.csv":
+            return classified.copy()
+        return original_load(name, **kwargs)
+
+    monkeypatch.setattr(dashboard, "load_csv", fake_load)
+    response = client.get("/api/watchlist?scope=explained")
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload["scope"] == "explained"
+    assert payload["total"] == 1
+    assert payload["rows"][0]["symbole"] == "AAA"
+    assert payload["rows"][0]["news_nearby"] is True
+    assert client.get("/api/watchlist?scope=invalid").status_code == 400
+
+
 @pytest.mark.parametrize("ticker", ["BIAT", "BNA"])
 def test_stock_endpoint_reads_individual_ticker_files(client, ticker):
     response = client.get(f"/api/stock/{ticker}")
