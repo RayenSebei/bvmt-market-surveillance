@@ -16,4 +16,5 @@ bvmt_quality_report.txt
 .venv/
 venv/
 *.log
+.playwright-mcp/
 bvmt-dashboard/

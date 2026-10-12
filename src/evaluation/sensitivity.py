@@ -23,10 +23,10 @@ def parameter_flags(trading: pd.DataFrame, window: int, cutoff: float) -> pd.Dat
         group["daily_return"] = group["cloture"].pct_change()
         group.loc[group["date"].diff().dt.days > MAX_RETURN_GAP_DAYS, "daily_return"] = np.nan
         log_volume = np.log1p(group["volume"])
-        volume_mean = log_volume.shift(1).rolling(window, min_periods=20).mean()
-        volume_std = log_volume.shift(1).rolling(window, min_periods=20).std().clip(lower=MIN_LOG_VOLUME_STD)
-        return_mean = group["daily_return"].shift(1).rolling(window, min_periods=20).mean()
-        return_std = group["daily_return"].shift(1).rolling(window, min_periods=20).std().clip(lower=MIN_RETURN_STD)
+        volume_mean = log_volume.shift(1).rolling(window, min_periods=window).mean()
+        volume_std = log_volume.shift(1).rolling(window, min_periods=window).std().clip(lower=MIN_LOG_VOLUME_STD)
+        return_mean = group["daily_return"].shift(1).rolling(window, min_periods=window).mean()
+        return_std = group["daily_return"].shift(1).rolling(window, min_periods=window).std().clip(lower=MIN_RETURN_STD)
         group["volume_zscore"] = (log_volume - volume_mean) / volume_std
         group["return_zscore"] = (group["daily_return"] - return_mean) / return_std
         frames.append(group[(group["volume_zscore"] > cutoff) | (group["return_zscore"].abs() > cutoff)])

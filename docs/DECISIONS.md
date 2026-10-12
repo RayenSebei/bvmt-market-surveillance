@@ -1,5 +1,14 @@
 # Engineering Decisions
 
+- Dashboard v2 Phase 1: Kept `/api/stock/<ticker>` as a JSON list and added optional range selection plus nested flag context so existing clients remain compatible.
+- Dashboard v2 Phase 1: Used native SVG for price, volume, axes, tooltip, and markers to keep the dashboard fully offline.
+- Dashboard v2 Phase 2: Added `/api/anomalies/search` instead of changing `/api/anomalies`, preserving its legacy top-50 list response.
+- Dashboard v2 Phase 2: Resolved news links by exact ticker-plus-headline first and ticker-plus-date only as a conservative fallback.
+- Dashboard v2 Phase 3: Treated watchlist AI fields as draft opinions and exposed decay cases in the same read-only endpoint.
+- Dashboard v2 Phase 4: Anchored every coverage label to the latest stored trading date and explicitly labels the dashboard as not live.
+- Dashboard v2 Phase 5: Split the dashboard into a small template and self-contained CSS/JavaScript with no runtime network dependencies.
+- Dashboard v2 Phase 5: Stored the optional dark theme in `localStorage` behind `try/catch` so restricted browsers still work.
+
 - Phase 1: Kept the script copies invoked by `run_all.py` and removed docstring-only duplicates.
 - Phase 1: Deleted `data/bvmt_data/` after preserving and verifying all 189 files at `../bvmt_backup/data_bvmt_data`; its `decay_classified.csv` had the same eight records as the canonical copy but different bytes.
 - Phase 1: Removed the unused `gunicorn` dependency as the only Render-era deployment leftover; no Render configuration files existed.

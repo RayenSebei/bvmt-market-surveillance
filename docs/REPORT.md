@@ -11,14 +11,14 @@
 ## Plain-English summary
 
 - The project checks local BVMT price and volume history for observations that are unusual relative to each stock's own recent history.
-- The delivered 85-symbol run produced 1,454 review flags, 17 refined-watchlist rows, and 17 AI draft assessments.
-- Against the small sourced case set, it matched 1 of 2 events in the 30-day window and 1 of 3 events in the 60-day window.
+- The corrected 85-symbol run produced 947 review flags and 14 refined-watchlist rows.
+- Against the small sourced case set, it matched 0 of 2 events in the 30-day window and 0 of 3 events in the 60-day window.
 - None of the 20 highest-ranked flags is near either primary-window event; incomplete event labels mean this does not prove those flags are false positives.
 - Results are case studies for human review, not a statistical performance estimate or a legal conclusion.
 
 ## Abstract
 
-This project builds a transparent statistical screening workflow for the Tunisian stock market. It reads historical price, volume, and news records; flags unusual activity; adds possible public-news context; and presents a review queue in a web dashboard. The delivered reference detector produced 1,454 flags, or 3.681 flags per ticker-year. In a small source-backed evaluation, it matched 1 of 2 positive events in the primary window and 1 of 3 in the secondary window. Every result is a prompt for human review.
+This project builds a transparent statistical screening workflow for the Tunisian stock market. It reads historical price, volume, and news records; flags unusual activity; adds possible public-news context; and presents a review queue in a web dashboard. The corrected reference detector produced 947 flags, or 2.397 flags per ticker-year. In a small source-backed evaluation, it matched 0 of 2 positive events in the primary window and 0 of 3 in the secondary window. Every result is a prompt for human review.
 
 ## 1. Introduction and context
 
@@ -54,7 +54,7 @@ The evaluation event table is separate at `data/evaluation/events.csv`. Its prim
 
 ### 3.1 Statistical screen
 
-The reference detector works independently for each ticker. It uses the previous 60 trading observations as its rolling baseline and excludes the current observation from that baseline, preventing look-ahead.
+The reference detector works independently for each ticker. It requires 60 valid prior observations for each rolling baseline and excludes the current observation from that baseline, preventing look-ahead. Source OHLC values are retained; 58 close-range violations are recorded in `anomaly_data_quality.csv` rather than silently corrected.
 
 - Volume is transformed with `log(1 + volume)` before its z-score is calculated. This reduces the effect of very large values in thinly traded shares.
 - The volume standard deviation has a floor of 0.10.
@@ -66,13 +66,13 @@ These parameters were not changed after looking at the labeled events. The 16-ce
 
 ### 3.2 Context and review queue
 
-The next stages cross-reference flags with local news, classify the available context, and produce a smaller watchlist. During the earlier pipeline repair, `watchlist_refined.csv` changed from 107 stale rows to 12 current rows because its input changed to the then-current 12-row `watchlist.csv`; no parameter changed. After adopting the 85-symbol universe, the same unchanged refinement logic produced 17 rows from the new 17-row watchlist.
+The next stages cross-reference flags with local news, classify the available context, and produce a smaller watchlist. Matches use neutral `NEWS_MATCH_FOUND` and `NO_LOCAL_MATCH` labels. Each match records whether the headline was available by the flag date or is later retrospective context. The corrected run produces 14 refined rows; absence of a local match is a prioritisation cue, not evidence of misconduct.
 
 ### 3.3 AI-assisted triage
 
 Groq triage uses `openai/gpt-oss-120b`, configured through `GROQ_MODEL`. An earlier 40-token response used 38 tokens for reasoning and ended with empty visible content. The client now requests a 1,500-token budget, low reasoning effort, and JSON output. Empty content is retried and then skipped safely while preserving the previous output.
 
-The authorized 17-row delivered run used 17 calls under a hard 40-call ceiling. It returned 8 `worth_investigating`, 8 `likely_noise`, and 1 `uncertain` draft assessments, with no empty reasoning fields. These are opinions for human review, never verdicts. The model does not change evaluation labels or detector parameters.
+The earlier 17-row run used 17 calls under a hard 40-call ceiling. Its output belongs to the superseded queue and is preserved for provenance but hidden by the dashboard because it does not match the current 14-row refined queue. AI triage now requires explicit `--with-ai`; these opinions are never verdicts and never change evaluation labels or detector parameters.
 
 ## 4. Evaluation design
 
@@ -108,60 +108,53 @@ The TINV label remains 6 October 2025. Its stored date type is `other`, explicit
 
 ## 5. Results
 
-There are 3 source-backed positive events. The 30-day denominator is 2 because GIF and LSTR have trading observations in that window, while SERVI's trading data ends on 30 November 2023, before its 30-day window begins. The 60-day window starts early enough to overlap SERVI's last observations, so its denominator is 3. The reference detector matched 1 of 2 events in the primary window and 1 of 3 events in the secondary window.
+There are 3 source-backed positive events. The 30-day denominator is 2 because GIF and LSTR have trading observations in that window, while SERVI's trading data ends on 30 November 2023, before its 30-day window begins. The 60-day window starts early enough to overlap SERVI's last observations, so its denominator is 3. The corrected reference detector matched 0 of 2 events in the primary window and 0 of 3 events in the secondary window.
 
 | Method | Flags | Flags per ticker-year | Recall, -30/+5 | Recall, -60/+5 | Precision at 20 | SOPAT-window flags |
 |---|---:|---:|---:|---:|---:|---:|
-| Reference union | 1,454 | 3.681 | 1 of 2 events | 1 of 3 events | 0 of 20 flags | 0 flags in 1 window |
-| Volume z-score only | 206 | 0.521 | 0 of 2 events | 0 of 3 events | 0 of 20 flags | 0 flags in 1 window |
-| Absolute return only | 1,269 | 3.212 | 1 of 2 events | 1 of 3 events | 0 of 20 flags | 0 flags in 1 window |
-| Random, same count, mean of 1,000 seeds | 1,454 | 3.681 | 0.483 of 2 events on average | 0.908 of 3 events on average | 0.008 of 20 flags on average | 0.548 flags in 1 window on average |
+| Reference union | 947 | 2.397 | 0 of 2 events | 0 of 3 events | 0 of 20 flags | 0 flags in 1 window |
+| Volume z-score only | 192 | 0.486 | 0 of 2 events | 0 of 3 events | 0 of 20 flags | 0 flags in 1 window |
+| Absolute return only | 771 | 1.952 | 0 of 2 events | 0 of 3 events | 0 of 20 flags | 0 flags in 1 window |
+| Random, same count, mean of 1,000 seeds | 947 | 2.397 | 0.059 of 2 events on average | 0.111 of 3 events on average | 0 of 20 flags on average | 0.315 flags in 1 window on average |
 
 For the reference detector, precision at 10, 20, and 50 is 0 of 10, 0 of 20, and 0 of 50 ranked flags. The **0 of 20** result means none of the 20 largest ranking scores occurs inside the fixed primary window around GIF or LSTR. It does not establish that those 20 flags are false positives because the event list is small and incomplete.
 
-GIF is the only reference hit. Its first matching flag is 22 October 2024: 3 days before the primary suspension date of 25 October and 21 days before the secondary article date of 12 November.
+No corrected reference flag falls in either fixed event window. The former GIF hit depended on the superseded warm-up and silent close-correction behavior and is not retained as evidence.
 
-The reference detector does not beat the absolute-return-only baseline on recall or precision. Both match 1 of 2 events in the primary window, 1 of 3 events in the secondary window, and 0 of 20 top-ranked flags, while the reference produces 1,454 flags and the return-only baseline produces 1,269. The reference matches more events than the volume-only baseline, but with a much larger review load.
+The reference detector does not beat the absolute-return-only baseline on recall or precision. Both match 0 of 2 events in the primary window, 0 of 3 events in the secondary window, and 0 of 20 top-ranked flags, while the reference produces 947 flags and the return-only baseline produces 771.
 
-The sensitivity grid contains 16 parameter combinations. Primary recall remains 1 of 2 events in 14 cells. It becomes 0 of 2 events only for a 120-day window with z cutoffs of 3.5 and 4.0. Flag load ranges from 473 to 2,673. This grid was not used to choose a new reference setting.
+The sensitivity grid contains 16 parameter combinations, each requiring its full configured history. Four 20-observation cells match 1 of 2 events; the other 12 cells match 0 of 2. Flag load ranges from 209 to 2,532. This grid was not used to choose a new reference setting.
 
 ### 5.1 Ranking and top 20
 
-Flags are ranked by `max(abs(volume_zscore), abs(return_zscore))`, highest first. Ties use earlier date and then ticker symbol. “Illiquid” means the ticker's median daily volume is at or below 349.5 shares, the 25th percentile across the 83 tickers represented in delivered reference flags. This liquidity label does not affect the ranking or detector.
+Flags are ranked by `max(abs(volume_zscore), abs(return_zscore))`, highest first. Ties use earlier date and then ticker symbol. “Illiquid” means the ticker's median daily volume is at or below 500 shares, the 25th percentile across tickers represented in corrected reference flags. This liquidity label does not affect the ranking or detector.
 
 | Rank | Ticker | Date | Ranking z-score | Illiquid |
 |---:|---|---|---:|---|
-| 1 | ASSAD | 2021-09-01 | 38.907 | No |
-| 2 | MIP | 2022-03-24 | 25.000 | Yes |
-| 3 | CITY | 2026-04-27 | 21.748 | No |
-| 4 | CITY | 2026-04-28 | 19.703 | No |
-| 5 | BT | 2022-05-10 | 18.598 | No |
-| 6 | PGH | 2021-11-30 | 17.375 | No |
-| 7 | ADWYA | 2022-06-13 | 16.933 | No |
-| 8 | SOMOC | 2025-05-13 | 14.704 | No |
-| 9 | TJARI | 2023-04-05 | 12.247 | No |
-| 10 | SAM | 2023-04-20 | 12.180 | No |
-| 11 | STAR | 2025-03-12 | 11.987 | No |
-| 12 | SIPHA | 2023-11-29 | 11.937 | Yes |
-| 13 | ARTES | 2023-07-31 | 11.690 | No |
-| 14 | ICF | 2022-09-01 | 11.664 | No |
-| 15 | SOTET | 2025-07-29 | 11.502 | No |
-| 16 | BNA | 2025-06-17 | 11.060 | No |
-| 17 | ARTES | 2022-07-06 | 11.018 | No |
-| 18 | TINV | 2025-10-22 | 10.880 | Yes |
-| 19 | BIAT | 2024-11-29 | 10.447 | No |
-| 20 | NBL | 2025-06-11 | 9.959 | No |
+| 1 | CITY | 2026-04-27 | 21.748 | No |
+| 2 | CITY | 2026-04-28 | 19.703 | No |
+| 3 | PGH | 2021-11-30 | 17.375 | No |
+| 4 | ARTES | 2023-07-31 | 11.690 | No |
+| 5 | ICF | 2022-09-01 | 11.664 | Yes |
+| 6 | SOTET | 2025-07-29 | 11.502 | No |
+| 7 | BNA | 2025-06-17 | 11.060 | No |
+| 8 | ARTES | 2022-07-06 | 11.018 | No |
+| 9 | BIAT | 2024-11-29 | 10.447 | No |
+| 10 | CITY | 2024-07-08 | 9.696 | No |
+| 11 | SMART | 2025-06-19 | 9.049 | No |
+| 12 | STAR | 2025-09-17 | 8.657 | No |
+| 13 | CITY | 2022-07-20 | 8.634 | No |
+| 14 | TJARI | 2021-12-06 | 8.489 | No |
+| 15 | ASSMA | 2026-06-17 | 7.671 | Yes |
+| 16 | ASSAD | 2021-09-29 | 7.542 | No |
+| 17 | SAM | 2023-07-31 | 7.452 | No |
+| 18 | STPAP | 2026-04-27 | 7.398 | No |
+| 19 | TJARI | 2025-04-30 | 7.360 | No |
+| 20 | TPR | 2022-07-27 | 7.228 | No |
 
 ### 5.2 Coverage comparison
 
-All 85 individual files pass the delivered build's input checks. PLTU has only 41 observations and is excluded from the reference anomaly detector as known-incomplete. The 85-symbol derived file adds the 25 valid omitted symbols without changing raw inputs. Shared OHLCV values and resulting detector flags agree across all 60 shared symbols.
-
-| Universe | Symbols | Rows | Flags | Flags per ticker-year | Recall, -30/+5 | Recall, -60/+5 | Precision at 20 |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| Archived earlier run | 60 | 44,531 | 1,027 | 3.607 | 1 of 2 events | 1 of 3 events | 0 of 20 flags |
-| Delivered reference | 85 | 61,812 | 1,454 | 3.681 | 1 of 2 events | 1 of 3 events | 0 of 20 flags |
-
-The added 25 symbols increase the review load by 427 flags but do not change the reported recall or precision at 20. The 85-symbol run is the delivered reference; the 60-symbol tables are archived under `outputs/evaluation_60symbol/`.
+All 85 individual files pass the delivered build's input checks. PLTU has only 41 observations and is excluded from the reference anomaly detector as known-incomplete. The 85-symbol derived file adds the 25 valid omitted symbols without changing protected inputs. The archived 60-symbol outputs used the superseded 20-observation warm-up and silent close clamping, so their flag counts and event hits are retained only as provenance and are not directly comparable with the corrected reference.
 
 ![Baseline comparison](../outputs/evaluation/baseline_comparison.svg)
 

@@ -1,16 +1,16 @@
-symbole,ticker_name,baseline_volume,recent_volume,decline_ratio,last_active_date,days_since_active,status,matched_headline,matched_news_date,category
-SITS,SITS,472778,8360,0.0176827178929645,2026-06-15,2,UNEXPLAINED,,,
-BL,BEST LEASE,12325196,264258,0.0214404703990102,2026-06-17,0,UNEXPLAINED,,,
-ARTES,ARTES,4619874,626334,0.1355738273381481,2026-06-17,0,EXPLAINED,Des revenus en hausse et un bénéfice solide pour le groupe ARTES en 2025,2026-06-17,earnings_results
-PLTU,PLTU,40255,6652,0.1652465532232021,2026-06-10,7,UNEXPLAINED,,,
-AL,AIR LIQUIDE TUNISIE,53226,9143,0.1717769511141171,2026-06-17,0,UNEXPLAINED,,,
-AETEC,AETECH,23766,12267,0.5161575359757637,2026-01-23,145,UNEXPLAINED,,,
-SOTEM,SOTEM,172,2742,15.94186046511628,2026-01-02,166,UNEXPLAINED,,,
-ADWYA,ADWYA,0,0,,2022-12-08,1287,EXPLAINED,"ADWYA : L'Offre Publique de Retrait sera ouverte le 30 novembre à 5,950 dinars l'action",2022-11-25,buyout_opr
-AMS,AMS,0,0,,2023-07-05,1078,EXPLAINED,Mise en vente judiciaire des AMS avec une mise à prix de 65 millions de dinars,2023-07-13,bankruptcy_distress
-CREAL,CEREALIS,0,0,,2022-12-08,1287,EXPLAINED,Power Brands monte à 95% au capital de CEREALIS,2022-12-12,other_news
-GIF,GIF FILTER,0,0,,2024-10-22,603,EXPLAINED,La Bourse de Tunis décide la radiation de la société GIF FILTER,2024-11-12,delisting_radiation
-LSTR,ELECTROSTAR,0,0,,2024-07-22,695,EXPLAINED,"En cessation de paiement, le Tribunal déclare la faillite de la société ELECTROSTAR",2024-07-24,bankruptcy_distress
-MIP,MIP,0,0,,2024-07-29,688,EXPLAINED,La société MIP a réalisé un chiffre d'affaires de 800 dinars en 2022,2024-08-01,earnings_results
-SERVI,SERVICOM,0,0,,2023-11-30,930,EXPLAINED,Suspension de la cotation du titre SERVICOM,2024-01-11,suspension
-SOPAT,SOPAT,0,0,,2023-10-31,960,EXPLAINED,"SOPAT : L'Offre Publique de Retrait sera ouverte le 11 octobre à un prix de 2,050 dinars l'action",2023-10-09,buyout_opr
+symbole,ticker_name,baseline_volume,recent_volume,decline_ratio,last_active_date,days_since_active,status,matched_headline,matched_news_date,gap_days,category,news_available_as_of_flag,post_event_news_context,news_match_timing
+SITS,SITS,472778,8360,0.0176827178929645,2026-06-15,2,NO_LOCAL_MATCH,,,,,False,False,NO_LOCAL_MATCH
+BL,BEST LEASE,12325196,264258,0.0214404703990102,2026-06-17,0,NO_LOCAL_MATCH,,,,,False,False,NO_LOCAL_MATCH
+ARTES,ARTES,4619874,626334,0.1355738273381481,2026-06-17,0,NEWS_MATCH_FOUND,Des revenus en hausse et un bénéfice solide pour le groupe ARTES en 2025,2026-06-17,0.0,earnings_results,True,False,AVAILABLE_AS_OF_FLAG
+PLTU,PLTU,40255,6652,0.1652465532232021,2026-06-10,7,NO_LOCAL_MATCH,,,,,False,False,NO_LOCAL_MATCH
+AL,AIR LIQUIDE TUNISIE,53226,9143,0.1717769511141171,2026-06-17,0,NO_LOCAL_MATCH,,,,,False,False,NO_LOCAL_MATCH
+AETEC,AETECH,23766,12267,0.5161575359757637,2026-01-23,145,NO_LOCAL_MATCH,,,,,False,False,NO_LOCAL_MATCH
+SOTEM,SOTEM,172,2742,15.94186046511628,2026-01-02,166,NO_LOCAL_MATCH,,,,,False,False,NO_LOCAL_MATCH
+ADWYA,ADWYA,0,0,,2022-12-08,1287,NEWS_MATCH_FOUND,"ADWYA : L'Offre Publique de Retrait sera ouverte le 30 novembre à 5,950 dinars l'action",2022-11-25,-13.0,buyout_opr,True,False,AVAILABLE_AS_OF_FLAG
+AMS,AMS,0,0,,2023-07-05,1078,NEWS_MATCH_FOUND,Mise en vente judiciaire des AMS avec une mise à prix de 65 millions de dinars,2023-07-13,8.0,bankruptcy_distress,False,True,POST_EVENT_CONTEXT
+CREAL,CEREALIS,0,0,,2022-12-08,1287,NEWS_MATCH_FOUND,Power Brands monte à 95% au capital de CEREALIS,2022-12-12,4.0,other_news,False,True,POST_EVENT_CONTEXT
+GIF,GIF FILTER,0,0,,2024-10-22,603,NEWS_MATCH_FOUND,La Bourse de Tunis décide la radiation de la société GIF FILTER,2024-11-12,21.0,delisting_radiation,False,True,POST_EVENT_CONTEXT
+LSTR,ELECTROSTAR,0,0,,2024-07-22,695,NEWS_MATCH_FOUND,"En cessation de paiement, le Tribunal déclare la faillite de la société ELECTROSTAR",2024-07-24,2.0,bankruptcy_distress,False,True,POST_EVENT_CONTEXT
+MIP,MIP,0,0,,2024-07-29,688,NEWS_MATCH_FOUND,La société MIP a réalisé un chiffre d'affaires de 800 dinars en 2022,2024-08-01,3.0,earnings_results,False,True,POST_EVENT_CONTEXT
+SERVI,SERVICOM,0,0,,2023-11-30,930,NEWS_MATCH_FOUND,Suspension de la cotation du titre SERVICOM,2024-01-11,42.0,suspension,False,True,POST_EVENT_CONTEXT
+SOPAT,SOPAT,0,0,,2023-10-31,960,NEWS_MATCH_FOUND,"SOPAT : L'Offre Publique de Retrait sera ouverte le 11 octobre à un prix de 2,050 dinars l'action",2023-10-09,-22.0,buyout_opr,True,False,AVAILABLE_AS_OF_FLAG
