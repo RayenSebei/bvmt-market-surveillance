@@ -13,7 +13,6 @@ BVMT (_all_tickers_full.csv) Full Data Quality Check
 """
 
 import pandas as pd
-import numpy as np
 from pathlib import Path
 
 CSV_PATH = Path(__file__).resolve().parents[2] / "bvmt_data" / "_all_tickers_full.csv"
@@ -177,7 +176,7 @@ for rule, mask in violations.items():
 
 ohlc_bad = df_valid[any_violation].copy()
 
-print(f"\n  OHLC rule violations:")
+print("\n  OHLC rule violations:")
 for rule, mask in violations.items():
     print(f"    {rule:<22}: {mask.sum():>4} row(s)")
 
@@ -214,7 +213,7 @@ vol_stats = df_vol.groupby("symbole").agg(
 vol_stats["zero_pct"] = vol_stats["zero_vol_rows"] / vol_stats["total_rows"] * 100
 vol_stats_flagged = vol_stats[vol_stats["zero_pct"] > 50].sort_values("zero_pct", ascending=False)
 
-print(f"\n  Zero-volume day statistics (flagging > 50%):")
+print("\n  Zero-volume day statistics (flagging > 50%):")
 print(f"  {'Ticker':<10} {'Total Rows':>10} {'Zero-Vol Rows':>14} {'Zero %':>8}  Status")
 print(f"  {'-'*10} {'-'*10} {'-'*14} {'-'*8}  ------")
 for _, r in vol_stats.sort_values("zero_pct", ascending=False).iterrows():

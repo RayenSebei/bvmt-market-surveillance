@@ -1,5 +1,7 @@
 # Return-baseline correctness fix
 
+> **Historical before/after evidence:** the counts below deliberately preserve the pre-refresh dataset and are not current dashboard totals.
+
 This change is a correctness fix, not tuning against labeled events. The reference
 settings remain a 60-observation baseline, a z-score cutoff of 3.0, a 1% return
 standard-deviation floor, and a 10-calendar-day maximum gap for a daily return.

@@ -68,7 +68,7 @@ Precision@k ranks every reference flag by **`max(abs(volume_zscore), abs(return_
 | 19 | TINV | 2025-10-22 | 10.300 | Yes |
 | 20 | NBL | 2025-06-11 | 10.010 | No |
 
-The **0 of 20** result means none of these 20 highest-scoring flags falls inside the fixed -30/+5-day window around either of the 2 source-backed positive events with primary-window coverage. It does not establish that the 20 flags are false positives: the repository event list is intentionally small and incomplete.
+The **0 of 20** result means none of these 20 highest-scoring flags falls inside the fixed -30/+5-day windows around the 3 source-backed positive events with primary-window coverage. It does not establish that the 20 flags are false positives: the repository event list is intentionally small and incomplete.
 
 ## Baseline comparison
 
@@ -79,7 +79,7 @@ The **0 of 20** result means none of these 20 highest-scoring flags falls inside
 | absolute_return_only | 1237 | 2.948 | 1 of 3 events | 1 of 3 events | 0 of 20 flags | 0 flags in 1 window |
 | random_same_count_mean_1000_seeds | 1414 | 3.369 | 0.666 of 3 events on average | 1.075 of 3 events on average | 0.014 of 20 flags on average | 0.383 flags in 1 window on average |
 
-The reference detector does **not** beat the absolute-return-only baseline on recall or precision: both match 1 of 3 events in the primary window, 1 of 3 events in the secondary window, and 0 of 20 flags at k=20, while the reference produces 1,414 flags versus 1,237. It also does not improve recall over the volume-only baseline in this tiny event set. The random method keeps the reference number of flags per ticker and averages 1,000 deterministic seeds; its non-integer event and SOPAT counts are averages, not observed cases.
+The reference detector does **not** beat the absolute-return-only baseline on recall or precision: both match 1 of 3 events in the primary window, 1 of 3 events in the secondary window, and 0 of 20 flags at k=20, while the reference produces 1,414 flags versus 1,237. It does improve recall over the volume-only baseline in this tiny event set. The random method keeps the reference number of flags per ticker and averages 1,000 deterministic seeds; its non-integer event and SOPAT counts are averages, not observed cases.
 
 ## Sensitivity grid
 
@@ -107,7 +107,7 @@ The reference detector does **not** beat the absolute-return-only baseline on re
 
 ## Universe coverage audit
 
-The older combined file contains 60 symbols while 85 valid individual ticker files exist. The 25 omitted symbols are **AB, ADWYA, AETEC, AL, AMS, ARTES, ASSAD, ASSMA, AST, ATB, ATL, BH, BHASS, BHL, BIAT, BL, BNA, BNASS, BT, BTE, CC, CELL, CREAL, TJARI, TJL**. The derived 85-symbol file contains 61,812 source rows; the current detector excludes TBIDX and known-incomplete PLTU. No scraper or protected source file was changed or run.
+The historical 60-symbol combined file omitted 25 symbols: **AB, ADWYA, AETEC, AL, AMS, ARTES, ASSAD, ASSMA, AST, ATB, ATL, BH, BHASS, BHL, BIAT, BL, BNA, BNASS, BT, BTE, CC, CELL, CREAL, TJARI, TJL**. The refreshed 85-symbol file contains 67,035 source rows through 2026-10-12; the current detector excludes TBIDX and known-incomplete PLTU. The incremental refresh preserved every pre-snapshot source row.
 
 The archived 60-symbol evaluation used the earlier 20-observation warm-up and silent close clamping. It is retained only as historical provenance and is **not directly comparable** to the corrected 60-valid-observation, raw-OHLC reference reported here.
 

@@ -53,6 +53,28 @@ def test_news_on_or_before_flag_is_available_as_of_flag():
     assert result["gap_days"].tolist() == [0, -1]
 
 
+def test_later_headline_never_hides_available_as_of_context():
+    anomalies = pd.DataFrame({
+        "symbole": ["AAA"], "date": ["2025-01-10"], "combined_anomaly": [True],
+    })
+    news = pd.DataFrame({
+        "symbole": ["AAA", "AAA"],
+        "news_date": pd.to_datetime(["2025-01-07", "2025-01-11"]),
+        "headline": ["Earlier disclosure", "Later follow-up"],
+    })
+
+    row = classify_anomalies(anomalies, news).iloc[0]
+
+    assert row["matched_headline"] == "Earlier disclosure"
+    assert row["as_of_headline"] == "Earlier disclosure"
+    assert row["as_of_gap_days"] == -3
+    assert row["later_headline"] == "Later follow-up"
+    assert row["later_gap_days"] == 1
+    assert bool(row["news_available_as_of_flag"])
+    assert bool(row["post_event_news_context"])
+    assert row["news_match_timing"] == "AS_OF_AND_POST_EVENT_CONTEXT"
+
+
 def test_cross_reference_window_is_inclusive():
     flags = pd.DataFrame({
         "symbole": ["AAA", "AAA"],

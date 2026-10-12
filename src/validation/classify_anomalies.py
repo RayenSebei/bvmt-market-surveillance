@@ -97,34 +97,93 @@ def find_nearby_news(news_df, symbole, target_date, window_days):
     return nearby.iloc[0]  # closest match by absolute distance
 
 
+def find_news_context(news_df, symbole, target_date, window_days):
+    """Return the nearest as-of headline and nearest later headline separately."""
+    group = news_df[news_df["symbole"] == symbole]
+    if group.empty:
+        return None, None
+    nearby = group.copy()
+    nearby["gap_days"] = (nearby["news_date"] - target_date).dt.days
+    nearby = nearby[nearby["gap_days"].abs() <= window_days]
+    if nearby.empty:
+        return None, None
+    as_of = nearby[nearby["gap_days"] <= 0].sort_values(
+        ["gap_days", "news_date"], ascending=[False, False]
+    )
+    later = nearby[nearby["gap_days"] > 0].sort_values(
+        ["gap_days", "news_date"], ascending=[True, True]
+    )
+    return (
+        as_of.iloc[0] if not as_of.empty else None,
+        later.iloc[0] if not later.empty else None,
+    )
+
+
+def add_news_context(out, as_of, later):
+    selected = as_of if as_of is not None else later
+    if selected is None:
+        out.update({
+            "status": NO_LOCAL_MATCH,
+            "matched_headline": None,
+            "matched_news_date": None,
+            "gap_days": None,
+            "category": None,
+            "as_of_headline": None,
+            "as_of_news_date": None,
+            "as_of_gap_days": None,
+            "as_of_category": None,
+            "later_headline": None,
+            "later_news_date": None,
+            "later_gap_days": None,
+            "later_category": None,
+            "news_available_as_of_flag": False,
+            "post_event_news_context": False,
+            "news_match_timing": "NO_LOCAL_MATCH",
+        })
+        return
+
+    def fields(prefix, match):
+        if match is None:
+            return {
+                f"{prefix}_headline": None,
+                f"{prefix}_news_date": None,
+                f"{prefix}_gap_days": None,
+                f"{prefix}_category": None,
+            }
+        return {
+            f"{prefix}_headline": match["headline"],
+            f"{prefix}_news_date": match["news_date"].date(),
+            f"{prefix}_gap_days": int(match["gap_days"]),
+            f"{prefix}_category": classify_headline(match["headline"]),
+        }
+
+    out.update(fields("as_of", as_of))
+    out.update(fields("later", later))
+    out.update({
+        "status": NEWS_MATCH_FOUND,
+        "matched_headline": selected["headline"],
+        "matched_news_date": selected["news_date"].date(),
+        "gap_days": int(selected["gap_days"]),
+        "category": classify_headline(selected["headline"]),
+        "news_available_as_of_flag": as_of is not None,
+        "post_event_news_context": later is not None,
+        "news_match_timing": (
+            "AS_OF_AND_POST_EVENT_CONTEXT"
+            if as_of is not None and later is not None
+            else "AVAILABLE_AS_OF_FLAG" if as_of is not None else "POST_EVENT_CONTEXT"
+        ),
+    })
+
+
 def classify_anomalies(anomaly_df, news_df):
     results = []
     for _, row in anomaly_df.iterrows():
         target_date = pd.Timestamp(row["date"])
-        match = find_nearby_news(news_df, row["symbole"], target_date, ANOMALY_WINDOW_DAYS)
-
         out = row.to_dict()
-        if match is not None:
-            gap_days = int(match["gap_days"])
-            out["status"] = NEWS_MATCH_FOUND
-            out["matched_headline"] = match["headline"]
-            out["matched_news_date"] = match["news_date"].date()
-            out["gap_days"] = gap_days  # positive = news came AFTER the anomaly
-            out["category"] = classify_headline(match["headline"])
-            out["news_available_as_of_flag"] = gap_days <= 0
-            out["post_event_news_context"] = gap_days > 0
-            out["news_match_timing"] = (
-                "AVAILABLE_AS_OF_FLAG" if gap_days <= 0 else "POST_EVENT_CONTEXT"
-            )
-        else:
-            out["status"] = NO_LOCAL_MATCH
-            out["matched_headline"] = None
-            out["matched_news_date"] = None
-            out["gap_days"] = None
-            out["category"] = None
-            out["news_available_as_of_flag"] = False
-            out["post_event_news_context"] = False
-            out["news_match_timing"] = "NO_LOCAL_MATCH"
+        as_of, later = find_news_context(
+            news_df, row["symbole"], target_date, ANOMALY_WINDOW_DAYS
+        )
+        add_news_context(out, as_of, later)
         results.append(out)
 
     return pd.DataFrame(results)
@@ -138,39 +197,12 @@ def classify_decay(decay_df, news_df):
 
         out = row.to_dict()
         if pd.isna(last_active):
-            out["status"] = NO_LOCAL_MATCH
-            out["matched_headline"] = None
-            out["matched_news_date"] = None
-            out["gap_days"] = None
-            out["category"] = None
-            out["news_available_as_of_flag"] = False
-            out["post_event_news_context"] = False
-            out["news_match_timing"] = "NO_LOCAL_MATCH"
+            add_news_context(out, None, None)
             results.append(out)
             continue
 
-        match = find_nearby_news(news_df, symbole, last_active, DECAY_WINDOW_DAYS)
-        if match is not None:
-            gap_days = int(match["gap_days"])
-            out["status"] = NEWS_MATCH_FOUND
-            out["matched_headline"] = match["headline"]
-            out["matched_news_date"] = match["news_date"].date()
-            out["gap_days"] = gap_days
-            out["category"] = classify_headline(match["headline"])
-            out["news_available_as_of_flag"] = gap_days <= 0
-            out["post_event_news_context"] = gap_days > 0
-            out["news_match_timing"] = (
-                "AVAILABLE_AS_OF_FLAG" if gap_days <= 0 else "POST_EVENT_CONTEXT"
-            )
-        else:
-            out["status"] = NO_LOCAL_MATCH
-            out["matched_headline"] = None
-            out["matched_news_date"] = None
-            out["gap_days"] = None
-            out["category"] = None
-            out["news_available_as_of_flag"] = False
-            out["post_event_news_context"] = False
-            out["news_match_timing"] = "NO_LOCAL_MATCH"
+        as_of, later = find_news_context(news_df, symbole, last_active, DECAY_WINDOW_DAYS)
+        add_news_context(out, as_of, later)
         results.append(out)
 
     return pd.DataFrame(results)

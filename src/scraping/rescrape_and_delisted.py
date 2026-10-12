@@ -24,7 +24,6 @@ Two jobs in one script:
 import os
 from datetime import datetime
 
-import pandas as pd
 import requests
 
 from src.scraping.scrape_ilboursa import (
@@ -72,7 +71,7 @@ def rescrape_gap_tickers(session):
                 print(f"      {failure['from']} -> {failure['to']}")
                 all_failures.append((code, failure["from"], failure["to"]))
         else:
-            print(f"  No failed chunks this time — earlier gap was likely a transient scrape bug, now fixed.")
+            print("  No failed chunks this time — earlier gap was likely a transient scrape bug, now fixed.")
 
     return all_failures
 

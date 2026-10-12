@@ -1,5 +1,7 @@
 # Delivery Status
 
+> Sections before “October 2026 refresh and dashboard delivery” are historical snapshots. Their older counts are retained only as explicit provenance.
+
 ## Dashboard v2 delivery
 
 - Done: Rebuilt the seven-page dashboard with native SVG price/volume charts, complete flag filtering, contextual drawers, Watchlist, Help/Glossary, responsive states, and offline-only assets.
@@ -202,3 +204,17 @@
 - Done: No scraper ran, `.env` was untouched, and nothing was pushed.
 - Next: None. Delivery is complete.
 - Blockers: Five optional dashboard page screenshots remain on the report TODO list.
+
+## October 2026 refresh and dashboard delivery
+
+- Done: Created and verified `../bvmt_snapshot3` before mutation; `.env` was not copied, read, or changed.
+- Done: Incrementally added 5,223 price rows and 648 news rows, producing 67,035 price observations through 2026-10-12 and 12,498 canonical deduplicated news records.
+- Done: Reconciled the former 11,944 news count: it included 94 rows from the excluded `news_GIF_test.csv`; the canonical baseline was 11,850.
+- Done: Retained 2026-10-12 after confirming the scrape completed after the exchange session and the date contains 62 symbols, consistent with recent complete sessions.
+- Done: Listed 140 new source rows for review without editing them: 134 zero-volume, five with absolute daily return above 15%, and one OHLC violation. Four large-return rows are flags; no zero-volume or OHLC-violation row is flagged.
+- Done: Corrected the valid-return rolling baseline without tuning and regenerated 1,414 flags, including 21 combined flags, plus 16 refined-watchlist and 16 decay rows.
+- Done: Evaluation is 1 of 3 in both fixed windows. GIF is a hit; LSTR and SERVI are misses. SERVI became evaluable solely because newly downloaded data extends through 2024-01-08.
+- Done: Added LF-normalized portable manifest hashing, protected pipeline status logs, time-aware dual news context, and removed stale duplicate evaluation outputs.
+- Done: Added command navigation, calendar filtering, radar scatter, candlesticks, z-score panel, drag zoom, read-only detector playground, GIF/LSTR case studies, motion-safe transitions, and loading states.
+- Verification: final test, compilation, route, browser, screenshot, and manifest results are recorded in the Phase 8 commit and pull request.
+- Blockers: None.

@@ -4,24 +4,25 @@
     "minimum_valid_prior_observations": 60,
     "ohlc_policy": "raw"
   },
-  "generated_at_utc": "2026-10-12T19:22:09.635447+00:00",
+  "generated_at_utc": "2026-10-12T20:03:03.538643+00:00",
+  "hash_mode": "sha256_text_lf_normalized",
   "inputs": {
-    "bvmt_data/_all_tickers_full.csv": "3312511a0026dafe309ccec76c2d7d8db32c0ed1dcb6e9a35ac507247771963b",
-    "bvmt_data/anomaly_flags.csv": "7a6672286dd2022de0a889a26f3fdadb58c56966f9410f1c97e8ef09ef5a8646",
-    "data/evaluation/events.csv": "e32ed154662758a91b632e4bb18586e50ad41c44b14253d65cee3b80f6c5c874",
-    "src/detection/anomaly_detector.py": "546ab882933c62f78beb5af8dd920ea7b5401902627ab7c847d2e1cdcdfa129f",
-    "src/evaluation/baselines.py": "d42599c7fa64eb2837e32f22f94c359c524cb1c8d3cd314bc20b1850b5a2cd62",
-    "src/evaluation/config.json": "3a2d8460ab35e047f783581d3fb9d657e1e39687c5aaf39b0741192e3ef46878",
-    "src/evaluation/evaluate.py": "9b5f6db9409100415ab79ada1ef964c7085496b99c9aed0b9d32182fa5345224",
-    "src/evaluation/report.py": "738f51e9f5dc684318e1504057e424da84a1d3bf423aed625a0d31a98593f468",
-    "src/evaluation/sensitivity.py": "2eae8a979b9d65193598ed5936bb57478b911a6a3a75dac75052a269bc2f7754"
+    "bvmt_data/_all_tickers_full.csv": "723be5c8cab223860ef6e6484929a886de74ada07896138fdb29549d9af33dd7",
+    "bvmt_data/anomaly_flags.csv": "85a64b8ddc28d0e5731b3745c18d145988f43e648de5b01dc4f3e7b772afeff2",
+    "data/evaluation/events.csv": "a1fff5754672099d97b1ce1d852354d56f22671abf16cebf4968d12c64139cd7",
+    "src/detection/anomaly_detector.py": "c3fd526c8123362385e365b872e406c529c7e47924b083af5487c4a167e545a3",
+    "src/evaluation/baselines.py": "59dcaf044340db5aa787703ffcf00439dfa9775a49ae2f4b7683b00bce97754c",
+    "src/evaluation/config.json": "35df5d8d60da007f98c7301cd7e6fe445dba6049b5fc6e3f446ed6b24775de8d",
+    "src/evaluation/evaluate.py": "604dca52c56bc9718d6402c39847a7edb05078d6755c616dd8f6c62d87a03eea",
+    "src/evaluation/report.py": "5312e433842a274581730f8c08276794b5ff3b6a73a7c6513c845f378c2d56ff",
+    "src/evaluation/sensitivity.py": "8b84cfc93444ebccd1550631a6c922aba77474bc0264e7f8319f7a267d341ffb"
   },
   "outputs": {
-    "outputs/evaluation/baseline_comparison.csv": "4d585103133aedd811e11184a4de0781e25f656ec6dd757ccfc5a1fd0d33510f",
-    "outputs/evaluation/events_table.csv": "f1352bc8147c898fb30cae6570269e708271aa5b11556dd36030f1316cfbae0c",
-    "outputs/evaluation/metrics.csv": "8c20f64b0936d1f892c4709a9eb010f0185f16a8f61a26cdc1de232311681616",
-    "outputs/evaluation/sensitivity.csv": "8c4223c6d498b76579eafa9ec7a90855b48f47930b9b3b2d69793a34155fd49a",
-    "outputs/evaluation/summary.md": "a4ed53811942b1c7cf92a6a8e79b66974dd1e03d461a13937284f2dbdd905b56"
+    "outputs/evaluation/baseline_comparison.csv": "7fb4f4903b10eef493c9e795c41bb2d9c0254a4e0c217db8e21a8e5cad98493f",
+    "outputs/evaluation/events_table.csv": "97c876a6ca0846c944fb80f7ac914d142eaacc9a630461908a9817c29337a2ec",
+    "outputs/evaluation/metrics.csv": "b049e62f47ea32fd2655b8cd52e29ac163900fbefab049be08e913deeaad1b5a",
+    "outputs/evaluation/sensitivity.csv": "f317ffe198c22b08953454e3fb64e7625f8c5319217aa1ecc57207e298571d8d",
+    "outputs/evaluation/summary.md": "1d8406973be8dee0f66b3ea843aba6891f71a8c7076fbf62a7da33f656dcc29e"
   },
-  "schema_version": 1
+  "schema_version": 2
 }
