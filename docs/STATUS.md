@@ -1,10 +1,21 @@
 # Delivery Status
 
-> Sections before “October 2026 refresh and dashboard delivery” are historical snapshots. Their older counts are retained only as explicit provenance.
+## Current state
+
+- The dashboard has eight pages, matching the eight navigation entries and page sections in `templates/dashboard.html`.
+- The regenerated pipeline has 1,414 flags, 16 refined-watchlist rows, and 16 volume-decay cases.
+- The source-backed evaluation recalls 1 of 3 events in each fixed window; precision at 10, 20, and 50 is zero.
+- The reference detector does not beat the return-only baseline on recall or precision.
+- All linked README screenshots and documentation files exist.
+- Blockers: None.
+
+## Historical snapshots
+
+> Everything below this heading is retained as dated project provenance. Counts and test totals may be superseded; they do not describe the current regenerated state above.
 
 ## Dashboard v2 delivery
 
-- Done: Rebuilt the seven-page dashboard with native SVG price/volume charts, complete flag filtering, contextual drawers, Watchlist, Help/Glossary, responsive states, and offline-only assets.
+- Done: Rebuilt the eight-page dashboard with native SVG price/volume charts, complete flag filtering, contextual drawers, Watchlist, Help/Glossary, responsive states, and offline-only assets.
 - Done: Browser-verified all pages against the real 85-symbol outputs at desktop and 380-pixel widths; the console reported no warnings or errors.
 - Done: Saved all seven requested screenshots under `docs/screenshots/` and confirmed 17 Watchlist rows, 15 decay cases, 1,454 searchable flags, and more than 30 News Feed items.
 - Done: Expanded API fixture coverage while keeping legacy endpoint defaults backward compatible.
@@ -89,7 +100,7 @@
 
 - Done: Rewrote `README.md` to match the 60-ticker local dataset, analysis-first runner, optional Groq triage, current results, and limitations.
 - Done: Added `docs/REPORT.md` with data, methods, the Groq response fix, the 107 → 12 refined-watchlist explanation, event audit, real result and baseline tables, sensitivity, limitations, reproducibility, and sources.
-- Done: Added `docs/DEMO_SCRIPT.md` with a timed five-minute six-page walkthrough and five likely teacher questions.
+- Done: Added `docs/DEMO_SCRIPT.md` with a timed five-minute eight-page walkthrough and five likely teacher questions.
 - Done: Final offline suite passes: 36 tests. Compilation succeeds, and all 11 final smoke-test endpoints return HTTP 200.
 - Done: All 178 protected raw CSV hashes match `../bvmt_snapshot`. Seven derived CSVs differ after the pipeline and authorized AI run: anomaly flags/classification/summary, decay classification, watchlist, refined watchlist, and AI-assessed watchlist.
 - Done: No scraper or detector was run during Phases 4–6; `.env` was not touched; nothing was pushed.

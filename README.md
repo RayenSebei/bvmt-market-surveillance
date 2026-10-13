@@ -4,6 +4,8 @@ A reproducible statistical screening project for the Bourse de Valeurs Mobilièr
 
 > **Statistical screening tool for human review, not a fraud verdict.** This independent academic project is not affiliated with BVMT or CMF and is not investment or legal advice.
 
+**Key finding:** The detector recalls 1 of 3 source-backed events, while precision at k=10, 20, and 50 is 0. It does not beat the return-only baseline, and the evaluation is case-study-level only. The project's value is the screening, news-context, and watchlist workflow for a human analyst—not detection accuracy.
+
 ## What is included
 
 - An 85-symbol analysis dataset with 67,035 source observations covering 17 June 2021 to 12 October 2026.
@@ -12,6 +14,7 @@ A reproducible statistical screening project for the Bourse de Valeurs Mobilièr
 - Optional Groq-assisted triage whose output is a draft opinion for human review.
 - A source-audited, case-study-level evaluation with fixed event windows, simple baselines, sensitivity reporting, and a negative control.
 - An eight-page, responsive Flask dashboard with native SVG charts and an offline pytest suite.
+- The recovered React/TypeScript Market Command Center terminal is committed under `frontend/`, served at `/terminal` after an offline build, and backed by a read-only smoke-tested API.
 
 ## Dashboard v2
 
@@ -118,7 +121,7 @@ src/triage/                  optional Groq-assisted draft triage
 src/evaluation/              metrics, baselines, and sensitivity tools
 outputs/evaluation/          generated tables, figures, and summary
 outputs/evaluation_60symbol/ archived earlier 60-symbol evaluation
-templates/dashboard.html     semantic seven-page dashboard shell
+templates/dashboard.html     semantic eight-page dashboard shell
 static/dashboard.css         offline responsive design system
 static/dashboard.js          API client, native SVG charts, filters, and drawers
 tests/                       offline tests and minimal fixtures

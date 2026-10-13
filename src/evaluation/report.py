@@ -30,6 +30,7 @@ def main(output_dir=OUTPUT_DIR, title="Evaluation Summary") -> int:
     events = pd.read_csv(output_dir / "events_table.csv")
     event_results = pd.read_csv(output_dir / "event_results.csv")
     top20 = pd.read_csv(output_dir / "top_20_flags.csv")
+    triage = pd.read_csv(output_dir / "triage_stats.csv")
     denominator = int(metrics["eligible_positive_events_30d"])
     denominator60 = int(metrics["eligible_positive_events_60d"])
     sourced = int(metrics["sourced_positive_events"])
@@ -118,6 +119,25 @@ The historical 60-symbol combined file omitted 25 symbols: **{missing}**. The re
 The archived 60-symbol evaluation used the earlier 20-observation warm-up and silent close clamping. It is retained only as historical provenance and is **not directly comparable** to the corrected 60-valid-observation, raw-OHLC reference reported here.
 """
 
+    triage_counts = triage.set_index("metric")["count"]
+    category_counts = triage.loc[
+        triage["section"].eq("classification_category"), ["category", "count"]
+    ]
+    category_text = ", ".join(
+        f"**{row.category}: {int(row.count)}**"
+        for row in category_counts.itertuples(index=False)
+    )
+    triage_section = f"""
+## Triage layer
+
+These are descriptive pipeline counts, not performance measures.
+
+- **{int(triage_counts['total_flags'])}** total anomaly flags: **{int(triage_counts['flags_with_matched_news_context'])}** with matched news context and **{int(triage_counts['flags_without_matched_news_context'])}** without.
+- Matched-news classification categories: {category_text}.
+- **{int(triage_counts['anomaly_flags_in_refined_watchlist'])} of {int(triage_counts['total_flags'])}** anomaly flags survive into the **{int(triage_counts['refined_watchlist_rows'])}-row** refined watchlist.
+- **{int(triage_counts['evaluated_event_tickers_on_refined_watchlist'])} of {int(triage_counts['evaluated_event_tickers_total'])}** evaluated-event tickers appear on the refined watchlist.
+"""
+
     text = f"""# {title}
 
 ## Scope
@@ -179,6 +199,8 @@ The reference detector does **not** beat the absolute-return-only baseline on re
 {target_cells} of {len(sensitivity)} sensitivity cells match {ratio_text(target_recall, denominator)}; {zero_cells} of {len(sensitivity)} match 0 of {denominator} events. Flag load ranges from {int(sensitivity['flag_count'].min())} to {int(sensitivity['flag_count'].max())}. No cell was selected to improve the labeled-event result.
 
 {coverage_section}
+
+{triage_section}
 
 ## Limitations
 
