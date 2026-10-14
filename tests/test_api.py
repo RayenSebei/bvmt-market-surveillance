@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import pandas as pd
@@ -64,6 +65,35 @@ def test_tickers_merge_combined_and_individual_files(client):
         "BIAT": "BIAT",
         "BNA": "BANQUE NATIONALE AGRICOLE",
     }
+
+
+def test_csv_cache_reloads_after_file_mtime_changes(monkeypatch):
+    fixture_dir = Path(__file__).parent / "fixtures" / "cache_tmp"
+    fixture_dir.mkdir(exist_ok=True)
+    path = fixture_dir / "sample.csv"
+    monkeypatch.setattr(dashboard, "DATA_DIR", fixture_dir)
+    try:
+        pd.DataFrame({"value": [1]}).to_csv(path, index=False)
+        first = dashboard.load_csv("sample.csv")
+        first.loc[0, "value"] = 99
+        assert dashboard.load_csv("sample.csv").loc[0, "value"] == 1
+
+        prior_mtime = path.stat().st_mtime_ns
+        pd.DataFrame({"value": [2]}).to_csv(path, index=False)
+        os.utime(path, ns=(prior_mtime + 1_000_000_000, prior_mtime + 1_000_000_000))
+
+        assert dashboard.load_csv("sample.csv").loc[0, "value"] == 2
+    finally:
+        path.unlink(missing_ok=True)
+        fixture_dir.rmdir()
+
+
+def test_identical_requests_return_identical_json(client):
+    first = client.get("/api/overview")
+    second = client.get("/api/overview")
+
+    assert first.status_code == second.status_code == 200
+    assert first.get_json() == second.get_json()
 
 
 def test_pipeline_execution_is_disabled_by_default(client):

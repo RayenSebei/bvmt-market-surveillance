@@ -31,6 +31,7 @@ def main(output_dir=OUTPUT_DIR, title="Evaluation Summary") -> int:
     event_results = pd.read_csv(output_dir / "event_results.csv")
     top20 = pd.read_csv(output_dir / "top_20_flags.csv")
     triage = pd.read_csv(output_dir / "triage_stats.csv")
+    funnel = pd.read_csv(output_dir / "watchlist_funnel.csv")
     denominator = int(metrics["eligible_positive_events_30d"])
     denominator60 = int(metrics["eligible_positive_events_60d"])
     sourced = int(metrics["sourced_positive_events"])
@@ -127,6 +128,25 @@ The archived 60-symbol evaluation used the earlier 20-observation warm-up and si
         f"**{row.category}: {int(row.count)}**"
         for row in category_counts.itertuples(index=False)
     )
+    funnel_counts = funnel.loc[funnel["record_type"].eq("funnel_count")].set_index(
+        "exclusion_rule"
+    )["count"]
+    event_flags = funnel.loc[funnel["record_type"].eq("event_flag")]
+    no_flag_tickers = funnel.loc[
+        funnel["record_type"].eq("event_no_flags"), "ticker"
+    ].tolist()
+    event_flag_text = "; ".join(
+        f"{row.ticker} had a flag on {str(row.date)[:10]}, excluded by "
+        f"{str(row.exclusion_rule).replace('_', ' ')}"
+        for row in event_flags.itertuples(index=False)
+    )
+    no_flag_text = " and ".join(no_flag_tickers)
+    event_window_text = "; ".join(
+        part for part in (
+            event_flag_text,
+            f"{no_flag_text} had no flags" if no_flag_text else "",
+        ) if part
+    )
     triage_section = f"""
 ## Triage layer
 
@@ -136,6 +156,8 @@ These are descriptive pipeline counts, not performance measures.
 - Matched-news classification categories: {category_text}.
 - **{int(triage_counts['anomaly_flags_in_refined_watchlist'])} of {int(triage_counts['total_flags'])}** anomaly flags survive into the **{int(triage_counts['refined_watchlist_rows'])}-row** refined watchlist.
 - **{int(triage_counts['evaluated_event_tickers_on_refined_watchlist'])} of {int(triage_counts['evaluated_event_tickers_total'])}** evaluated-event tickers appear on the refined watchlist.
+
+The mutually exclusive watchlist funnel excludes **{int(funnel_counts['single_signal_only'])}** flags for being single-signal only, **{int(funnel_counts['news_matched'])}** for having matched news only, and **{int(funnel_counts['both'])}** for both conditions. In the three evaluable primary windows, {event_window_text}.
 """
 
     text = f"""# {title}

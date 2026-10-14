@@ -14,6 +14,7 @@ INPUT_PATHS = (
     "bvmt_data/_all_tickers_full.csv",
     "bvmt_data/anomaly_flags.csv",
     "bvmt_data/anomaly_classified.csv",
+    "bvmt_data/watchlist.csv",
     "bvmt_data/watchlist_refined.csv",
     "data/evaluation/events.csv",
     "src/detection/anomaly_detector.py",
@@ -30,6 +31,7 @@ OUTPUT_PATHS = (
     "outputs/evaluation/sensitivity.csv",
     "outputs/evaluation/events_table.csv",
     "outputs/evaluation/triage_stats.csv",
+    "outputs/evaluation/watchlist_funnel.csv",
     "outputs/evaluation/summary.md",
 )
 

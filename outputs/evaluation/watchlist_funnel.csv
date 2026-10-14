@@ -1,0 +1,7 @@
+record_type,event_id,ticker,event_date,window_start,window_end,date,volume_anomaly,price_anomaly,combined_anomaly,status,in_watchlist,in_watchlist_refined,exclusion_rule,count
+event_flag,GIF-2024-radiation,GIF,2024-10-25,2024-09-25,2024-10-30,2024-10-22,False,True,False,NO_LOCAL_MATCH,False,False,single_signal_only,
+event_no_flags,LSTR-2024-bankruptcy,LSTR,2024-07-23,2024-06-23,2024-07-28,,,,,NO_FLAGS_IN_PRIMARY_WINDOW,,,,
+event_no_flags,SERVI-2024-bankruptcy,SERVI,2024-01-11,2023-12-12,2024-01-16,,,,,NO_FLAGS_IN_PRIMARY_WINDOW,,,,
+funnel_count,,,,,,,,,,,,,single_signal_only,856
+funnel_count,,,,,,,,,,,,,news_matched,11
+funnel_count,,,,,,,,,,,,,both,537
