@@ -21,3 +21,5 @@ frontend/verification/
 *.log
 .playwright-mcp/
 bvmt-dashboard/
+deliverables/
+tmp/
