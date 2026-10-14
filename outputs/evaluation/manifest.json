@@ -4,7 +4,7 @@
     "minimum_valid_prior_observations": 60,
     "ohlc_policy": "raw"
   },
-  "generated_at_utc": "2026-10-14T11:27:10.986127+00:00",
+  "generated_at_utc": "2026-10-14T17:49:15.696225+00:00",
   "hash_mode": "sha256_text_lf_normalized",
   "inputs": {
     "bvmt_data/_all_tickers_full.csv": "723be5c8cab223860ef6e6484929a886de74ada07896138fdb29549d9af33dd7",

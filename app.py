@@ -84,6 +84,7 @@ app.config.update(
     PIPELINE_API_ENABLED=env_true("BVMT_ENABLE_PIPELINE_API"),
     PIPELINE_NETWORK_SCRAPE_ENABLED=env_true("BVMT_ENABLE_NETWORK_SCRAPE"),
     PIPELINE_API_TOKEN=os.environ.get("BVMT_PIPELINE_API_TOKEN", ""),
+    CACHE_WARMUP_ENABLED=env_true("BVMT_WARM_CACHE", True),
 )
 
 # ── SCRAPE STATE ─────────────────────────────────────────────────────────────
@@ -98,6 +99,22 @@ cache_lock = threading.RLock()
 _csv_cache = {}
 _news_lookup_cache = {}
 _ticker_list_cache = {}
+STARTUP_DATA_CSVS = (
+    "_all_tickers_full.csv",
+    "_all_news_combined.csv",
+    "anomaly_flags.csv",
+    "anomaly_classified.csv",
+    "anomaly_summary.csv",
+    "watchlist_refined.csv",
+    "watchlist_ai_assessed.csv",
+    "decay_classified.csv",
+)
+STARTUP_EVALUATION_CSVS = (
+    "metrics.csv",
+    "baseline_comparison.csv",
+    "sensitivity.csv",
+    "events_table.csv",
+)
 
 
 def _freeze_cache_value(value):
@@ -285,6 +302,17 @@ def news_lookup():
             _news_lookup_cache.pop(item, None)
         _news_lookup_cache[key] = result
     return result
+
+
+def warm_startup_caches() -> None:
+    """Optionally preload frequently used read-only tables before serving requests."""
+    for filename in STARTUP_DATA_CSVS:
+        if (DATA_DIR / filename).is_file():
+            load_csv(filename)
+    for filename in STARTUP_EVALUATION_CSVS:
+        if (EVALUATION_DIR / filename).is_file():
+            load_evaluation_csv(filename)
+    news_lookup()
 
 
 def anomaly_record(row, headline_urls=None, date_urls=None):
@@ -1154,44 +1182,6 @@ def api_playground():
     return jsonify(result) if result else (jsonify({"error": "Sensitivity data unavailable"}), 404)
 
 
-@app.route("/api/case-studies")
-def api_case_studies():
-    """Annotated GIF/LSTR case-study inputs from generated evaluation data."""
-    events = load_evaluation_csv("event_results.csv")
-    if events.empty or "ticker" not in events.columns:
-        return jsonify([])
-    studies = []
-    for ticker in ("GIF", "LSTR"):
-        event = events[events.get("ticker", "") == ticker]
-        prices = load_csv(f"{ticker}.csv")
-        if event.empty or prices.empty:
-            continue
-        row = event.iloc[0]
-        event_date = pd.to_datetime(row.get("event_date"), errors="coerce")
-        prices["date"] = pd.to_datetime(prices.get("date"), errors="coerce")
-        prices = prices[
-            prices["date"].between(event_date - timedelta(days=120), event_date + timedelta(days=10))
-        ].sort_values("date")
-        studies.append({
-            "ticker": ticker,
-            "event_name": safe_val(row.get("event_name"), ""),
-            "event_date": event_date.strftime("%Y-%m-%d"),
-            "source": safe_http_url(row.get("source")),
-            "hit_30d": bool(is_true(row.get("hit_30d"))),
-            "matched_flag_date_30d": safe_val(row.get("first_matching_flag_30d"), ""),
-            "lead_days_30d": number(row.get("lead_time_days_30d"), integer=True),
-            "prices": [
-                {
-                    "date": item["date"].strftime("%Y-%m-%d"),
-                    "close": number(item.get("cloture"), 3),
-                    "volume": number(item.get("volume"), integer=True),
-                }
-                for _, item in prices.iterrows() if pd.notna(item.get("date"))
-            ],
-        })
-    return jsonify(studies)
-
-
 @app.route("/api/evaluation/metrics")
 def api_evaluation_metrics():
     df = load_evaluation_csv("metrics.csv")
@@ -1219,4 +1209,6 @@ def api_evaluation_events():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     host = os.environ.get("HOST", "127.0.0.1")
+    if app.config["CACHE_WARMUP_ENABLED"]:
+        warm_startup_caches()
     app.run(host=host, port=port, debug=False)

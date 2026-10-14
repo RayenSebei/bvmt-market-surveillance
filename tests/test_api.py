@@ -35,7 +35,7 @@ def client(monkeypatch):
     ("get", "/api/summary"), ("get", "/api/news/categories"),
     ("get", "/api/watchlist"), ("get", "/api/overview"),
     ("get", "/api/overview/calendar"), ("get", "/api/overview/radar"),
-    ("get", "/api/playground"), ("get", "/api/case-studies"),
+    ("get", "/api/playground"),
     ("get", "/api/evaluation/metrics"), ("get", "/api/evaluation/baselines"),
     ("get", "/api/evaluation/sensitivity"), ("get", "/api/evaluation/events"),
 ])
@@ -94,6 +94,34 @@ def test_identical_requests_return_identical_json(client):
 
     assert first.status_code == second.status_code == 200
     assert first.get_json() == second.get_json()
+
+
+def test_startup_warmup_preloads_existing_csv_and_news_caches(client, monkeypatch):
+    fixture_dir = Path(__file__).parent / "fixtures" / "api_data"
+    evaluation_dir = Path(__file__).parent / "fixtures" / "evaluation"
+    monkeypatch.setattr(dashboard, "DATA_DIR", fixture_dir)
+    monkeypatch.setattr(dashboard, "EVALUATION_DIR", evaluation_dir)
+    monkeypatch.setattr(
+        dashboard,
+        "STARTUP_DATA_CSVS",
+        ("_all_tickers_full.csv", "anomaly_classified.csv", "_all_news_combined.csv"),
+    )
+    monkeypatch.setattr(dashboard, "STARTUP_EVALUATION_CSVS", ("metrics.csv",))
+    monkeypatch.setattr(dashboard, "_csv_cache", {})
+    monkeypatch.setattr(dashboard, "_news_lookup_cache", {})
+
+    before = client.get("/api/overview").get_json()
+    dashboard.warm_startup_caches()
+    after = client.get("/api/overview").get_json()
+
+    cached_paths = {key[0] for key in dashboard._csv_cache}
+    expected_paths = {
+        str((fixture_dir / filename).resolve())
+        for filename in dashboard.STARTUP_DATA_CSVS
+    } | {str((evaluation_dir / "metrics.csv").resolve())}
+    assert expected_paths.issubset(cached_paths)
+    assert len(dashboard._news_lookup_cache) == 1
+    assert before == after
 
 
 def test_pipeline_execution_is_disabled_by_default(client):

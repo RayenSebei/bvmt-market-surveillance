@@ -2,7 +2,7 @@
 
 ## Current state
 
-- The dashboard has eight pages, matching the eight navigation entries and page sections in `templates/dashboard.html`.
+- The dashboard has seven pages, matching the seven navigation entries and page sections in `templates/dashboard.html`.
 - The regenerated pipeline has 1,414 flags, 16 refined-watchlist rows, and 16 volume-decay cases.
 - The source-backed evaluation recalls 1 of 3 events in each fixed window; precision at 10, 20, and 50 is zero.
 - The reference detector does not beat the return-only baseline on recall or precision.
@@ -15,7 +15,7 @@
 
 ## Dashboard v2 delivery
 
-- Done: Rebuilt the eight-page dashboard with native SVG price/volume charts, complete flag filtering, contextual drawers, Watchlist, Help/Glossary, responsive states, and offline-only assets.
+- Done: Rebuilt the seven-page dashboard with native SVG price/volume charts, complete flag filtering, contextual drawers, Watchlist, Help/Glossary, responsive states, and offline-only assets.
 - Done: Browser-verified all pages against the real 85-symbol outputs at desktop and 380-pixel widths; the console reported no warnings or errors.
 - Done: Saved all seven requested screenshots under `docs/screenshots/` and confirmed 17 Watchlist rows, 15 decay cases, 1,454 searchable flags, and more than 30 News Feed items.
 - Done: Expanded API fixture coverage while keeping legacy endpoint defaults backward compatible.
@@ -100,7 +100,7 @@
 
 - Done: Rewrote `README.md` to match the 60-ticker local dataset, analysis-first runner, optional Groq triage, current results, and limitations.
 - Done: Added `docs/REPORT.md` with data, methods, the Groq response fix, the 107 → 12 refined-watchlist explanation, event audit, real result and baseline tables, sensitivity, limitations, reproducibility, and sources.
-- Done: Added `docs/DEMO_SCRIPT.md` with a timed five-minute eight-page walkthrough and five likely teacher questions.
+- Done: Added `docs/DEMO_SCRIPT.md` with a timed five-minute seven-page walkthrough and five likely teacher questions.
 - Done: Final offline suite passes: 36 tests. Compilation succeeds, and all 11 final smoke-test endpoints return HTTP 200.
 - Done: All 178 protected raw CSV hashes match `../bvmt_snapshot`. Seven derived CSVs differ after the pipeline and authorized AI run: anomaly flags/classification/summary, decay classification, watchlist, refined watchlist, and AI-assessed watchlist.
 - Done: No scraper or detector was run during Phases 4–6; `.env` was not touched; nothing was pushed.
@@ -226,9 +226,9 @@
 - Done: Corrected the valid-return rolling baseline without tuning and regenerated 1,414 flags, including 21 combined flags, plus 16 refined-watchlist and 16 decay rows.
 - Done: Evaluation is 1 of 3 in both fixed windows. GIF is a hit; LSTR and SERVI are misses. SERVI became evaluable solely because newly downloaded data extends through 2024-01-08.
 - Done: Added LF-normalized portable manifest hashing, protected pipeline status logs, time-aware dual news context, and removed stale duplicate evaluation outputs.
-- Done: Added command navigation, calendar filtering, radar scatter, candlesticks, z-score panel, drag zoom, read-only detector playground, GIF/LSTR case studies, motion-safe transitions, and loading states.
+- Done: Added command navigation, calendar filtering, radar scatter, candlesticks, z-score panel, drag zoom, a read-only detector playground, motion-safe transitions, and loading states.
 - Verification: 103 automated tests passed in 138.98 seconds; Python compilation, JavaScript syntax, and Python static checks passed.
 - Verification: all 24 enabled real-data GET routes returned HTTP 200, while both protected scrape routes returned HTTP 404 as designed.
-- Verification: all eight dashboard views passed at 1440×900 and 380×844 (16 browser checks total), with zero console warnings or errors; matching desktop and mobile screenshots are saved under `docs/screenshots/`.
+- Verification: all seven dashboard views passed at 1440×900 and 380×844 (14 browser checks total), with zero console warnings or errors; matching desktop and mobile screenshots are saved under `docs/screenshots/`.
 - Verification: the evaluation manifest is fresh with no mismatches, and `.env` remains ignored, untracked, and untouched.
 - Blockers: None.

@@ -1,6 +1,6 @@
 [hidden] { display: none !important; }
 .page.active { animation: page-in .22s ease both; }
-.chart svg, .stock-chart svg, .mini-chart svg, .z-chart svg, .case-card svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.chart svg, .stock-chart svg, .mini-chart svg, .z-chart svg { width: 100%; height: 100%; display: block; overflow: visible; }
 .grid-line { stroke: var(--line); }
 .axis-text { fill: var(--muted); font-size: 11px; }
 .price-line { fill: none; stroke: var(--blue); stroke-width: 2.4; stroke-linejoin: round; }
@@ -37,8 +37,6 @@
 .playground input { grid-column: 2; }
 .play-result { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
 .play-result > * { background: var(--soft); border-radius: 10px; padding: 12px 16px; }
-.case-card svg { height: 260px; margin: 16px 0; }
-.event-line { stroke: var(--amber); stroke-width: 2; stroke-dasharray: 5 4; }
 kbd { font: 10px ui-monospace, monospace; border: 1px solid #ffffff55; border-radius: 4px; padding: 2px 4px; }
 .command-backdrop { display: grid; place-items: start center; padding-top: 12vh; z-index: 80; }
 .command-palette { width: min(620px, calc(100% - 28px)); background: var(--panel); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 24px 80px #0007; overflow: hidden; }

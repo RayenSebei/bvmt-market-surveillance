@@ -2,7 +2,7 @@
 
 ## Before the demo
 
-Run `python app.py`, open the eight-page dashboard at `http://127.0.0.1:5000`, and click **Start guided tour** on Case Studies if you want the built-in prompts. Do not scrape during the presentation.
+Run `python app.py` and open the seven-page dashboard at `http://127.0.0.1:5000`. Do not scrape during the presentation.
 
 ## 0:00–0:40 — Purpose and coverage
 
@@ -28,7 +28,7 @@ Say: “The stock view supports line and candlestick modes, drag-to-zoom, volume
 
 Say: “The refined queue has 16 rows and there are 16 separate volume-decay cases. The Detector Playground reads the precomputed sensitivity grid live, but it is exploratory and does not change the reference detector.”
 
-## 3:25–4:30 — Evaluation and Case Studies
+## 3:25–4:30 — Evaluation
 
 Say: “The fixed primary window is 30 days before through five days after an event. All three sourced positives are now evaluable, and the reference detector hits 1 of 3. GIF is the hit; LSTR and SERVI are misses.”
 

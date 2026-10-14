@@ -47,7 +47,7 @@ These results are descriptive case studies, not an accuracy estimate. Three posi
 
 ## Dashboard and reproducibility
 
-The offline eight-page Flask dashboard exposes the complete review queue and adds a keyboard command palette, clickable flag calendar, volume/return surveillance radar, line/candlestick stock views, z-score panel, drag zoom, a read-only detector playground, and annotated GIF/LSTR case studies. All visuals use native SVG and remain responsive at 380 px. The evaluation page explicitly explains why SERVI changed the denominator and identifies its miss.
+The offline seven-page Flask dashboard exposes the complete review queue and adds a keyboard command palette, clickable flag calendar, volume/return surveillance radar, line/candlestick stock views, z-score panel, drag zoom, and a read-only detector playground. All visuals use native SVG and remain responsive at 380 px. The evaluation page explicitly explains why SERVI changed the denominator and identifies its miss.
 
 The generated manifest hashes text after canonical LF normalization, so freshness checks are portable across Windows, Linux, and macOS. Pipeline status logs require the explicitly enabled execution API and its bearer token. The default command performs analysis only and makes neither network nor AI calls.
 
