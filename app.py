@@ -17,7 +17,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 import pandas as pd
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, render_template, request, send_from_directory
 from flask_cors import CORS
 from flask.json.provider import DefaultJSONProvider
 from src.evaluation.provenance import MANIFEST_PATH, verify_manifest
@@ -68,6 +68,7 @@ if cors_origins:
 # ── DATA DIRECTORY ──────────────────────────────────────────────────────────
 DATA_DIR = Path(os.environ.get("DATA_DIR", "./bvmt_data"))
 EVALUATION_DIR = Path(os.environ.get("EVALUATION_DIR", "./outputs/evaluation"))
+FRONTEND_DIR = Path(__file__).resolve().parent / "frontend"
 TICKER_FILE_PATTERN = re.compile(r"^[A-Z0-9]+$")
 NEWS_MATCH_STATUSES = {"NEWS_MATCH_FOUND", "EXPLAINED"}
 NO_MATCH_STATUSES = {"NO_LOCAL_MATCH", "UNEXPLAINED"}
@@ -331,6 +332,38 @@ def run_scraper_background(mode: str):
 @app.route("/")
 def index():
     return render_template("dashboard.html")
+
+
+@app.route("/terminal")
+def terminal():
+    """Serve the optional built terminal without replacing the research dashboard."""
+    dist = FRONTEND_DIR / "dist"
+    if not (dist / "index.html").is_file():
+        return jsonify({"error": "Terminal build unavailable; run npm ci and npm run build in frontend/"}), 503
+    return send_from_directory(dist, "index.html")
+
+
+@app.route("/assets/<path:filename>")
+def terminal_asset(filename):
+    return send_from_directory(FRONTEND_DIR / "dist" / "assets", filename)
+
+
+@app.route("/favicon.svg")
+def terminal_icon():
+    return send_from_directory(FRONTEND_DIR / "public", "favicon.svg")
+
+
+@app.route("/api/command-center")
+def api_command_center():
+    from src.dashboard import command_center
+
+    days = request.args.get("days", "90")
+    if days not in {"30", "90", "365"}:
+        return jsonify({"error": "days must be 30, 90, or 365"}), 400
+    result, status = command_center(
+        load_csv("_all_tickers_full.csv"), load_csv("anomaly_flags.csv"), int(days)
+    )
+    return jsonify(result), status
 
 
 @app.route("/api/status")

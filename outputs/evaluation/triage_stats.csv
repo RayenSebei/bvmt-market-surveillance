@@ -1,0 +1,15 @@
+section,metric,category,count
+flags,total_flags,,1414
+news_context,flags_with_matched_news_context,,548
+news_context,flags_without_matched_news_context,,866
+classification_category,matched_news_category,buyout_opr,1
+classification_category,matched_news_category,capital_increase,4
+classification_category,matched_news_category,dividend,18
+classification_category,matched_news_category,earnings_results,200
+classification_category,matched_news_category,governance,13
+classification_category,matched_news_category,other_news,311
+classification_category,matched_news_category,suspension,1
+watchlist,anomaly_flags_in_refined_watchlist,,10
+watchlist,refined_watchlist_rows,,16
+evaluated_events,evaluated_event_tickers_total,,3
+evaluated_events,evaluated_event_tickers_on_refined_watchlist,,0

@@ -43,6 +43,18 @@ def test_every_endpoint_smoke(client, method, path):
     assert response.status_code == 200
 
 
+def test_terminal_route_and_read_only_api_smoke(client):
+    page = client.get("/terminal")
+    data = client.get("/api/command-center?days=30")
+
+    assert (dashboard.FRONTEND_DIR / "package.json").is_file()
+    assert page.status_code in {200, 503}
+    if page.status_code == 503:
+        assert "Terminal build unavailable" in page.get_json()["error"]
+    assert data.status_code == 200
+    assert data.get_json()["metrics"]["flags"] == 1
+
+
 def test_tickers_merge_combined_and_individual_files(client):
     response = client.get("/api/tickers")
     assert response.status_code == 200

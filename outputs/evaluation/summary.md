@@ -105,11 +105,16 @@ The reference detector does **not** beat the absolute-return-only baseline on re
 14 of 16 sensitivity cells match 1 of 3 events; 2 of 16 match 0 of 3 events. Flag load ranges from 397 to 3182. No cell was selected to improve the labeled-event result.
 
 
-## Universe coverage audit
 
-The historical 60-symbol combined file omitted 25 symbols: **AB, ADWYA, AETEC, AL, AMS, ARTES, ASSAD, ASSMA, AST, ATB, ATL, BH, BHASS, BHL, BIAT, BL, BNA, BNASS, BT, BTE, CC, CELL, CREAL, TJARI, TJL**. The refreshed 85-symbol file contains 67,035 source rows through 2026-10-12; the current detector excludes TBIDX and known-incomplete PLTU. The incremental refresh preserved every pre-snapshot source row.
 
-The archived 60-symbol evaluation used the earlier 20-observation warm-up and silent close clamping. It is retained only as historical provenance and is **not directly comparable** to the corrected 60-valid-observation, raw-OHLC reference reported here.
+## Triage layer
+
+These are descriptive pipeline counts, not performance measures.
+
+- **1414** total anomaly flags: **548** with matched news context and **866** without.
+- Matched-news classification categories: **buyout_opr: 1**, **capital_increase: 4**, **dividend: 18**, **earnings_results: 200**, **governance: 13**, **other_news: 311**, **suspension: 1**.
+- **10 of 1414** anomaly flags survive into the **16-row** refined watchlist.
+- **0 of 3** evaluated-event tickers appear on the refined watchlist.
 
 
 ## Limitations

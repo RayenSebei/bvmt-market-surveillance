@@ -24,6 +24,7 @@ EVALUATION_STEPS = [
     "src/evaluation/evaluate.py",
     "src/evaluation/baselines.py",
     "src/evaluation/sensitivity.py",
+    "src/evaluation/triage_stats.py",
     "src/evaluation/report.py",
     "src/evaluation/provenance.py",
 ]
