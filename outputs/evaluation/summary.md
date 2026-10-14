@@ -116,6 +116,8 @@ These are descriptive pipeline counts, not performance measures.
 - **10 of 1414** anomaly flags survive into the **16-row** refined watchlist.
 - **0 of 3** evaluated-event tickers appear on the refined watchlist.
 
+The mutually exclusive watchlist funnel excludes **856** flags for being single-signal only, **11** for having matched news only, and **537** for both conditions. In the three evaluable primary windows, GIF had a flag on 2024-10-22, excluded by single signal only; LSTR and SERVI had no flags.
+
 
 ## Limitations
 

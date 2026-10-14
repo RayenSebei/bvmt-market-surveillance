@@ -94,32 +94,66 @@ scrape_state = {
     "log": []
 }
 scrape_lock = threading.Lock()
+cache_lock = threading.RLock()
+_csv_cache = {}
+_news_lookup_cache = {}
+_ticker_list_cache = {}
+
+
+def _freeze_cache_value(value):
+    """Convert common pandas read options into a stable, hashable cache key."""
+    if isinstance(value, dict):
+        return ("dict", tuple(sorted((str(key), _freeze_cache_value(item)) for key, item in value.items())))
+    if isinstance(value, (list, tuple)):
+        return (type(value).__name__, tuple(_freeze_cache_value(item) for item in value))
+    if isinstance(value, (set, frozenset)):
+        return (type(value).__name__, tuple(sorted(_freeze_cache_value(item) for item in value)))
+    if isinstance(value, Path):
+        return ("path", str(value))
+    try:
+        hash(value)
+    except TypeError:
+        return ("identity", id(value))
+    return ("value", value)
+
+
+def _path_cache_key(path: Path, kwargs: dict) -> tuple:
+    resolved = str(path.resolve())
+    mtime_ns = path.stat().st_mtime_ns
+    options = tuple(sorted((key, _freeze_cache_value(value)) for key, value in kwargs.items()))
+    return resolved, mtime_ns, options
+
+
+def _load_csv_path(path: Path, label: str, **kwargs) -> pd.DataFrame:
+    if not path.exists():
+        app.logger.warning(f"{label} file not found: {path}")
+        return pd.DataFrame()
+    try:
+        key = _path_cache_key(path, kwargs)
+        with cache_lock:
+            cached = _csv_cache.get(key)
+        if cached is None:
+            loaded = pd.read_csv(path, **kwargs)
+            with cache_lock:
+                stale = [item for item in _csv_cache if item[0] == key[0] and item != key]
+                for item in stale:
+                    _csv_cache.pop(item, None)
+                _csv_cache[key] = loaded
+            cached = loaded
+        return cached.copy()
+    except Exception as exc:
+        app.logger.error(f"Error reading {path}: {exc}")
+        return pd.DataFrame()
 
 
 def load_csv(filename: str, **kwargs) -> pd.DataFrame:
     """Load a CSV from DATA_DIR. Returns empty DataFrame on error."""
-    path = DATA_DIR / filename
-    if not path.exists():
-        app.logger.warning(f"File not found: {path}")
-        return pd.DataFrame()
-    try:
-        return pd.read_csv(path, **kwargs)
-    except Exception as exc:
-        app.logger.error(f"Error reading {path}: {exc}")
-        return pd.DataFrame()
+    return _load_csv_path(DATA_DIR / filename, "Data", **kwargs)
 
 
 def load_evaluation_csv(filename: str) -> pd.DataFrame:
     """Load a generated evaluation table without modifying it."""
-    path = EVALUATION_DIR / filename
-    if not path.exists():
-        app.logger.warning(f"Evaluation file not found: {path}")
-        return pd.DataFrame()
-    try:
-        return pd.read_csv(path)
-    except Exception as exc:
-        app.logger.error(f"Error reading {path}: {exc}")
-        return pd.DataFrame()
+    return _load_csv_path(EVALUATION_DIR / filename, "Evaluation")
 
 
 def is_true(value) -> bool:
@@ -215,11 +249,23 @@ def risk_level(z) -> str:
 
 
 def news_lookup():
-    """Return parsed news plus conservative headline/date URL indexes."""
+    """Return immutable-by-convention news data and indexes cached by source mtime."""
+    path = DATA_DIR / "_all_news_combined.csv"
+    if not path.exists():
+        return pd.DataFrame(), {}, {}
+    try:
+        key = (str(path.resolve()), path.stat().st_mtime_ns)
+    except OSError as exc:
+        app.logger.error(f"Error reading {path}: {exc}")
+        return pd.DataFrame(), {}, {}
+    with cache_lock:
+        cached = _news_lookup_cache.get(key)
+    if cached is not None:
+        return cached
+
     news = load_csv("_all_news_combined.csv")
     if news.empty:
         return news, {}, {}
-    news = news.copy()
     news["parsed_date"] = pd.to_datetime(news.get("date_str"), format="%d/%m/%y", errors="coerce")
     by_headline = {}
     by_date = {}
@@ -232,7 +278,13 @@ def news_lookup():
             by_headline[(symbol, headline)] = url
         if symbol and pd.notna(date) and url:
             by_date.setdefault((symbol, date.strftime("%Y-%m-%d")), url)
-    return news, by_headline, by_date
+    result = (news, by_headline, by_date)
+    with cache_lock:
+        stale = [item for item in _news_lookup_cache if item[0] == key[0] and item != key]
+        for item in stale:
+            _news_lookup_cache.pop(item, None)
+        _news_lookup_cache[key] = result
+    return result
 
 
 def anomaly_record(row, headline_urls=None, date_urls=None):
@@ -544,8 +596,8 @@ def api_anomalies_search():
         return jsonify({"rows": [], "total": 0, "page": 1, "page_size": 25, "pages": 0})
     df = df.copy()
     df["date"] = pd.to_datetime(df.get("date"), errors="coerce")
-    volume = df.get("volume_anomaly", pd.Series(False, index=df.index)).map(is_true)
-    price = df.get("price_anomaly", pd.Series(False, index=df.index)).map(is_true)
+    volume = df.get("volume_anomaly", pd.Series(False, index=df.index)).astype(str).str.strip().str.lower().eq("true")
+    price = df.get("price_anomaly", pd.Series(False, index=df.index)).astype(str).str.strip().str.lower().eq("true")
     df = df[volume | price].copy()
     df["max_zscore"] = df[["volume_zscore", "return_zscore"]].apply(pd.to_numeric, errors="coerce").abs().max(axis=1)
 
@@ -564,7 +616,8 @@ def api_anomalies_search():
     if signal and signal not in {"volume", "price"}:
         return jsonify({"error": "Invalid signal filter"}), 400
     if signal:
-        df = df[df.apply(lambda row: signal in signal_type(row).lower(), axis=1)]
+        signal_mask = volume if signal == "volume" else price
+        df = df[signal_mask.reindex(df.index, fill_value=False)]
     category = request.args.get("category", "").strip().lower()
     if category:
         df = df[df.get("category", "").fillna("").astype(str).str.lower() == category]
@@ -741,8 +794,13 @@ def api_news_recent():
         allowed = set()
         if not classified.empty:
             cats = classified[classified.get("category", "").fillna("").astype(str).str.lower() == category_filter]
-            allowed = {(str(row.get("symbole", "")).upper(), str(row.get("matched_headline", ""))) for _, row in cats.iterrows()}
-        df = df[df.apply(lambda row: (str(row.get("symbole", "")).upper(), str(row.get("headline", ""))) in allowed, axis=1)]
+            cat_symbols = cats.get("symbole", pd.Series("", index=cats.index)).astype(str).str.upper()
+            cat_headlines = cats.get("matched_headline", pd.Series("", index=cats.index)).astype(str)
+            allowed = set(zip(cat_symbols, cat_headlines))
+        news_symbols = df.get("symbole", pd.Series("", index=df.index)).astype(str).str.upper()
+        news_headlines = df.get("headline", pd.Series("", index=df.index)).astype(str)
+        keys = pd.MultiIndex.from_arrays([news_symbols, news_headlines])
+        df = df[keys.isin(allowed)]
     df = df.head(limit)
 
     records = []
@@ -857,6 +915,24 @@ def api_stock(ticker):
 @app.route("/api/tickers")
 def api_tickers():
     """List of all available ticker symbols."""
+    resolved_dir = str(DATA_DIR.resolve())
+    try:
+        directory_mtime = DATA_DIR.stat().st_mtime_ns
+    except OSError:
+        directory_mtime = None
+    source_mtimes = []
+    for path in DATA_DIR.glob("*.csv"):
+        if path.name == "_all_tickers_full.csv" or TICKER_FILE_PATTERN.fullmatch(path.stem):
+            try:
+                source_mtimes.append((path.name, path.stat().st_mtime_ns))
+            except OSError:
+                source_mtimes.append((path.name, None))
+    cache_key = (resolved_dir, directory_mtime, tuple(sorted(source_mtimes)))
+    with cache_lock:
+        cached = _ticker_list_cache.get(cache_key)
+    if cached is not None:
+        return jsonify(cached)
+
     tickers = {}
     combined = load_csv("_all_tickers_full.csv")
     if not combined.empty and "symbole" in combined.columns:
@@ -884,8 +960,13 @@ def api_tickers():
                 app.logger.warning(f"Could not read ticker metadata from {path}: {exc}")
             tickers[symbol] = name
 
-    return jsonify([{"symbole": symbol, "name": tickers[symbol]}
-                    for symbol in sorted(tickers)])
+    result = [{"symbole": symbol, "name": tickers[symbol]} for symbol in sorted(tickers)]
+    with cache_lock:
+        stale = [item for item in _ticker_list_cache if item[0] == resolved_dir and item != cache_key]
+        for item in stale:
+            _ticker_list_cache.pop(item, None)
+        _ticker_list_cache[cache_key] = result
+    return jsonify(result)
 
 
 @app.route("/api/summary")
