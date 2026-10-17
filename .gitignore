@@ -23,3 +23,6 @@ frontend/verification/
 bvmt-dashboard/
 deliverables/
 tmp/
+report/
+/*.pdf
+bvmt_data/watchlist_ai_assessed.csv

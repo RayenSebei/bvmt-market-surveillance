@@ -20,7 +20,7 @@ The read-only new-row audit is in [`NEW_SCRAPE_ROW_AUDIT.csv`](NEW_SCRAPE_ROW_AU
 
 ## Detector correctness
 
-Returns across gaps longer than 10 calendar days are excluded. The return baseline is calculated from the most recent 60 valid prior returns, excluding the current observation. This prevents one excluded gap return from blanking the next 60 z-scores. The correction restored valid coverage without choosing parameters against event labels. Full historical before/after evidence is preserved in [`DETECTOR_RETURN_BASELINE_FIX.md`](history/DETECTOR_RETURN_BASELINE_FIX.md).
+Returns across gaps longer than 10 calendar days are excluded. The return baseline is calculated from the most recent 60 valid prior returns, excluding the current observation. This prevents one excluded gap return from blanking the next 60 z-scores while keeping the reference calculation independent of the event labels.
 
 Source OHLC values remain raw. Quality issues are logged for human review rather than silently clamped. News classification preserves both the nearest headline available on or before a flag and the nearest later headline, so retrospective context cannot hide information available at the time.
 
@@ -47,7 +47,7 @@ These results are descriptive case studies, not an accuracy estimate. Three posi
 
 ## Dashboard and reproducibility
 
-The offline seven-page Flask dashboard exposes the complete review queue and adds a keyboard command palette, clickable flag calendar, volume/return surveillance radar, line/candlestick stock views, z-score panel, drag zoom, and a read-only detector playground. All visuals use native SVG and remain responsive at 380 px. The evaluation page explicitly explains why SERVI changed the denominator and identifies its miss.
+The offline seven-page Flask dashboard exposes the complete review queue and adds a keyboard command palette, clickable flag calendar, volume/return surveillance radar, line/candlestick stock views, z-score panel, drag zoom, and a read-only detector playground. All visuals use native SVG and remain responsive at 380 px. The evaluation page reports the current three-event result, baseline comparison, negative control, and sensitivity grid.
 
 The generated manifest hashes text after canonical LF normalization, so freshness checks are portable across Windows, Linux, and macOS. Pipeline status logs require the explicitly enabled execution API and its bearer token. The default command performs analysis only and makes neither network nor AI calls.
 
