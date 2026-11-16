@@ -1,4 +1,21 @@
-# BVMT Surveillance Terminal 2.0
+# BVMT Surveillance Terminal v2
+
+The React application at `/terminal` now has seven lazy-loaded views: Overview, Anomaly Feed, Stock Detail, News, Watchlist, Pipeline and Evaluation. It uses the existing read-only Flask API. Statistical flags are prompts for human review, not findings of misconduct.
+
+## V2 structure and tokens
+
+- `src/App.tsx`: navigation, historical ticker tape, status bar, theme, URL state, Ctrl+K search and inspector dialog.
+- `src/pages/`: one lazy-loaded module per view.
+- `src/components/Inspector.tsx`: price, z-score, and dated news context.
+- `src/components/StockChart.tsx`: lazy-loaded candlesticks and comparison normalized to 100.
+- `src/components/FlagRows.tsx`: paged review tables.
+- `src/terminal.css`: responsive v2 tokens and pane layout.
+
+Dark colors: background `#101923`, pane `#17232e`, border `#2b3b49`, text `#e7eef1`, teal `#6dd6bf`, amber `#e8b966`, coral `#e18f86`. Inter is the UI font, IBM Plex Mono is the data font. Light theme is persisted under `bvmt-theme-v2`. The 250 ms entrance and drawer motion is removed under reduced motion.
+
+Watchlist statuses and saved filter views stay in localStorage. URL query parameters carry page, ticker, range and feed filters. The detector console reads precomputed sensitivity cells; it does not rerun detection. The tape is historical, based on each symbol's last two stored closes.
+
+The evaluation remains a small case study: 30-day recall 1/3, P@20 0, and no improvement over the return-only baseline. The event audit exposes source-label limitations.
 
 The Market Command Center is a React/TypeScript application using Vite, Tailwind 4, shadcn/ui, TradingView Lightweight Charts 5, TanStack Query/Table, Motion, and Lucide. Fonts are bundled locally. The Flask API and original research dashboard remain available.
 
