@@ -19,6 +19,10 @@ export function TimeChart({
   const element = useRef<HTMLDivElement>(null)
   const chart = useRef<IChartApi | null>(null)
   const [hover, setHover] = useState('')
+  const values = points.map((p) => p.value).filter(Number.isFinite)
+  const summary = points.length
+    ? `${price ? 'Historical closing values' : 'Flagged observations'} from ${points[0].date} to ${points.at(-1)?.date}; ${points.length} recorded points; minimum ${Math.min(...values).toFixed(price ? 3 : 0)}, maximum ${Math.max(...values).toFixed(price ? 3 : 0)} ${unit}. Drag to zoom.`
+    : 'No recorded observations in this window.'
   useEffect(() => {
     if (!element.current || !points.length) return
     const instance = createChart(element.current, {
@@ -105,16 +109,7 @@ export function TimeChart({
         </Button>
       </div>
       {points.length ? (
-        <div
-          className="time-chart"
-          ref={element}
-          role="img"
-          aria-label={
-            price
-              ? 'Interactive historical closing price chart'
-              : 'Interactive historical anomaly count chart'
-          }
-        />
+        <div className="time-chart" ref={element} role="img" aria-label={summary} />
       ) : (
         <div className="empty">No observations in this window.</div>
       )}

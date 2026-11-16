@@ -1,5 +1,7 @@
-import { lazy, Suspense, useEffect, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
+import { useQueries, useQuery } from '@tanstack/react-query'
+import gsap from 'gsap'
+import { useGSAP } from '@gsap/react'
 import {
   Activity,
   Bell,
@@ -50,6 +52,7 @@ const pages = [
   { id: 'evaluation', label: 'Evaluation', icon: BookOpen },
 ] as const
 const initial = new URLSearchParams(location.search)
+gsap.registerPlugin(useGSAP)
 const validPage = (value: string | null): Page =>
   pages.find((p) => p.id === value)?.id ?? 'overview'
 export const n = (value: number | null | undefined) =>
@@ -126,6 +129,9 @@ export function Empty({ text }: { text: string }) {
   return <div className="v2-empty">{text}</div>
 }
 export default function App() {
+  const shellRef = useRef<HTMLDivElement>(null)
+  const dialogOrigin = useRef<HTMLElement | null>(null)
+  const commandOrigin = useRef<HTMLElement | null>(null)
   const [page, setPage] = useState<Page>(() => validPage(initial.get('view')))
   const [ticker, setTicker] = useState(() => initial.get('ticker') || 'BIAT')
   const [range, setRange] = useState(() => initial.get('range') || '1Y')
@@ -133,6 +139,7 @@ export default function App() {
   const [command, setCommand] = useState(false)
   const [rail, setRail] = useState(false)
   const [theme, setTheme] = useState(() => localStorage.getItem('bvmt-theme-v2') || 'dark')
+  const [tapeReady, setTapeReady] = useState(false)
   const overview = useQuery({
     queryKey: ['v2-overview'],
     queryFn: ({ signal }) => getJSON<Overview>('/api/command-center?days=30', signal),
@@ -140,28 +147,24 @@ export default function App() {
   const tickers = useQuery({
     queryKey: ['v2-tickers'],
     queryFn: ({ signal }) => getJSON<{ symbole: string; name: string }[]>('/api/tickers', signal),
+    enabled: command || page === 'stock',
   })
-  const stock = useQuery({
-    queryKey: [
-      'v2-tape',
-      overview.data?.symbols
-        ?.slice(0, 8)
-        .map((s) => s.symbol)
-        .join(','),
-    ],
-    queryFn: async ({ signal }) =>
-      Promise.all(
-        (overview.data?.symbols ?? []).slice(0, 8).map(async (s) => ({
-          symbol: s.symbol,
-          flags: s.flags,
-          points: await getJSON<StockPoint[]>(
-            `/api/stock/${encodeURIComponent(s.symbol)}?range=3M`,
-            signal,
-          ).catch(() => [] as StockPoint[]),
-        })),
-      ),
-    enabled: !!overview.data,
+  const tapeSymbols = overview.data?.symbols.slice(0, 3) ?? []
+  const tapeQueries = useQueries({
+    queries: tapeSymbols.map((s) => ({
+      queryKey: ['v2-stock', s.symbol, '3M'],
+      queryFn: ({ signal }: { signal: AbortSignal }) =>
+        getJSON<StockPoint[]>(`/api/stock/${encodeURIComponent(s.symbol)}?range=3M`, signal),
+      enabled: tapeReady,
+      staleTime: 15 * 60 * 1000,
+      retry: false,
+    })),
   })
+  useEffect(() => {
+    if (!overview.data) return
+    const timer = window.setTimeout(() => setTapeReady(true), 900)
+    return () => window.clearTimeout(timer)
+  }, [overview.data])
   useEffect(() => {
     document.documentElement.dataset.theme = theme
     localStorage.setItem('bvmt-theme-v2', theme)
@@ -177,30 +180,51 @@ export default function App() {
     const onKey = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault()
-        setCommand(true)
+        commandOrigin.current =
+          document.activeElement instanceof HTMLElement ? document.activeElement : null
+        setCommand((value) => !value)
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [])
   const open = (symbol: string, date?: string) => {
+    dialogOrigin.current = command
+      ? document.querySelector<HTMLElement>('.v2-search')
+      : document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null
     setSelected({ symbol, date })
     setCommand(false)
+  }
+  const openCommand = () => {
+    commandOrigin.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null
+    setCommand(true)
   }
   const go = (p: Page) => {
     setPage(p)
     setRail(false)
     window.scrollTo({ top: 0 })
   }
-  const tape =
-    stock.data?.map((s) => {
-      const valid = s.points.filter((p) => p.cloture != null)
-      const last = valid.at(-1)?.cloture ?? null
-      const prev = valid.at(-2)?.cloture ?? null
-      return { ...s, last, change: last != null && prev ? (last / prev - 1) * 100 : null }
-    }) ?? []
+  const tape = tapeSymbols.map((s, i) => {
+    const valid = (tapeQueries[i]?.data ?? []).filter((p) => p.cloture != null)
+    const last = valid.at(-1)?.cloture ?? null
+    const prev = valid.at(-2)?.cloture ?? null
+    return { ...s, last, change: last != null && prev ? (last / prev - 1) * 100 : null }
+  })
+  useGSAP(
+    () => {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+      gsap
+        .timeline({ defaults: { duration: 0.24, ease: 'power2.out' } })
+        .from('.v2-rail', { x: -12, opacity: 0 })
+        .from('.v2-tape', { y: -8, opacity: 0 }, '-=0.12')
+    },
+    { scope: shellRef },
+  )
   return (
-    <div className={`v2-app ${rail ? 'rail-open' : ''}`}>
+    <div ref={shellRef} className={`v2-app ${rail ? 'rail-open' : ''}`}>
       <a className="v2-skip" href="#workspace">
         Skip to workspace
       </a>
@@ -243,7 +267,7 @@ export default function App() {
             BVMT <span>/</span> {pages.find((p) => p.id === page)?.label}
           </div>
           <div className="v2-top-actions">
-            <button className="v2-search" onClick={() => setCommand(true)}>
+            <button className="v2-search" onClick={openCommand} aria-label="Search instruments">
               <Search size={15} /> <span>Search instrument</span>
               <kbd>Ctrl K</kbd>
             </button>
@@ -352,6 +376,10 @@ export default function App() {
       <CommandDialog
         open={command}
         onOpenChange={setCommand}
+        onCloseAutoFocus={(event) => {
+          event.preventDefault()
+          commandOrigin.current?.focus()
+        }}
         title="Search instruments"
         description="Choose a stored instrument"
       >
@@ -380,7 +408,13 @@ export default function App() {
           if (!value) setSelected(null)
         }}
       >
-        <DialogContent className="v2-drawer">
+        <DialogContent
+          className="v2-drawer"
+          onCloseAutoFocus={(event) => {
+            event.preventDefault()
+            dialogOrigin.current?.focus()
+          }}
+        >
           <DialogHeader>
             <DialogTitle>
               {selected?.symbol} <span>/ SIGNAL INSPECTOR</span>

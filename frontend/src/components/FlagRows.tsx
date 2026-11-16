@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { type Flag } from '../lib/api'
 import { Empty, n } from '../App'
 export function FlagRows({
@@ -10,11 +10,43 @@ export function FlagRows({
   open: (symbol: string, date?: string) => void
   priority?: boolean
 }) {
-  const [page, setPage] = useState(0)
-  const visible = rows.slice(page * 50, (page + 1) * 50)
+  const [scrollTop, setScrollTop] = useState(0)
+  const [active, setActive] = useState(0)
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const virtual = rows.length > 200
+  const rowHeight = 62
+  const start = virtual ? Math.max(0, Math.floor(scrollTop / rowHeight) - 5) : 0
+  const end = virtual ? Math.min(rows.length, start + 19) : rows.length
+  const visible = rows.slice(start, end)
+  const move = (index: number) => {
+    const next = Math.max(0, Math.min(rows.length - 1, index))
+    setActive(next)
+    if (virtual && scrollRef.current)
+      scrollRef.current.scrollTop = Math.max(0, (next - 4) * rowHeight)
+  }
   return (
     <>
-      <div className="v2-table-scroll">
+      <div
+        ref={scrollRef}
+        className={virtual ? 'v2-table-scroll v2-virtual-table' : 'v2-table-scroll'}
+        onScroll={(event) => setScrollTop(event.currentTarget.scrollTop)}
+        tabIndex={rows.length ? 0 : undefined}
+        aria-label="Flag rows. Use J and K to move, Enter to inspect."
+        onKeyDown={(event) => {
+          if (event.key === 'j' || event.key === 'ArrowDown') {
+            event.preventDefault()
+            move(active + 1)
+          }
+          if (event.key === 'k' || event.key === 'ArrowUp') {
+            event.preventDefault()
+            move(active - 1)
+          }
+          if (event.key === 'Enter' && rows[active]) {
+            event.preventDefault()
+            open(rows[active].symbole, rows[active].date)
+          }
+        }}
+      >
         <table>
           <thead>
             <tr>
@@ -28,9 +60,18 @@ export function FlagRows({
             </tr>
           </thead>
           <tbody>
+            {virtual && start > 0 && (
+              <tr aria-hidden="true" className="v2-spacer">
+                <td colSpan={priority ? 7 : 6} style={{ height: start * rowHeight }} />
+              </tr>
+            )}
             {visible.map((r, i) => (
-              <tr key={`${r.symbole}-${r.date}-${i}`}>
-                {priority && <td>{n(r.priority ?? i + 1)}</td>}
+              <tr
+                key={`${r.symbole}-${r.date}-${start + i}`}
+                className={active === start + i ? 'selected' : ''}
+                aria-selected={active === start + i}
+              >
+                {priority && <td>{n(r.priority ?? start + i + 1)}</td>}
                 <td className="mono">{r.date}</td>
                 <td>
                   <b>{r.symbole}</b>
@@ -50,22 +91,22 @@ export function FlagRows({
                 </td>
               </tr>
             ))}
+            {virtual && end < rows.length && (
+              <tr aria-hidden="true" className="v2-spacer">
+                <td
+                  colSpan={priority ? 7 : 6}
+                  style={{ height: (rows.length - end) * rowHeight }}
+                />
+              </tr>
+            )}
           </tbody>
         </table>
         {!rows.length && <Empty text="No flags match this view. Adjust the filters or range." />}
       </div>
-      {rows.length > 50 && (
-        <div className="v2-pagination">
-          <button disabled={page === 0} onClick={() => setPage(page - 1)}>
-            Previous
-          </button>
-          <span>
-            {page + 1} / {Math.ceil(rows.length / 50)}
-          </span>
-          <button disabled={(page + 1) * 50 >= rows.length} onClick={() => setPage(page + 1)}>
-            Next
-          </button>
-        </div>
+      {virtual && (
+        <p className="v2-note">
+          {rows.length} rows in this API page; visible rows are rendered as you scroll.
+        </p>
       )}
     </>
   )

@@ -25,7 +25,7 @@ export default function FeedPage({ open }: { open: (symbol: string, date?: strin
     queryKey: ['v2-feed', symbol, date, signal, news, page],
     queryFn: ({ signal: abort }) =>
       getJSON<FlagPage>(
-        `/api/anomalies/search?page=${page}&page_size=100&sort=date&ticker=${encodeURIComponent(symbol)}&date_from=${date}&date_to=${date}&signal=${signal}&status=${news}`,
+        `/api/anomalies/search?page=${page}&page_size=500&sort=date&ticker=${encodeURIComponent(symbol)}&date_from=${date}&date_to=${date}&signal=${signal}&status=${news}`,
         abort,
       ),
   })

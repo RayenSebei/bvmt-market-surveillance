@@ -88,8 +88,8 @@ export default function StockChart({
       role="img"
       aria-label={
         compare
-          ? `Normalized closing values from 100 for ${normalized.map((s) => s.symbol).join(', ')}`
-          : `Candlestick history for ${symbol}, with F markers for stored flags`
+          ? `Normalized closing values from 100 for ${normalized.map((s) => s.symbol).join(', ')}. ${normalized.map((s) => `${s.symbol}: ${s.points.length} points, latest ${s.points.at(-1)?.value.toFixed(2) ?? 'unavailable'}`).join('; ')}.`
+          : `Candlestick history for ${symbol}, ${points.length} observations from ${points[0]?.date ?? 'unknown'} to ${points.at(-1)?.date ?? 'unknown'}, with ${points.filter((p) => p.flag).length} stored flag markers.`
       }
     />
   )

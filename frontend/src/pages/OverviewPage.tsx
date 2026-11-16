@@ -1,9 +1,14 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
+import gsap from 'gsap'
+import { useGSAP } from '@gsap/react'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { Empty, Failure, Loading, Pane, n, type Page } from '../App'
 import { getJSON, type Overview, type Flag } from '../lib/api'
 import { FlagRows } from '../components/FlagRows'
 import { TimeChart } from '../components/TimeChart'
+import { KpiValue, Sparkline } from '../components/KpiValue'
+gsap.registerPlugin(useGSAP, ScrollTrigger)
 
 export default function OverviewPage({
   overview,
@@ -14,6 +19,7 @@ export default function OverviewPage({
   go: (p: Page) => void
   open: (symbol: string, date?: string) => void
 }) {
+  const pageRef = useRef<HTMLDivElement>(null)
   const [all, setAll] = useState(false)
   const radar = useQuery({
     queryKey: ['v2-radar'],
@@ -26,8 +32,40 @@ export default function OverviewPage({
   })
   const historical = useMemo(() => radar.data ?? [], [radar.data])
   const data = overview.data
-  const noNews = historical.length
-    ? Math.round((historical.filter((r) => !r.news_nearby).length / historical.length) * 100)
+  useGSAP(
+    () => {
+      if (!data || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+      const strip = pageRef.current?.querySelector<HTMLElement>('.v2-kpis')
+      if (!strip) return
+      gsap
+        .timeline({ defaults: { ease: 'power2.out', duration: 0.24 } })
+        .from('.v2-kpi', { y: 12, opacity: 0, stagger: 0.04 })
+        .from('.v2-pane', { y: 10, opacity: 0, stagger: 0.035 }, '-=0.12')
+      gsap.to(strip, {
+        scale: 0.96,
+        transformOrigin: 'top center',
+        ease: 'none',
+        scrollTrigger: {
+          trigger: strip,
+          start: 'top 104px',
+          end: '+=130',
+          scrub: true,
+        },
+      })
+    },
+    { scope: pageRef, dependencies: [data?.as_of], revertOnUpdate: true },
+  )
+  const currentFlags = historical.filter(
+    (r) => r.date >= (data?.start ?? '') && r.date <= (data?.as_of ?? ''),
+  )
+  const previousStart = data
+    ? new Date(Date.parse(`${data.start}T00:00:00Z`) - 30 * 86400000).toISOString().slice(0, 10)
+    : ''
+  const previousFlags = historical.filter(
+    (r) => r.date >= previousStart && r.date < (data?.start ?? ''),
+  )
+  const noNews = currentFlags.length
+    ? Math.round((currentFlags.filter((r) => !r.news_nearby).length / currentFlags.length) * 100)
     : null
   const months = [...new Set(historical.map((r) => r.date.slice(0, 7)))].sort().slice(-12)
   const grid = new Map<string, number>()
@@ -42,29 +80,59 @@ export default function OverviewPage({
     return <Failure error={overview.error} retry={() => void overview.refetch()} />
   if (!data) return <Empty text="No stored market snapshot is available." />
   const today = data.timeline.find((r) => r.date === data.as_of)?.count ?? 0
+  const previousSession = data.timeline.filter((r) => r.date < data.as_of).at(-1)?.count ?? null
+  const previousNoNewsPct = previousFlags.length
+    ? Math.round((previousFlags.filter((r) => !r.news_nearby).length / previousFlags.length) * 100)
+    : null
+  const delta = (value: number | null, prior: number | null, unit = '') =>
+    value == null || prior == null
+      ? 'Previous period unavailable'
+      : `${value - prior >= 0 ? '+' : ''}${n(value - prior)}${unit} vs previous period`
+  const flagDays = data.timeline.map((r) => r.count)
+  const highDays = data.timeline.map(
+    (d) => currentFlags.filter((r) => r.date === d.date && r.max_zscore >= 4).length,
+  )
+  const noNewsDays = data.timeline.map(
+    (d) => currentFlags.filter((r) => r.date === d.date && !r.news_nearby).length,
+  )
   const kpis = [
-    { label: 'FLAGS AT AS-OF', value: n(today), sub: 'Recorded latest date', tone: 'teal' },
+    {
+      label: 'FLAGS AT AS-OF',
+      value: today,
+      suffix: '',
+      sub: delta(today, previousSession),
+      tone: 'teal',
+      trend: flagDays,
+    },
     {
       label: 'FLAGS / 30D',
-      value: n(data.metrics.flags),
-      sub: `${n(data.metrics.window_observations)} source rows`,
+      value: data.metrics.flags,
+      suffix: '',
+      sub: radar.data ? delta(data.metrics.flags, previousFlags.length) : 'Previous period loading',
       tone: 'teal',
+      trend: flagDays,
     },
     {
       label: 'HIGH INTENSITY',
-      value: n(data.metrics.high_intensity),
-      sub: 'Max absolute z ≥ 4',
+      value: data.metrics.high_intensity,
+      suffix: '',
+      sub: radar.data
+        ? delta(data.metrics.high_intensity, previousFlags.filter((r) => r.max_zscore >= 4).length)
+        : 'Previous period loading',
       tone: 'coral',
+      trend: highDays,
     },
     {
       label: 'NO NEARBY NEWS',
-      value: noNews == null ? '—' : `${noNews}%`,
-      sub: 'Across stored historical flags',
+      value: noNews,
+      suffix: '%',
+      sub: delta(noNews, previousNoNewsPct, ' pp'),
       tone: 'amber',
+      trend: noNewsDays,
     },
   ]
   return (
-    <div className="v2-page">
+    <div className="v2-page v2-overview" ref={pageRef}>
       <div className="v2-pulse-title">
         <div>
           <span className="v2-eyebrow">MARKET PULSE / OVR-00</span>
@@ -81,11 +149,12 @@ export default function OverviewPage({
               <span>{k.label}</span>
               <small>0{i + 1}</small>
             </div>
-            <strong>{k.value}</strong>
+            <KpiValue value={k.value} suffix={k.suffix} />
             <p>{k.sub}</p>
-            <svg viewBox="0 0 100 20" preserveAspectRatio="none" aria-hidden="true">
-              <path d="M0 17 L12 14 L24 16 L35 8 L45 12 L57 5 L67 10 L79 3 L88 7 L100 2" />
-            </svg>
+            <Sparkline
+              values={k.trend}
+              label={`${k.label} across ${k.trend.length} recorded sessions; latest ${k.trend.at(-1) ?? 0}`}
+            />
           </section>
         ))}
       </div>
@@ -166,7 +235,7 @@ export default function OverviewPage({
         <Pane id="OVR-04" title="Signal radar / 2D">
           <div
             className="v2-radar"
-            role="img"
+            role="group"
             aria-label="Scatter plot of historical volume and return z-scores; select a point to inspect"
           >
             <div className="v2-axis-x">VOLUME Z →</div>

@@ -13,12 +13,14 @@ export default function WatchlistPage({ open }: { open: (symbol: string, date?: 
       JSON.parse(localStorage.getItem('bvmt-review-status-v2') || '{}') as Record<string, Status>,
   )
   const [active, setActive] = useState(0)
+  const [queuePage, setQueuePage] = useState(0)
   const setStatus = (key: string, status: Status) => {
     const next = { ...statuses, [key]: status }
     setStatuses(next)
     localStorage.setItem('bvmt-review-status-v2', JSON.stringify(next))
   }
-  const rows = query.data?.rows ?? []
+  const totalRows = query.data?.rows ?? []
+  const rows = totalRows.slice(queuePage * 100, (queuePage + 1) * 100)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (
@@ -68,7 +70,7 @@ export default function WatchlistPage({ open }: { open: (symbol: string, date?: 
                 </tr>
               </thead>
               <tbody>
-                {rows.slice(0, 200).map((r, i) => {
+                {rows.map((r, i) => {
                   const key = `${r.symbole}:${r.date}`
                   return (
                     <tr
@@ -105,6 +107,31 @@ export default function WatchlistPage({ open }: { open: (symbol: string, date?: 
               </tbody>
             </table>
             {!rows.length && <Empty text="The stored review queue is empty." />}
+          </div>
+        )}
+        {totalRows.length > 100 && (
+          <div className="v2-pagination">
+            <button
+              disabled={queuePage === 0}
+              onClick={() => {
+                setQueuePage(queuePage - 1)
+                setActive(0)
+              }}
+            >
+              Previous
+            </button>
+            <span>
+              {queuePage + 1} / {Math.ceil(totalRows.length / 100)}
+            </span>
+            <button
+              disabled={(queuePage + 1) * 100 >= totalRows.length}
+              onClick={() => {
+                setQueuePage(queuePage + 1)
+                setActive(0)
+              }}
+            >
+              Next
+            </button>
           </div>
         )}
       </Pane>

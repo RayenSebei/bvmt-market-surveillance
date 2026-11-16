@@ -60,6 +60,15 @@ a {
   outline: 2px solid var(--v-amber) !important;
   outline-offset: 2px;
 }
+.v2-app button:hover,
+.v2-drawer button:hover {
+  border-color: var(--v-teal);
+}
+[data-theme='light'] .v2-kpi.coral strong,
+[data-theme='light'] .v2-chip.amber,
+[data-theme='light'] .v2-kpi.amber strong {
+  color: var(--v-coral);
+}
 .mono,
 .v2-app strong,
 .v2-app b,
@@ -356,7 +365,7 @@ a {
 .v2-page {
   display: grid;
   gap: 18px;
-  animation: v2-in var(--v-duration) var(--v-ease) both;
+  min-width: 0;
 }
 @keyframes v2-in {
   from {
@@ -392,6 +401,11 @@ a {
   gap: 1px;
   background: var(--v-line);
   border: 1px solid var(--v-line);
+}
+.v2-overview .v2-kpis {
+  position: sticky;
+  top: 0;
+  z-index: 4;
 }
 .v2-kpi {
   background: var(--v-pane);
@@ -628,6 +642,23 @@ a {
   width: 100%;
   min-width: 660px;
   text-align: left;
+}
+.v2-virtual-table {
+  max-height: 520px;
+  overflow: auto;
+}
+.v2-virtual-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--v-pane);
+}
+.v2-virtual-table tbody tr:not(.v2-spacer) {
+  height: 62px;
+}
+.v2-spacer td {
+  padding: 0 !important;
+  border: 0 !important;
 }
 .v2-table-scroll th,
 .v2-table-scroll td {
@@ -1219,11 +1250,33 @@ a {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .v2-app *,
-  .v2-app *:before,
-  .v2-app *:after {
+  *,
+  *:before,
+  *:after {
     animation: none !important;
     transition: none !important;
     scroll-behavior: auto !important;
+  }
+}
+@media (max-width: 700px) {
+  .v2-app button,
+  .v2-drawer button,
+  [data-slot='dialog-content'] button,
+  .v2-app select,
+  .v2-app input {
+    min-height: 44px;
+  }
+  .v2-calendar {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+  }
+  .v2-calendar button {
+    min-width: 0;
+    aspect-ratio: auto;
+  }
+  .v2-matrix {
+    grid-template-columns: 90px repeat(12, 44px) !important;
+  }
+  .v2-matrix button {
+    height: 44px;
   }
 }
