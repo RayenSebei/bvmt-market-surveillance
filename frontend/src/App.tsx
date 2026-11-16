@@ -23,13 +23,7 @@ import {
   CommandItem,
   CommandList,
 } from './components/ui/command'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from './components/ui/dialog'
+import { Dialog, DialogContent } from './components/ui/dialog'
 import { getJSON, type Overview, type StockPoint, type Flag } from './lib/api'
 import { Inspector } from './components/Inspector'
 import './terminal.css'
@@ -410,19 +404,13 @@ export default function App() {
       >
         <DialogContent
           className="v2-drawer"
+          variant="sheet"
+          showCloseButton={false}
           onCloseAutoFocus={(event) => {
             event.preventDefault()
             dialogOrigin.current?.focus()
           }}
         >
-          <DialogHeader>
-            <DialogTitle>
-              {selected?.symbol} <span>/ SIGNAL INSPECTOR</span>
-            </DialogTitle>
-            <DialogDescription>
-              Stored price and statistical context. Human review required.
-            </DialogDescription>
-          </DialogHeader>
           {selected && <Inspector symbol={selected.symbol} date={selected.date} />}
         </DialogContent>
       </Dialog>
