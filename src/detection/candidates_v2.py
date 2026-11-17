@@ -103,8 +103,8 @@ def candidate_flags(trading: pd.DataFrame, reference: pd.DataFrame, settings: Ca
     ref = reference.copy()
     ref["date"] = pd.to_datetime(ref["date"])
     ref_stock = ref.loc[~ref["symbole"].isin(INDEXES)]
-    robust = (scores["robust_volume_z"] > 3) | (scores["robust_return_z"].abs() >= 3)
-    robust4 = (scores["robust_volume_z"] > 4) | (scores["robust_return_z"].abs() >= 4)
+    robust = (scores["robust_volume_z"] >= 3) | (scores["robust_return_z"].abs() >= 3)
+    robust4 = (scores["robust_volume_z"] >= 4) | (scores["robust_return_z"].abs() >= 4)
     excess = scores["excess_return_z"].abs() >= 3
     activity = scores[["symbole", "date", "volume", "prior_active_days", "prior_median_volume"]]
     activity = ref_stock.merge(activity, on=["symbole", "date"], how="inner")

@@ -40,23 +40,27 @@ def corporate_action_suspects(trading: pd.DataFrame, news: pd.DataFrame, flags: 
     n["date"] = pd.to_datetime(n["date_str"], format="%d/%m/%y", errors="coerce")
     n = n[n["headline"].fillna("").str.contains(ACTION_WORDS, case=False, regex=True)]
     actions = n[["symbole", "date", "headline", "url"]].dropna(subset=["date"])
+    ref = flags[["symbole", "date"]].copy()
+    ref["date"] = pd.to_datetime(ref["date"])
     rows = []
     for stock in data.groupby("symbole"):
         symbol, group = stock
-        significant = group[group["close_return"].abs() >= 0.15]
+        flagged_dates = set(ref.loc[ref["symbole"].eq(symbol), "date"])
+        significant = group[(group["close_return"].abs() >= 0.15) | group["date"].isin(flagged_dates)]
         local = actions[actions["symbole"] == symbol]
         for item in significant.itertuples():
             nearby = local[(local["date"] - item.date).abs().dt.days <= 7].copy()
+            large_jump = pd.notna(item.close_return) and abs(item.close_return) >= 0.15
+            if not large_jump and nearby.empty:
+                continue
             nearby["distance"] = (nearby["date"] - item.date).abs().dt.days
             match = nearby.sort_values(["distance", "date"]).head(1)
             rows.append({"symbole": symbol, "date": item.date, "close_return": item.close_return,
-                "reason": "large_close_jump_with_nearby_action_news" if len(match) else "large_close_jump_no_stored_action_news",
+                "reason": ("large_close_jump_with_nearby_action_news" if len(match) else "large_close_jump_no_stored_action_news") if large_jump else "reference_flag_nearby_action_news",
                 "nearby_headline": match["headline"].iloc[0] if len(match) else "",
                 "nearby_news_date": match["date"].iloc[0] if len(match) else pd.NaT,
                 "nearby_url": match["url"].iloc[0] if len(match) else ""})
     result = pd.DataFrame(rows)
-    ref = flags[["symbole", "date"]].copy()
-    ref["date"] = pd.to_datetime(ref["date"])
     result["reference_flag"] = result.set_index(["symbole", "date"]).index.isin(ref.set_index(["symbole", "date"]).index)
     return result
 
@@ -101,7 +105,7 @@ def main() -> int:
     report = ["# Phase 2 data quality review", "", f"Rows: {len(trading):,}; symbols: {trading.symbole.nunique()}; latest date: {latest.date()}.",
         f"Duplicate symbol/date rows: {duplicate}; invalid dates: {invalid_dates}; OHLC/negative/missing numeric rows: {ohlc}; gaps >30 calendar days: {long_gaps}.",
         f"Symbols with last observation >90 days before latest: {len(stale_symbols)} ({', '.join(stale_symbols)}).",
-        f"Corporate-action suspects from ≥15% daily close jumps: {len(suspects)}; with stored action news within ±7 days: {int(suspects['nearby_url'].fillna('').ne('').sum())}; existing reference flags tagged: {int(suspects['reference_flag'].sum())}.",
+        f"Corporate-action suspects from >=15% daily close jumps or reference flags within +/-7 days of stored action news: {len(suspects)}; with stored action news: {int(suspects['nearby_url'].fillna('').ne('').sum())}; existing reference flags tagged: {int(suspects['reference_flag'].sum())}.",
         f"New scrape rows reviewed: {len(review)}; classes: {review.review_class.value_counts().to_dict()}. Every row remains flagged for manual review; no source value was changed.",
         "", "These are mechanical checks and candidate context tags. A nearby headline does not prove a price move was caused by a corporate action. ilboursa is the sole stored news source. The sample's human_label and human_notes fields are intentionally empty."]
     (OUT / "report.md").write_text("\n".join(report) + "\n", encoding="utf-8")

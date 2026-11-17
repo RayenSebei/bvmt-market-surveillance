@@ -249,6 +249,7 @@ def main(
         "original_label_date", "secondary_date",
         "source", "confidence", "label_role", "include_headline",
         f"has_{before}d_window_coverage", "days_from_last_trade_to_event",
+        "first_trading_date", "last_trading_date",
     ]].copy()
     events_table["evaluable"] = (
         events_table["include_headline"]
@@ -266,8 +267,10 @@ def main(
             return "negative control, not a positive event"
         if row["label_role"] == "exploratory":
             return "exploratory case excluded from headline metrics"
+        if pd.isna(row["first_trading_date"]):
+            return "ticker has no stored trading observations"
         if not row[f"has_{before}d_window_coverage"]:
-            return "trading data ends before the evaluation window"
+            return "no trading observation in the primary window"
         return "source-backed positive event with window coverage"
     events_table["evaluable_reason"] = events_table.apply(reason, axis=1)
     events_table.to_csv(output_dir / "events_table.csv", index=False)

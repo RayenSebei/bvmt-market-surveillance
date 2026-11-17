@@ -31,11 +31,12 @@ def _keys(df: pd.DataFrame) -> pd.DataFrame:
     return df[["symbole", "date"]].drop_duplicates().sort_values(["date", "symbole"]).reset_index(drop=True)
 
 
-def _events(events: pd.DataFrame, trading: pd.DataFrame) -> pd.DataFrame:
-    coverage = coverage_table(trading, events, 30)
-    e = events.merge(coverage[["event_id", "has_30d_window_coverage"]], on="event_id")
+def _events(events: pd.DataFrame, trading: pd.DataFrame, lookback: int = 30) -> pd.DataFrame:
+    coverage = coverage_table(trading, events, lookback)
+    covered = f"has_{lookback}d_window_coverage"
+    e = events.merge(coverage[["event_id", covered]], on="event_id")
     e["include_headline"] = e["include_headline"].astype(str).str.lower().eq("true")
-    return e[e["label_role"].eq("positive") & e["include_headline"] & e["source"].ne("SOURCE_NEEDED") & e["event_date"].notna() & e["has_30d_window_coverage"]]
+    return e[e["label_role"].eq("positive") & e["include_headline"] & e["source"].ne("SOURCE_NEEDED") & e["event_date"].notna() & e[covered]]
 
 
 def _hit_ids(flags: pd.DataFrame, events: pd.DataFrame, before: int = 30) -> set[str]:
@@ -47,7 +48,11 @@ def _hit_ids(flags: pd.DataFrame, events: pd.DataFrame, before: int = 30) -> set
 def _neg_count(flags: pd.DataFrame, negatives: pd.DataFrame) -> int:
     if flags.empty or negatives.empty:
         return 0
-    return int(sum(bool(((flags["symbole"] == e.ticker) & flags["date"].between(pd.Timestamp(e.event_date) - pd.Timedelta(days=30), pd.Timestamp(e.event_date) + pd.Timedelta(days=5))).any()) for e in negatives.itertuples()))
+    matched = pd.Series(False, index=flags.index)
+    for event in negatives.itertuples():
+        date = pd.Timestamp(event.event_date)
+        matched |= flags["symbole"].eq(event.ticker) & flags["date"].between(date - pd.Timedelta(days=30), date + pd.Timedelta(days=5))
+    return int(matched.sum())
 
 
 def _random_flags(observed: pd.DataFrame, method: pd.DataFrame, rng: np.random.Generator) -> pd.DataFrame:
@@ -100,6 +105,7 @@ def main(trading_path: Path = ROOT / "bvmt_data/_all_tickers_full.csv",
     events = pd.read_csv(events_path)
     events["event_date"] = pd.to_datetime(events["event_date"], errors="coerce")
     positive = _events(events, trading)
+    positive60 = _events(events, trading, 60)
     negative = events[events["label_role"].eq("negative") & events["event_date"].notna() & events["source"].ne("SOURCE_NEEDED")]
     candidate = candidate_flags(trading, ref)
     scored = score_trading(trading)
@@ -107,7 +113,9 @@ def main(trading_path: Path = ROOT / "bvmt_data/_all_tickers_full.csv",
     ranked = ranked_flags(ref)
     ranked["month"] = ranked["date"].dt.to_period("M")
     top_month = ranked[~ranked["symbole"].isin(INDEXES)].groupby("month", sort=True).head(2)
-    observed = _keys(trading[~trading["symbole"].isin(INDEXES)])
+    # The frozen reference includes PX1 rows; preserve their per-symbol count
+    # in the registered random baseline even though candidates exclude indices.
+    observed = _keys(trading[~trading["symbole"].isin({"TBIDX", "PLTU"})])
     methods = {
         "reference_v1": _keys(ref),
         "volume_only": _keys(ref[ref["volume_anomaly"].astype(str).str.lower().eq("true")]),
@@ -121,6 +129,8 @@ def main(trading_path: Path = ROOT / "bvmt_data/_all_tickers_full.csv",
     cut = pd.Timestamp("2025-01-01")
     dev = positive[positive["event_date"] < cut]
     hold = positive[positive["event_date"] >= cut]
+    dev60 = positive60[positive60["event_date"] < cut]
+    hold60 = positive60[positive60["event_date"] >= cut]
     dev_negative = negative[negative["event_date"] < cut]
     hold_negative = negative[negative["event_date"] >= cut]
     candidate_names = [x for x in candidate if x != "market_wide_tag"]
@@ -136,12 +146,16 @@ def main(trading_path: Path = ROOT / "bvmt_data/_all_tickers_full.csv",
     best_baseline = sorted(baseline_names, key=lambda n: (-len(dev_hits[n]), workload(n, dev_start, dev_end), n))[0]
     out.mkdir(parents=True, exist_ok=True)
     lock = {"split_date": "2025-01-01", "selected_candidate": choice, "selected_baseline": best_baseline,
-            "selection_basis": "development recall, then flags/week, then negative-control event count, then ID", "candidate_variants": candidate_names}
+            "selection_basis": "development recall, then flags/week, then negative-control flag count, then ID", "candidate_variants": candidate_names}
     lock_path = out / "phase2_selection_lock.json"
     if lock_path.exists():
         previous = json.loads(lock_path.read_text(encoding="utf-8"))
         if previous != lock:
-            raise ValueError("Phase 2 development selection changed; investigate before held-out scoring")
+            old_basis = "development recall, then flags/week, then negative-control event count, then ID"
+            if previous.get("selection_basis") == old_basis and {k: v for k, v in previous.items() if k != "selection_basis"} == {k: v for k, v in lock.items() if k != "selection_basis"}:
+                lock_path.write_text(json.dumps(lock, indent=2) + "\n", encoding="utf-8")
+            else:
+                raise ValueError("Phase 2 development selection changed; investigate before held-out scoring")
     else:
         lock_path.write_text(json.dumps(lock, indent=2) + "\n", encoding="utf-8")
     hold_hits = {name: _hit_ids(methods[name], hold) for name in methods}
@@ -153,9 +167,14 @@ def main(trading_path: Path = ROOT / "bvmt_data/_all_tickers_full.csv",
             low, high = wilson(k, n)
             period_flags = flags[flags["date"].between(start, end)]
             null_mean, pvalue = permutation(period_flags, observed[observed["date"].between(start, end)], e)
+            e60 = dev60 if split == "dev" else hold60
+            hits60 = _hit_ids(flags, e60, before=60)
+            low60, high60 = wilson(len(hits60), len(e60))
             table.append({"method": name, "split": split, "hits": k, "events": n, "recall": k / n if n else np.nan,
-                "wilson_low": low, "wilson_high": high, "flags": len(period_flags), "flags_per_week": workload(name, start, end),
-                "negative_control_events_flagged": _neg_count(flags, negatives), "random_mean_hits": null_mean, "permutation_p": pvalue})
+                "wilson_low": low, "wilson_high": high, "secondary_hits": len(hits60), "secondary_events": len(e60),
+                "secondary_wilson_low": low60, "secondary_wilson_high": high60,
+                "flags": len(period_flags), "flags_per_week": workload(name, start, end),
+                "negative_control_flags": _neg_count(flags, negatives), "random_mean_hits": null_mean, "permutation_p": pvalue})
             if not e.empty:
                 h = event_hits(flags, e, 30, 5)
                 h.insert(0, "split", split)

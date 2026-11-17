@@ -2,7 +2,7 @@
   "split_date": "2025-01-01",
   "selected_candidate": "robust_z3",
   "selected_baseline": "simple_volume_spike",
-  "selection_basis": "development recall, then flags/week, then negative-control event count, then ID",
+  "selection_basis": "development recall, then flags/week, then negative-control flag count, then ID",
   "candidate_variants": [
     "robust_z3",
     "robust_z4",

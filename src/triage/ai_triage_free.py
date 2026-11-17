@@ -1,7 +1,7 @@
 """Optional Groq-assisted triage for the BVMT statistical watchlist.
 
-The model receives only already-computed screening evidence. Its output is a
-draft prioritisation aid for human review, never a verdict. If configuration
+The model receives only already-computed screening evidence. Its output is an
+unvalidated draft opinion for human review, never a verdict. If configuration
 or the service is unavailable, this module leaves the existing output intact.
 """
 
@@ -42,7 +42,8 @@ MAX_LIVE_CALLS = 40
 
 SYSTEM_PROMPT = """You assist a student market-surveillance research tool for
 the Tunis Stock Exchange. Assess only the quantitative evidence supplied.
-You are not a regulator and cannot confirm wrongdoing. Return JSON with keys
+You are not a regulator and cannot confirm wrongdoing. Your response is an
+unvalidated draft opinion. Return JSON with keys
 assessment (likely_noise, worth_investigating, or uncertain) and reasoning
 (one or two plain-language sentences citing the supplied numbers). Be
 conservative, do not invent explanations, and treat repeated thin-trading
@@ -171,6 +172,7 @@ def main() -> int:
         return 0
     frame["ai_assessment"] = assessments
     frame["ai_reasoning"] = reasonings
+    frame["ai_opinion_status"] = "unvalidated draft opinion"
     OUT_DIR.mkdir(exist_ok=True)
     frame.to_csv(OUT_PATH, index=False)
     print(f"AI triage saved: {OUT_PATH}")

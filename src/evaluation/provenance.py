@@ -24,6 +24,11 @@ INPUT_PATHS = (
     "src/evaluation/sensitivity.py",
     "src/evaluation/triage_stats.py",
     "src/evaluation/report.py",
+    "src/detection/candidates_v2.py",
+    "src/evaluation/phase2.py",
+    "src/validation/phase2_quality.py",
+    "docs/EVALUATION_PROTOCOL_v2.md",
+    "docs/EVENT_LABEL_LOG.md",
 )
 OUTPUT_PATHS = (
     "outputs/evaluation/metrics.csv",
@@ -33,6 +38,14 @@ OUTPUT_PATHS = (
     "outputs/evaluation/triage_stats.csv",
     "outputs/evaluation/watchlist_funnel.csv",
     "outputs/evaluation/summary.md",
+    "outputs/evaluation/phase2_comparison.csv",
+    "outputs/evaluation/phase2_event_hits.csv",
+    "outputs/evaluation/phase2_selection_lock.json",
+    "outputs/evaluation/phase2_verdict.json",
+    "outputs/data_quality/report.md",
+    "outputs/data_quality/corporate_action_suspects.csv",
+    "outputs/data_quality/new_scrape_row_review.csv",
+    "data/evaluation/news_label_sample.csv",
 )
 
 
