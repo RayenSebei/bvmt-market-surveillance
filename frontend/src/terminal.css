@@ -1368,7 +1368,7 @@ a {
 
 @media (max-width: 600px) {
   .v2-drawer {
-    right: 0 !important;
+    right: 1px !important;
     left: 0 !important;
     width: auto !important;
   }
