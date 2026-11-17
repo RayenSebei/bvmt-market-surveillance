@@ -1,0 +1,26 @@
+{
+  "split_date": "2025-01-01",
+  "selected_candidate": "robust_z3",
+  "selected_baseline": "simple_volume_spike",
+  "selection_basis": "development recall, then flags/week, then negative-control event count, then ID",
+  "candidate_variants": [
+    "robust_z3",
+    "robust_z4",
+    "market_adjusted_z3",
+    "activity_filtered_v1",
+    "persistent_v1",
+    "decay_point_in_time"
+  ],
+  "held_out_positives": 1,
+  "candidate_minus_reference_bootstrap_95": [
+    0.0,
+    0.0
+  ],
+  "candidate_minus_baseline_bootstrap_95": [
+    -1.0,
+    -1.0
+  ],
+  "adopt_candidate": false,
+  "market_wide_tagged": 0,
+  "market_wide_total": 1399
+}
