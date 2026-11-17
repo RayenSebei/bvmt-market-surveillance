@@ -107,7 +107,7 @@ export function Inspector({ symbol, date }: { symbol: string; date?: string }) {
                     ))}
                   </div>
                 ) : (
-                  <Empty text="No local news match within seven calendar days." />
+                  <Empty text="No ilboursa news match within seven calendar days. This alone is not suspicious." />
                 )}
               </Pane>
               <p className="v2-note">

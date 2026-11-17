@@ -5,6 +5,7 @@ No fake data. All endpoints serve real scraped files.
 """
 
 import os
+import json
 import hmac
 import math
 import re
@@ -1208,6 +1209,13 @@ def api_evaluation_baselines():
     return jsonify(df.fillna("").to_dict(orient="records"))
 
 
+@app.route("/api/evaluation/precision")
+def api_evaluation_precision():
+    """Read known-event-nearby top-k counts and Wilson intervals."""
+    df = load_evaluation_csv("precision_at_k.csv")
+    return jsonify(df.fillna("").to_dict(orient="records"))
+
+
 @app.route("/api/evaluation/sensitivity")
 def api_evaluation_sensitivity():
     df = load_evaluation_csv("sensitivity.csv")
@@ -1218,6 +1226,21 @@ def api_evaluation_sensitivity():
 def api_evaluation_events():
     df = load_evaluation_csv("events_table.csv")
     return jsonify(df.fillna("").to_dict(orient="records"))
+
+
+@app.route("/api/evaluation/phase2/comparison")
+def api_evaluation_phase2_comparison():
+    """Read the frozen-split comparison without recalculating detectors."""
+    df = load_evaluation_csv("phase2_comparison.csv")
+    return jsonify(df.fillna("").to_dict(orient="records"))
+
+
+@app.route("/api/evaluation/phase2/verdict")
+def api_evaluation_phase2_verdict():
+    path = EVALUATION_DIR / "phase2_verdict.json"
+    if not path.is_file():
+        return jsonify({"error": "Phase 2 verdict unavailable"}), 404
+    return jsonify(json.loads(path.read_text(encoding="utf-8")))
 
 
 if __name__ == "__main__":

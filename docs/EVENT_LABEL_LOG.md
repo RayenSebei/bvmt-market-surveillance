@@ -56,3 +56,12 @@ The linked article/notice date is the earliest **verified** public date for the 
 - GIF-2024-radiation: replaced later retrospective https://www.ilboursa.com/marches/la-bourse-de-tunis-decide-la-radiation-de-la-societe-gif-filter_49247 with date-contemporaneous https://tunis-stockexchange.com/en/node/6451. Event date, role, and detector hits are unchanged.
 - LSTR-2024-bankruptcy: replaced later retrospective https://www.ilboursa.com/marches/en-cessation-de-paiement-le-tribunal-declare-la-faillite-de-la-societe-electrostar_47391 with date-contemporaneous https://managers.tn/2024/07/23/la-societe-electrostar-declaree-en-faillite/. Event date, role, and detector hits are unchanged.
 - SERVI-2024-bankruptcy: replaced later retrospective https://www.ilboursa.com/marches/le-tribunal-de-tunis-declare-la-faillite-de-la-societe-servicom_45451 with date-contemporaneous https://www.ilboursa.com/marches/suspension-de-la-cotation-du-titre-servicom_44316. Event date, role, and detector hits are unchanged.
+
+## Additional source review after the frozen comparison
+
+These were consulted only after the registry and development choice had been locked. They were not added to the scored event set or used to change a threshold.
+
+- https://www.cmf.tn/sites/default/files/pdfs/publications/bulletin-officiel/bo250925.pdf — CMF bulletin of 2025-09-25 records a disciplinary sanction against the TSI intermediary's chief executive. This is later action in the existing TSI matter and has no listed TSI price series; no second positive was scored.
+- https://www.ilboursa.com/marches/le-groupe-poulina-lance-une-opa-sur-le-promoteur-immobilier-sits_53214 — June 2025 SITS takeover/suspension candidate for a future negative-control registry, excluded from this frozen comparison.
+- https://www.ilboursa.com/marches/exclusif-fin-du-contentieux-douanier-pour-assad_63522 — August 2026 ASSAD suspension and settlement candidate for future review, excluded from this frozen comparison.
+- https://www.ilboursa.com/marches/la-bourse-de-tunis-decide-la-radiation-des-societes-electrostar-et-mip_48040 — September 2024 downstream delisting of already registered LSTR and MIP matters, not an independent event.

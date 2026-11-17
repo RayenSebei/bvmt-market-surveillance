@@ -7,6 +7,22 @@ import pytest
 import app as dashboard
 
 
+def test_phase2_endpoints_are_read_only(client, monkeypatch, tmp_path):
+    import json
+    comparison = tmp_path / "phase2_comparison.csv"
+    verdict = tmp_path / "phase2_verdict.json"
+    precision = tmp_path / "precision_at_k.csv"
+    comparison.write_text("method,split,hits,events\nreference_v1,held_out,0,1\n", encoding="utf-8")
+    verdict.write_text(json.dumps({"selected_candidate": "robust_z3", "adopt_candidate": False}), encoding="utf-8")
+    precision.write_text("k,known_event_nearby_flags,wilson_low,wilson_high\n20,0,0,0.161\n", encoding="utf-8")
+    monkeypatch.setattr(dashboard, "EVALUATION_DIR", tmp_path)
+    before = (comparison.read_bytes(), verdict.read_bytes())
+    assert client.get("/api/evaluation/phase2/comparison").get_json()[0]["method"] == "reference_v1"
+    assert client.get("/api/evaluation/phase2/verdict").get_json()["adopt_candidate"] is False
+    assert client.get("/api/evaluation/precision").get_json()[0]["k"] == 20
+    assert before == (comparison.read_bytes(), verdict.read_bytes())
+
+
 @pytest.fixture
 def client(monkeypatch):
     fixture_dir = Path(__file__).parent / "fixtures" / "api_data"
