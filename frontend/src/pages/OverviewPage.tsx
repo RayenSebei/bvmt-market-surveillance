@@ -135,7 +135,7 @@ export default function OverviewPage({
   ]
   return (
     <div className="v2-page v2-overview" ref={pageRef}>
-      <MarketMap compact open={open} goFull={() => go('market-map')} />
+      <MarketMap open={open} />
       <div className="v2-pulse-title">
         <div>
           <span className="v2-eyebrow">MARKET PULSE / OVR-00</span>

@@ -100,22 +100,14 @@ function percentile95(values: number[]) {
   return Math.max(0.01, sorted[low] + (sorted[high] - sorted[low]) * (rank - low))
 }
 
-export default function MarketMap({
-  compact = false,
-  open,
-  goFull,
-}: {
-  compact?: boolean
-  open: (symbol: string) => void
-  goFull?: () => void
-}) {
+export default function MarketMap({ open }: { open: (symbol: string) => void }) {
   const [tf, setTf] = useState<Timeframe>('1D')
   const [colorBy, setColorBy] = useState<ColorBy>('Daily change')
   const [sizeBy, setSizeBy] = useState<SizeBy>('Traded value')
   const [search, setSearch] = useState('')
   const [fullscreen, setFullscreen] = useState(false)
   const [active, setActive] = useState(0)
-  const [dimensions, setDimensions] = useState({ width: 900, height: compact ? 260 : 540 })
+  const [dimensions, setDimensions] = useState({ width: 900, height: 260 })
   const surface = useRef<HTMLDivElement>(null)
   const tilesRef = useRef<HTMLDivElement>(null)
   const previous = useRef(new Map<string, { x: number; y: number }>())
@@ -131,12 +123,12 @@ export default function MarketMap({
       const width = entry.contentRect.width
       setDimensions({
         width,
-        height: fullscreen ? Math.max(300, innerHeight - 280) : compact ? 260 : 540,
+        height: fullscreen ? Math.max(300, innerHeight - 280) : 260,
       })
     })
     observer.observe(surface.current)
     return () => observer.disconnect()
-  }, [compact, fullscreen])
+  }, [fullscreen])
   const ordered = useMemo(
     () => rows.slice().sort((a, b) => a.symbol.localeCompare(b.symbol)),
     [rows],
@@ -234,10 +226,7 @@ export default function MarketMap({
   if (query.isPending) return <Loading />
   if (query.isError) return <Failure error={query.error} retry={() => void query.refetch()} />
   return (
-    <section
-      className={`market-map ${compact ? 'compact' : ''} ${fullscreen ? 'fullscreen' : ''}`}
-      aria-label="Market Map"
-    >
+    <section className={`market-map ${fullscreen ? 'fullscreen' : ''}`} aria-label="Market Map">
       <div className="market-map-head">
         <div>
           <h2>Market Map</h2>
@@ -250,56 +239,49 @@ export default function MarketMap({
                 : 'Size: equal'}
           </span>
         </div>
-        {compact && (
-          <button className="v2-small-button" onClick={goFull}>
-            Open full map ↗
-          </button>
-        )}
       </div>
-      {!compact && (
-        <div className="market-controls">
-          <label>
-            Timeframe{' '}
-            <select value={tf} onChange={(e) => setTf(e.target.value as Timeframe)}>
-              {(['1D', '1W', '1M', 'YTD'] as const).map((v) => (
-                <option key={v}>{v}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Color by{' '}
-            <select value={colorBy} onChange={(e) => setColorBy(e.target.value as ColorBy)}>
-              {(['Daily change', 'Max |z|', 'Flag intensity'] as const).map((v) => (
-                <option key={v}>{v}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Size by{' '}
-            <select value={sizeBy} onChange={(e) => setSizeBy(e.target.value as SizeBy)}>
-              {(['Traded value', 'Flag count', 'Equal'] as const).map((v) => (
-                <option key={v}>{v}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Find ticker{' '}
-            <input
-              type="search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value.toUpperCase())}
-              placeholder="e.g. BIAT"
-            />
-          </label>
-          <button
-            className="market-fullscreen"
-            onClick={() => setFullscreen(!fullscreen)}
-            aria-label={fullscreen ? 'Exit fullscreen' : 'Fullscreen map'}
-          >
-            {fullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
-          </button>
-        </div>
-      )}
+      <div className="market-controls">
+        <label>
+          Timeframe{' '}
+          <select value={tf} onChange={(e) => setTf(e.target.value as Timeframe)}>
+            {(['1D', '1W', '1M', 'YTD'] as const).map((v) => (
+              <option key={v}>{v}</option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Color by{' '}
+          <select value={colorBy} onChange={(e) => setColorBy(e.target.value as ColorBy)}>
+            {(['Daily change', 'Max |z|', 'Flag intensity'] as const).map((v) => (
+              <option key={v}>{v}</option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Size by{' '}
+          <select value={sizeBy} onChange={(e) => setSizeBy(e.target.value as SizeBy)}>
+            {(['Traded value', 'Flag count', 'Equal'] as const).map((v) => (
+              <option key={v}>{v}</option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Find ticker{' '}
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value.toUpperCase())}
+            placeholder="e.g. BIAT"
+          />
+        </label>
+        <button
+          className="market-fullscreen"
+          onClick={() => setFullscreen(!fullscreen)}
+          aria-label={fullscreen ? 'Exit fullscreen' : 'Fullscreen map'}
+        >
+          {fullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+        </button>
+      </div>
       <div
         className="market-legend"
         aria-label={`${colorBy} scale clamped at 95th percentile of absolute values: ${fmt(clamp)}${colorBy === 'Daily change' ? '%' : ''}`}
