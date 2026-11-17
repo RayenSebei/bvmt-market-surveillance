@@ -446,6 +446,20 @@ def api_command_center():
     return jsonify(result), status
 
 
+@app.route("/api/heatmap")
+def api_heatmap():
+    """Stored market-map values; no live data or source writes."""
+    from src.heatmap import build_heatmap
+
+    timeframe = request.args.get("tf", "1D").upper()
+    if timeframe not in {"1D", "1W", "1M", "YTD"}:
+        return jsonify({"error": "tf must be 1D, 1W, 1M, or YTD"}), 400
+    response = build_heatmap(
+        load_csv("_all_tickers_full.csv"), load_csv("anomaly_flags.csv"), timeframe
+    )
+    return jsonify(response), (503 if "error" in response else 200)
+
+
 @app.route("/api/status")
 def api_status():
     """Pipeline health + last scrape info."""
