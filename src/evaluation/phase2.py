@@ -55,6 +55,17 @@ def _neg_count(flags: pd.DataFrame, negatives: pd.DataFrame) -> int:
     return int(matched.sum())
 
 
+def _neg_count_collapsed(flags: pd.DataFrame, negatives: pd.DataFrame) -> int:
+    """Count the shared PGH/LNDOR notice once, using the larger ticker flag count."""
+    correlated = {"PGH-2026-buyout", "LNDOR-2026-buyout"}
+    separate = negatives[~negatives["event_id"].isin(correlated)]
+    members = negatives[negatives["event_id"].isin(correlated)]
+    return _neg_count(flags, separate) + max(
+        (_neg_count(flags, members[members["event_id"].eq(event_id)]) for event_id in correlated),
+        default=0,
+    )
+
+
 def _random_flags(observed: pd.DataFrame, method: pd.DataFrame, rng: np.random.Generator) -> pd.DataFrame:
     dates_by_symbol = {s: g["date"].to_numpy() for s, g in observed.groupby("symbole")}
     rows = []
@@ -174,7 +185,9 @@ def main(trading_path: Path = ROOT / "bvmt_data/_all_tickers_full.csv",
                 "wilson_low": low, "wilson_high": high, "secondary_hits": len(hits60), "secondary_events": len(e60),
                 "secondary_wilson_low": low60, "secondary_wilson_high": high60,
                 "flags": len(period_flags), "flags_per_week": workload(name, start, end),
-                "negative_control_flags": _neg_count(flags, negatives), "random_mean_hits": null_mean, "permutation_p": pvalue})
+                "negative_control_flags": _neg_count(flags, negatives),
+                "negative_control_flags_collapsed": _neg_count_collapsed(flags, negatives),
+                "random_mean_hits": null_mean, "permutation_p": pvalue})
             if not e.empty:
                 h = event_hits(flags, e, 30, 5)
                 h.insert(0, "split", split)
