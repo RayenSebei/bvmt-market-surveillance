@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { lazy, useMemo, useRef, useState } from 'react'
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
@@ -8,6 +8,8 @@ import { getJSON, type Overview, type Flag } from '../lib/api'
 import { FlagRows } from '../components/FlagRows'
 import { TimeChart } from '../components/TimeChart'
 import { KpiValue, Sparkline } from '../components/KpiValue'
+const MarketMap = lazy(() => import('../components/MarketMap'))
+
 gsap.registerPlugin(useGSAP, ScrollTrigger)
 
 export default function OverviewPage({
@@ -133,6 +135,7 @@ export default function OverviewPage({
   ]
   return (
     <div className="v2-page v2-overview" ref={pageRef}>
+      <MarketMap compact open={open} goFull={() => go('market-map')} />
       <div className="v2-pulse-title">
         <div>
           <span className="v2-eyebrow">MARKET PULSE / OVR-00</span>

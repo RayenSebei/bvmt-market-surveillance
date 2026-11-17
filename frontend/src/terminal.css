@@ -1365,3 +1365,11 @@ a {
     height: 44px;
   }
 }
+
+@media (max-width: 600px) {
+  .v2-drawer {
+    right: 0 !important;
+    left: 0 !important;
+    width: auto !important;
+  }
+}

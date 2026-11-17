@@ -10,6 +10,7 @@ import {
   ChartNoAxesCombined,
   Database,
   Menu,
+  Map,
   Moon,
   Newspaper,
   Search,
@@ -29,15 +30,18 @@ import { Inspector } from './components/Inspector'
 import './terminal.css'
 
 const OverviewPage = lazy(() => import('./pages/OverviewPage'))
+const MarketMap = lazy(() => import('./components/MarketMap'))
 const FeedPage = lazy(() => import('./pages/FeedPage'))
 const StockPage = lazy(() => import('./pages/StockPage'))
 const NewsPage = lazy(() => import('./pages/NewsPage'))
 const WatchlistPage = lazy(() => import('./pages/WatchlistPage'))
 const PipelinePage = lazy(() => import('./pages/PipelinePage'))
 const EvaluationPage = lazy(() => import('./pages/EvaluationPage'))
-export type Page = 'overview' | 'feed' | 'stock' | 'news' | 'watchlist' | 'pipeline' | 'evaluation'
+export type Page =
+  'overview' | 'market-map' | 'feed' | 'stock' | 'news' | 'watchlist' | 'pipeline' | 'evaluation'
 const pages = [
   { id: 'overview', label: 'Overview', icon: ChartNoAxesCombined },
+  { id: 'market-map', label: 'Market Map', icon: Map },
   { id: 'feed', label: 'Anomaly Feed', icon: Activity },
   { id: 'stock', label: 'Stock Detail', icon: ChartCandlestick },
   { id: 'news', label: 'News', icon: Newspaper },
@@ -318,6 +322,8 @@ export default function App() {
           <Suspense fallback={<Loading />}>
             {page === 'overview' ? (
               <OverviewPage overview={overview} go={go} open={open} />
+            ) : page === 'market-map' ? (
+              <MarketMap open={open} />
             ) : page === 'feed' ? (
               <FeedPage open={open} />
             ) : page === 'stock' ? (
