@@ -16,7 +16,7 @@ This is a case-study-level evaluation, not a statistical performance estimate. T
 | Ticker | Primary date | Date type | Original label | Secondary date | Source | Confidence | Evaluable | Reason |
 |---|---|---|---|---|---|---|---|---|
 | TINV | 2025-10-06 | other | 2025-10-06 | — | `SOURCE_NEEDED` | low | No | no supporting repository source |
-| UADH | 2026-03-24 | public_announcement | 2026-03-24 | 2026-03-25 | [source](https://www.bvmt.com.tn/sites/default/files/avis-decisions/uadh-tlyq-ltdwl.pdf) | high | Yes | source-backed positive event with window coverage |
+| UADH | 2026-03-25 | suspension | 2026-03-24 | 2026-03-25 | [source](https://www.bvmt.com.tn/sites/default/files/avis-decisions/uadh-tlyq-ltdwl.pdf) | high | Yes | source-backed positive event with window coverage |
 | TSI | 2025-04-23 | public_announcement | 2025-04-23 | — | [source](https://www.cmf.tn/sites/default/files/pdfs/publications/bulletin-officiel/bo250423.pdf) | high | No | ticker has no stored trading observations |
 | CGF | — | other | — | — | `SOURCE_NEEDED` | not_assessed | No | no supporting repository source |
 | UBCI | — | other | — | — | `SOURCE_NEEDED` | not_assessed | No | no supporting repository source |
@@ -28,11 +28,11 @@ This is a case-study-level evaluation, not a statistical performance estimate. T
 | OTH | 2021-10-29 | public_announcement | 2021-10-29 | — | [source](https://www.ilboursa.com/marches/onetech-holding-augmentation-de-capital-approuvee_31068) | high | No | negative control, not a positive event |
 | LNDOR | 2021-11-26 | public_announcement | 2021-11-26 | — | [source](https://www.ilboursa.com/marches/land-or-l-augmentation-de-capital-approuvee-par-l-assemblee-generale-extraordinaire_31547) | high | No | negative control, not a positive event |
 | ATB | 2021-11-26 | public_announcement | 2021-11-26 | — | [source](https://www.ilboursa.com/marches/atb-l-age-approuve-l-augmentation-de-capital-de-28-millions-de-dinars-reservee-a-l-arab-bank_31564) | high | No | negative control, not a positive event |
-| ADWYA | 2022-06-07 | public_announcement | 2022-06-07 | — | [source](https://www.ilboursa.com/marches/suspension-de-la-cotation-des-titres-adwya_34995) | high | No | negative control, not a positive event |
+| ADWYA | 2022-06-07 | suspension | 2022-06-07 | — | [source](https://www.ilboursa.com/marches/suspension-de-la-cotation-des-titres-adwya_34995) | medium | No | exploratory case excluded from headline metrics |
 | CREAL | 2022-11-14 | public_announcement | 2022-11-14 | — | [source](https://www.ilboursa.com/marches/cardinal-brands-nouvel-actionnaire-majoritaire-de-cerealis-lance-une-opa_37790) | high | No | negative control, not a positive event |
 | WIFAK | 2023-01-09 | suspension | 2023-01-09 | — | [source](https://www.ilboursa.com/marches/suspension-de-la-cotation-des-titres-wifak-bank_38650) | medium | No | exploratory case excluded from headline metrics |
 | STPAP | 2023-09-28 | suspension | 2023-09-28 | — | [source](https://www.ilboursa.com/marches/incendie-dans-l-usine-de-sotipapier-cotation-suspendue-a-la-bourse-de-tunis_42802) | high | Yes | source-backed positive event with window coverage |
-| SPHAX | 2023-12-19 | court_ruling | 2023-12-19 | — | [source](https://www.ilboursa.com/marches/mise-en-faillite-de-la-compagnie-aerienne-syphax-airlines_44054) | high | No | ticker has no stored trading observations |
+| SPHAX | 2023-12-19 | public_announcement | 2023-12-19 | — | [source](https://www.ilboursa.com/marches/mise-en-faillite-de-la-compagnie-aerienne-syphax-airlines_44054) | high | No | ticker has no stored trading observations |
 | SMART | 2024-10-31 | public_announcement | 2024-10-31 | — | [source](https://www.ilboursa.com/marches/smart-tunisie-augmentation-de-capital-annoncee_49080) | high | No | negative control, not a positive event |
 | BIAT | 2024-11-27 | public_announcement | 2024-11-27 | — | [source](https://www.ilboursa.com/marches/biat-augmentation-de-capital-annoncee_49512) | high | No | negative control, not a positive event |
 | SMD | 2025-03-13 | public_announcement | 2025-03-13 | — | [source](https://www.ilboursa.com/marches/sanimed-lance-une-augmentation-de-capital-de-10-millions-de-dinars_51474) | high | No | negative control, not a positive event |
@@ -95,7 +95,7 @@ The **0 of 20** result counts highest-scoring flags inside the fixed -30/+5-day 
 | reference_union | 1414 | 3.369 | 1 of 5 events | 2 of 5 events | 0 of 20 flags | 13 flags near negative controls |
 | volume_zscore_only | 198 | 0.472 | 0 of 5 events | 0 of 5 events | 0 of 20 flags | 1 flags near negative controls |
 | absolute_return_only | 1237 | 2.948 | 1 of 5 events | 2 of 5 events | 0 of 20 flags | 12 flags near negative controls |
-| random_same_count_mean_1000_seeds | 1414 | 3.369 | 1.111 of 5 events on average | 1.878 of 5 events on average | 0.020 of 20 flags on average | 6.954 flags near negative controls on average |
+| random_same_count_mean_1000_seeds | 1414 | 3.369 | 1.111 of 5 events on average | 1.864 of 5 events on average | 0.020 of 20 flags on average | 6.722 flags near negative controls on average |
 
 The reference detector does **not** beat the absolute-return-only baseline on recall or precision: both match 1 of 5 events in the primary window, 2 of 5 events in the secondary window, and 0 of 20 flags at k=20, while the reference produces 1,414 flags versus 1,237. It does improve recall over the volume-only baseline in this tiny event set. The random method keeps the reference number of flags per ticker and averages 1,000 deterministic seeds; its non-integer event and SOPAT counts are averages, not observed cases.
 
