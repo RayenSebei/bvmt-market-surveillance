@@ -317,6 +317,11 @@ export default function MarketMap({ open }: { open: (symbol: string) => void }) 
         >
           {tiles.map(({ row, x, y, w, h }) => {
             const area = w * h
+            const tileWidth = Math.max(0, w - 1)
+            const tileHeight = Math.max(0, h - 1)
+            // Keep padding inside very small weighted rectangles. Otherwise the
+            // browser expands the border box to the combined padding size.
+            const tilePadding = Math.max(0, Math.min(6, tileWidth / 2, tileHeight / 2))
             const detail = `${row.name} (${row.symbol}). Close ${fmt(row.close, 3)}. Change ${pct(row.change_pct)}. Average traded value over 20 sessions ${fmt(row.avg_traded_value_20d)}. Last trade ${row.last_date}. ${row.flags_30d} flags in 30 days. Max absolute z ${fmt(row.max_abs_z_30d)}.`
             return (
               <button
@@ -326,8 +331,9 @@ export default function MarketMap({ open }: { open: (symbol: string) => void }) 
                 style={{
                   left: x + 0.5,
                   top: y + 0.5,
-                  width: Math.max(0, w - 1),
-                  height: Math.max(0, h - 1),
+                  width: tileWidth,
+                  height: tileHeight,
+                  padding: tilePadding,
                   background: color(row),
                 }}
                 tabIndex={ordered[active]?.symbol === row.symbol ? 0 : -1}
