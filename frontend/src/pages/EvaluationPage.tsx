@@ -42,6 +42,7 @@ type Phase2Row = {
   flags: number
   flags_per_week: number
   negative_control_flags: number
+  negative_control_flags_collapsed: number
   permutation_p: number
 }
 type Phase2Verdict = {
@@ -121,6 +122,7 @@ export default function EvaluationPage() {
                 <th scope="col">Hits / events · 95% Wilson</th>
                 <th scope="col">Flags / week</th>
                 <th scope="col">Negative-control flags</th>
+                <th scope="col">Controls, shared notice collapsed</th>
                 <th scope="col">Random p</th>
               </tr>
             </thead>
@@ -138,6 +140,7 @@ export default function EvaluationPage() {
                     {row.flags_per_week.toFixed(2)} <small>({n(row.flags)} total)</small>
                   </td>
                   <td>{row.negative_control_flags}</td>
+                  <td>{row.negative_control_flags_collapsed}</td>
                   <td>{row.permutation_p.toFixed(3)}</td>
                 </tr>
               ))}
@@ -147,7 +150,8 @@ export default function EvaluationPage() {
         <p className="v2-note">
           Six candidate detectors were tried. Same-count random placements use 1,000 seeds.
           Intervals describe uncertainty in this small sourced event set; they are not accuracy
-          estimates.
+          estimates. ADWYA is exploratory and excluded from control counts. The collapsed count
+          treats the shared PGH/Land'Or notice as one control cluster.
         </p>
       </Pane>
       <div className="v2-grid two">

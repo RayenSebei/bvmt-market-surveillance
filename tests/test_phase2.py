@@ -4,7 +4,7 @@ import pandas as pd
 
 from src.detection.candidates_v2 import CandidateSettings, candidate_flags, score_trading
 from src.evaluation.evaluate import wilson_interval
-from src.evaluation.phase2 import paired_bootstrap
+from src.evaluation.phase2 import _neg_count, _neg_count_collapsed, paired_bootstrap
 from src.validation.phase2_quality import review_scrape_rows
 
 
@@ -47,3 +47,13 @@ def test_scrape_review_keeps_every_row_flagged():
     reviewed = review_scrape_rows(rows)
     assert reviewed.review_class.tolist() == ["ZERO_VOLUME_OBSERVATION", "OHLC_INCONSISTENCY", "LARGE_CLOSE_JUMP"]
     assert set(reviewed.review_status) == {"flagged_for_review"}
+
+
+def test_shared_notice_reports_separate_and_collapsed_control_flags():
+    flags = pd.DataFrame({"symbole": ["PGH", "PGH", "LNDOR", "OTH"],
+                          "date": pd.to_datetime(["2026-02-18", "2026-02-19", "2026-02-19", "2021-10-29"])})
+    controls = pd.DataFrame({"event_id": ["PGH-2026-buyout", "LNDOR-2026-buyout", "OTH-2021-capital"],
+                             "ticker": ["PGH", "LNDOR", "OTH"],
+                             "event_date": pd.to_datetime(["2026-02-19", "2026-02-19", "2021-10-29"])})
+    assert _neg_count(flags, controls) == 4
+    assert _neg_count_collapsed(flags, controls) == 3
