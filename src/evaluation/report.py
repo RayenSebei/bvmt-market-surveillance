@@ -115,7 +115,7 @@ def main(output_dir=OUTPUT_DIR, title="Evaluation Summary") -> int:
         coverage_section = f"""
 ## Universe coverage audit
 
-The historical 60-symbol combined file omitted 25 symbols: **{missing}**. The refreshed 85-symbol file contains 67,035 source rows through 2026-10-12; the current detector excludes TBIDX and known-incomplete PLTU. The incremental refresh preserved every pre-snapshot source row.
+The historical 60-symbol combined file omitted 25 series: **{missing}**. The refreshed 85-series file contains 83 company-share symbols plus PX1 (TUNINDEX) and TBIDX (Tunisian Bond Index), with 67,035 source rows through 2026-10-12; the current detector excludes TBIDX and known-incomplete PLTU. The incremental refresh preserved every pre-snapshot source row.
 
 The archived 60-symbol evaluation used the earlier 20-observation warm-up and silent close clamping. It is retained only as historical provenance and is **not directly comparable** to the corrected 60-valid-observation, raw-OHLC reference reported here.
 """

@@ -4,7 +4,7 @@
 
 ## Executive summary
 
-The refreshed project covers **85 symbols and 67,035 price rows from 17 June 2021 through 12 October 2026**, plus **12,498 deduplicated news records**. With the fixed reference settings—60 valid prior observations and a z-score cutoff of 3.0—the pipeline produces **1,414 flags**, including **21 combined price-and-volume flags**, and a **16-row refined watchlist**.
+The refreshed project covers **85 stored series and 67,035 price rows from 17 June 2021 through 12 October 2026**: 83 company-share symbols plus PX1 (TUNINDEX) and TBIDX (Tunisian Bond Index). It also contains **12,498 deduplicated news records**. With the fixed reference settings—60 valid prior observations and a z-score cutoff of 3.0—the pipeline produces **1,414 flags**, including **21 combined price-and-volume flags**, and a **16-row refined watchlist**.
 
 The original three sourced positives still reproduce **1 of 3** for `reference_v1`: GIF is a hit, LSTR and SERVI are misses. The expanded Phase 2 registry has **5 evaluable sourced positives**, with reference recall **1 of 5** (95% Wilson 0.04–0.62). Only one positive is held out, so no new method qualifies for adoption. The six registered candidate variants, all baselines, dates, and uncertainty intervals are in [PHASE2_RESULTS.md](PHASE2_RESULTS.md).
 

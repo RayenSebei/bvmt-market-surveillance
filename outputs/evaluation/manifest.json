@@ -4,7 +4,7 @@
     "minimum_valid_prior_observations": 60,
     "ohlc_policy": "raw"
   },
-  "generated_at_utc": "2026-11-17T20:47:04.814322+00:00",
+  "generated_at_utc": "2026-11-18T21:05:25.108422+00:00",
   "hash_mode": "sha256_text_lf_normalized",
   "inputs": {
     "bvmt_data/_all_tickers_full.csv": "723be5c8cab223860ef6e6484929a886de74ada07896138fdb29549d9af33dd7",
@@ -14,14 +14,14 @@
     "bvmt_data/watchlist_refined.csv": "ae9c3c7e5c2e8e2b7dba08ed5a3ccdea3ba01f70b707894bf1003395a682cb15",
     "data/evaluation/events.csv": "7de3cb18acbe93ea89b0e01832f319c3e175435433b873049350400953502f47",
     "docs/EVALUATION_PROTOCOL_v2.md": "2620e90c9aca938eab8cf082acc9c42f012a759e19d39142810c02313c31fb96",
-    "docs/EVENT_LABEL_LOG.md": "e6c5b4b2a97567c4e20d3a2ca4ec6d6f3b9d837dd5467d5c2f0f360983cbdf0d",
+    "docs/EVENT_LABEL_LOG.md": "1d7244be8cde39559d9ed3828b1fc858e384fee4c64f53d9ff19178d2ae5344d",
     "src/detection/anomaly_detector.py": "c3fd526c8123362385e365b872e406c529c7e47924b083af5487c4a167e545a3",
     "src/detection/candidates_v2.py": "a119049fd0ed7ac307e931d5b2b7ae8802117b3bf2745a5ca72232fedcb40aea",
     "src/evaluation/baselines.py": "59dcaf044340db5aa787703ffcf00439dfa9775a49ae2f4b7683b00bce97754c",
     "src/evaluation/config.json": "35df5d8d60da007f98c7301cd7e6fe445dba6049b5fc6e3f446ed6b24775de8d",
     "src/evaluation/evaluate.py": "54f88d7dfc0bdc10f0b6a22549332adb75648422ca538eab6ba3e21aa5b67172",
     "src/evaluation/phase2.py": "d3b5e3db08b0938b12f229b7ebbcb8eabca042b63d54b551c07d2a9f9c389860",
-    "src/evaluation/report.py": "9517a4a4a2c2b6837f2aee657c75a47e82b449435de36434a34c4096d5b26ce6",
+    "src/evaluation/report.py": "285bef4e66cdbdce17273dc8f96ecf02bc519c7c1ee9823b12561aa908f4cb60",
     "src/evaluation/sensitivity.py": "8b84cfc93444ebccd1550631a6c922aba77474bc0264e7f8319f7a267d341ffb",
     "src/evaluation/triage_stats.py": "326b5912e3679e78d1cb2a232ffe14cfed6aef7e8289d8b3e5461530f9c3a464",
     "src/validation/phase2_quality.py": "f3bc4d97dc28012c3bb6b7061bec828645bd3fcad343158ef434ca6a7bffb132"

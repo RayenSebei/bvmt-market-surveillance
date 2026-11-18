@@ -10,7 +10,7 @@ See the [Phase 2 results](docs/PHASE2_RESULTS.md). The watchlist is a review que
 
 ## What is included
 
-- An 85-symbol analysis dataset with 67,035 source observations covering 17 June 2021 to 12 October 2026.
+- An 85-series analysis dataset with 67,035 source observations covering 17 June 2021 to 12 October 2026: 83 company-share symbols plus the PX1 (TUNINDEX) and TBIDX (Tunisian Bond Index) series.
 - A transparent rolling z-score detector for volume and returns.
 - News cross-reference, rule-based classification, and watchlist refinement.
 - Optional Groq-assisted triage whose output is an **unvalidated draft opinion** for human review. It was not run in Phase 2.
@@ -131,7 +131,7 @@ The reference detector requires 60 valid prior observations and uses a z-score c
 ```text
 app.py                       Flask API and dashboard server
 run_all.py                   safe, analysis-first pipeline entry point
-bvmt_data/                   protected raw CSVs plus the derived 85-symbol analysis file
+bvmt_data/                   protected raw CSVs plus the derived 85-series analysis file (83 shares + 2 indices)
 data/evaluation/events.csv   audited evaluation events
 src/detection/               transparent statistical detectors
 src/validation/              context and watchlist stages

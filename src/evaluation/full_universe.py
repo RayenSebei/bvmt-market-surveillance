@@ -1,4 +1,4 @@
-"""Build and evaluate an 85-symbol derived universe without changing raw inputs."""
+"""Build and evaluate an 85-series derived universe without changing raw inputs."""
 
 from __future__ import annotations
 
@@ -147,7 +147,7 @@ def comparison_table(shared_agreement: bool) -> pd.DataFrame:
     rows = []
     for label, directory, data_path in [
         ("60-symbol archive", ARCHIVE_DIR, COMBINED_PATH),
-        ("85-symbol delivered universe", OUTPUT_DIR, FULL_PATH),
+        ("85-series delivered universe (83 shares + 2 indices)", OUTPUT_DIR, FULL_PATH),
     ]:
         metrics = pd.read_csv(directory / "metrics.csv").set_index("metric")["value"]
         precision = pd.read_csv(directory / "precision_at_k.csv").set_index("k")
