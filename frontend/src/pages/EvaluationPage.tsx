@@ -10,6 +10,12 @@ type Baseline = {
   precision_at_20: number
   negative_control_flags_30d: number
 }
+type KnownRate = {
+  k: number
+  known_event_nearby_flags: number
+  wilson_low: number
+  wilson_high: number
+}
 type Sensitivity = {
   z_cutoff: number
   rolling_window: number
@@ -26,7 +32,35 @@ type Event = {
   evaluable: string | boolean
   evaluable_reason: string
 }
+type Phase2Row = {
+  method: string
+  split: string
+  hits: number
+  events: number
+  wilson_low: number
+  wilson_high: number
+  flags: number
+  flags_per_week: number
+  negative_control_flags: number
+  negative_control_flags_collapsed: number
+  permutation_p: number
+}
+type Phase2Verdict = {
+  selected_candidate: string
+  held_out_positives: number
+  adopt_candidate: boolean
+  market_wide_tagged: number
+  market_wide_total: number
+}
 export default function EvaluationPage() {
+  const phase2 = useQuery({
+    queryKey: ['phase2-comparison'],
+    queryFn: ({ signal }) => getJSON<Phase2Row[]>('/api/evaluation/phase2/comparison', signal),
+  })
+  const verdict = useQuery({
+    queryKey: ['phase2-verdict'],
+    queryFn: ({ signal }) => getJSON<Phase2Verdict>('/api/evaluation/phase2/verdict', signal),
+  })
   const metrics = useQuery({
     queryKey: ['v2-eval-metrics'],
     queryFn: ({ signal }) => getJSON<Metric[]>('/api/evaluation/metrics', signal),
@@ -34,6 +68,10 @@ export default function EvaluationPage() {
   const baselines = useQuery({
     queryKey: ['v2-eval-baselines'],
     queryFn: ({ signal }) => getJSON<Baseline[]>('/api/evaluation/baselines', signal),
+  })
+  const knownRates = useQuery({
+    queryKey: ['v2-known-event-rates'],
+    queryFn: ({ signal }) => getJSON<KnownRate[]>('/api/evaluation/precision', signal),
   })
   const sensitivity = useQuery({
     queryKey: ['v2-eval-sensitivity'],
@@ -45,12 +83,105 @@ export default function EvaluationPage() {
   })
   const get = (key: string) => metrics.data?.find((m) => m.metric === key)?.value
   const reference = baselines.data?.find((b) => b.method === 'reference_union')
+  const at20 = knownRates.data?.find((row) => row.k === 20)
+  const denominator = Number(get('eligible_positive_events_30d') ?? 0)
+  const expandedReference = phase2.data?.find(
+    (row) => row.method === 'reference_v1' && row.split === 'held_out',
+  )
+  const pct = (value: number) => `${(100 * value).toFixed(1)}%`
+  const wilson = (k: number, total: number) => {
+    if (!total) return '—'
+    const z = 1.959963984540054
+    const p = k / total
+    const base = 1 + (z * z) / total
+    const center = (p + (z * z) / (2 * total)) / base
+    const half = (z * Math.sqrt((p * (1 - p)) / total + (z * z) / (4 * total * total))) / base
+    return `${pct(Math.max(0, center - half))}–${pct(Math.min(1, center + half))}`
+  }
   return (
     <div className="v2-page">
       <div className="v2-callout amber">
-        Case-study-level evaluation. The reference detector recalls 1 of 3 eligible positive cases
-        at 30 days, P@20 is 0, and it does not beat the return-only baseline. These are weak
-        results.
+        Phase 2 keeps reference_v1. The selected {verdict.data?.selected_candidate ?? 'candidate'}
+        {expandedReference &&
+          ` and reference_v1 each hit ${expandedReference.hits} of ${expandedReference.events} held-out positive events`}
+        . The held-out set is too small to establish improvement.
+      </div>
+      <Pane
+        id="EVA-P2"
+        title="Frozen-split method comparison"
+        action={<span className="v2-muted">Primary window −30/+5 calendar days</span>}
+      >
+        {phase2.isPending && <Loading />}
+        {phase2.isError && <Failure error={phase2.error} retry={() => void phase2.refetch()} />}
+        <div className="v2-table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Method</th>
+                <th scope="col">Split</th>
+                <th scope="col">Hits / events · 95% Wilson</th>
+                <th scope="col">Flags / week</th>
+                <th scope="col">Negative-control flags</th>
+                <th scope="col">Controls, shared notice collapsed</th>
+                <th scope="col">Random p</th>
+              </tr>
+            </thead>
+            <tbody>
+              {phase2.data?.map((row) => (
+                <tr key={`${row.method}-${row.split}`}>
+                  <td>
+                    <b>{row.method.replaceAll('_', ' ')}</b>
+                  </td>
+                  <td>{row.split === 'held_out' ? 'Held out' : 'Development'}</td>
+                  <td>
+                    {row.hits} of {row.events} · {pct(row.wilson_low)}–{pct(row.wilson_high)}
+                  </td>
+                  <td>
+                    {row.flags_per_week.toFixed(2)} <small>({n(row.flags)} total)</small>
+                  </td>
+                  <td>{row.negative_control_flags}</td>
+                  <td>{row.negative_control_flags_collapsed}</td>
+                  <td>{row.permutation_p.toFixed(3)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="v2-note">
+          Six candidate detectors were tried. Same-count random placements use 1,000 seeds.
+          Intervals describe uncertainty in this small sourced event set; they are not accuracy
+          estimates. ADWYA is exploratory and excluded from control counts. The collapsed count
+          treats the shared PGH/Land'Or notice as one control cluster.
+        </p>
+      </Pane>
+      <div className="v2-grid two">
+        <Pane id="EVA-REVIEW" title="Top-flag review summary">
+          <div className="v2-prose">
+            <p>
+              Among the 20 highest ranked reference flags: six have likely corporate-action context,
+              two have suspected data glitches, three show thin-trading artifacts, and nine remain
+              unexplained in stored material.
+            </p>
+            <p>
+              {verdict.data?.market_wide_tagged ?? '—'} of {verdict.data?.market_wide_total ?? '—'}{' '}
+              stock flags meet the predeclared market-wide tag threshold. Review classes are
+              provisional and do not establish wrongdoing.
+            </p>
+          </div>
+        </Pane>
+        <Pane id="EVA-LIMIT" title="What this does and does not prove">
+          <div className="v2-prose">
+            <p>
+              It shows dated flags near a small set of sourced events, with workload, negative
+              controls, and a fixed held-out split.
+            </p>
+            <p>
+              It cannot establish wrongdoing, estimate accuracy for all market days, or prove that
+              no nearby ilboursa headline is suspicious. ilboursa is the sole stored news source.
+              Human review is required.
+            </p>
+          </div>
+        </Pane>
       </div>
       {metrics.isPending && <Loading />}
       {metrics.isError && <Failure error={metrics.error} retry={() => void metrics.refetch()} />}
@@ -58,19 +189,21 @@ export default function EvaluationPage() {
         {[
           {
             label: 'RECALL / 30D',
-            value: reference ? `${(reference.recall_30d * 100).toFixed(1)}%` : '—',
-            sub: '1 of 3 eligible cases',
+            value: denominator ? `${get('recall_30d_hits')} of ${denominator}` : '—',
+            sub: denominator
+              ? `95% Wilson ${pct(Number(get('recall_30d_wilson_low')))}–${pct(Number(get('recall_30d_wilson_high')))}; original 1 of 3`
+              : '—',
           },
           {
             label: 'EVALUABLE POSITIVES',
             value: String(get('eligible_positive_events_30d') ?? '—'),
-            sub: 'Small case study set',
+            sub: 'Small sourced case study set',
           },
           { label: 'FLAG LOAD', value: n(reference?.flag_count), sub: 'Reference union flags' },
           {
-            label: 'PRECISION @ 20',
-            value: reference ? String(reference.precision_at_20) : '—',
-            sub: 'No known case in top 20',
+            label: 'KNOWN-EVENT @ 20',
+            value: at20 ? `${at20.known_event_nearby_flags} of ${at20.k}` : '—',
+            sub: at20 ? `95% Wilson ${pct(at20.wilson_low)}–${pct(at20.wilson_high)}` : '—',
           },
         ].map((k, i) => (
           <section className="v2-kpi" key={k.label}>
@@ -99,14 +232,23 @@ export default function EvaluationPage() {
                 <div>
                   <i style={{ width: `${b.recall_30d * 100}%` }} />
                 </div>
-                <b>{(b.recall_30d * 100).toFixed(1)}%</b>
+                <b>
+                  {b.method.startsWith('random_')
+                    ? `mean ${(b.recall_30d * denominator).toFixed(2)} of ${denominator}`
+                    : `${Math.round(b.recall_30d * denominator)} of ${denominator}`}
+                </b>
+                {!b.method.startsWith('random_') && (
+                  <small>
+                    95% Wilson {wilson(Math.round(b.recall_30d * denominator), denominator)}
+                  </small>
+                )}
                 <small>{n(b.flag_count)} flags</small>
               </div>
             ))}
           </div>
           <p className="v2-note">
-            Reference union and return-only both hit 1 of 3. A smaller flag load can matter
-            operationally; this set cannot establish comparative performance.
+            Reference and return-only results are descriptive on the expanded sourced set. A smaller
+            flag load can matter operationally; this set cannot establish comparative performance.
           </p>
         </Pane>
         <Pane id="EVA-02" title="What this does and does not prove">
@@ -146,7 +288,11 @@ export default function EvaluationPage() {
                   return (
                     <div key={w} className={z === 3 && w === 60 ? 'reference' : ''}>
                       <small>{w}d</small>
-                      <strong>{s ? `${Math.round(s.recall_30d * 3)}/3` : '—'}</strong>
+                      <strong>
+                        {s && get('eligible_positive_events_30d')
+                          ? `${Math.round(s.recall_30d * Number(get('eligible_positive_events_30d')))}/${get('eligible_positive_events_30d')}`
+                          : '—'}
+                      </strong>
                       <span>{n(s?.flag_count)} flags</span>
                     </div>
                   )

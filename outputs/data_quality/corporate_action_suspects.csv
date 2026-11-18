@@ -1,0 +1,116 @@
+symbole,date,close_return,reason,nearby_headline,nearby_news_date,nearby_url,reference_flag
+ADWYA,2022-06-13,0.2021276595744681,large_close_jump_no_stored_action_news,,,,True
+AETEC,2024-03-14,0.18518518518518512,large_close_jump_no_stored_action_news,,,,True
+AETEC,2025-12-04,0.15999999999999992,large_close_jump_no_stored_action_news,,,,True
+AMS,2022-05-16,0.17045454545454541,large_close_jump_no_stored_action_news,,,,True
+ARTES,2023-07-24,0.058721934369602824,reference_flag_nearby_action_news,Le concessionnaire ARTES décide de doubler son dividende à 1 dinar par action,2023-07-26,https://www.ilboursa.com/marches/le-concessionnaire-artes-decide-de-doubler-son-dividende-a-1-dinar-par-action_41833,True
+ARTES,2023-07-31,0.20391517128874392,large_close_jump_with_nearby_action_news,Le concessionnaire ARTES décide de doubler son dividende à 1 dinar par action,2023-07-26,https://www.ilboursa.com/marches/le-concessionnaire-artes-decide-de-doubler-son-dividende-a-1-dinar-par-action_41833,True
+ASSAD,2021-09-01,0.9668508287292819,large_close_jump_no_stored_action_news,,,,False
+ASSAD,2021-09-28,-0.5041237113402062,large_close_jump_no_stored_action_news,,,,True
+ASSAD,2021-09-29,1.0956340956340958,large_close_jump_no_stored_action_news,,,,True
+ASSAD,2021-10-01,-0.4834368530020704,large_close_jump_no_stored_action_news,,,,False
+ASSAD,2025-04-04,0.226027397260274,large_close_jump_no_stored_action_news,,,,True
+ASSAD,2025-04-16,0.18226600985221686,large_close_jump_no_stored_action_news,,,,True
+ASSAD,2025-06-12,0.1751152073732718,large_close_jump_no_stored_action_news,,,,False
+ASSAD,2026-10-08,0.23287671232876717,large_close_jump_no_stored_action_news,,,,True
+ASSMA,2026-03-17,0.059935897435897445,reference_flag_nearby_action_news,"Assurances Maghrebia : Dividende de 2,900 dinars et attribution d'actions gratuites",2026-03-19,https://www.ilboursa.com/marches/assurances-maghrebia-dividende-de-2-900-dinars-et-attribution-d-actions-gratuites_60570,True
+ASSMA,2026-03-18,0.05836105231327493,reference_flag_nearby_action_news,"Assurances Maghrebia : Dividende de 2,900 dinars et attribution d'actions gratuites",2026-03-19,https://www.ilboursa.com/marches/assurances-maghrebia-dividende-de-2-900-dinars-et-attribution-d-actions-gratuites_60570,True
+ASSMA,2026-06-17,-0.1637220259128387,large_close_jump_no_stored_action_news,,,,True
+BIAT,2023-05-15,-0.054166666666666696,reference_flag_nearby_action_news,"La BIAT gâte ses actionnaires et augmente son dividende à 5,800 dinars par action",2023-05-10,https://www.ilboursa.com/marches/la-biat-gate-ses-actionnaires-et-augmente-son-dividende-a-5-800-dinars-par-action_40641,True
+BIAT,2024-11-29,-0.10361904761904761,reference_flag_nearby_action_news,BIAT : Augmentation de capital annoncée,2024-11-27,https://www.ilboursa.com/marches/biat-augmentation-de-capital-annoncee_49512,True
+BL,2023-08-04,-0.16055045871559637,large_close_jump_no_stored_action_news,,,,False
+BL,2023-08-15,0.23428571428571443,large_close_jump_no_stored_action_news,,,,False
+BNA,2023-05-29,0.05919395465994959,reference_flag_nearby_action_news,"BNA Bank décide de distribuer un dividende de 0,800 dinar par action",2023-05-29,https://www.ilboursa.com/marches/bna-bank-decide-de-distribuer-un-dividende-de-0-800-dinar-par-action_40941,True
+BNA,2024-04-17,0.059107358262967535,reference_flag_nearby_action_news,"La BNA Bank propose un dividende de 0,900 dinar par action au titre de 2023",2024-04-17,https://www.ilboursa.com/marches/la-bna-bank-propose-un-dividende-de-0-900-dinar-par-action-au-titre-de-2023_45757,True
+BT,2022-05-10,-0.185483870967742,large_close_jump_no_stored_action_news,,,,True
+CELL,2023-03-27,0.2298850574712643,large_close_jump_no_stored_action_news,,,,True
+CELL,2023-05-25,-0.16216216216216217,large_close_jump_no_stored_action_news,,,,True
+CELL,2023-10-25,-0.16746411483253587,large_close_jump_no_stored_action_news,,,,True
+CIL,2023-03-24,0.191717077710563,large_close_jump_no_stored_action_news,,,,True
+CIL,2023-05-16,-0.28301886792452835,large_close_jump_no_stored_action_news,,,,True
+CITY,2026-04-27,-0.58042194092827,large_close_jump_with_nearby_action_news,"CITY CARS : Bénéfice en hausse de 17 % en 2025 et dividende maintenu à 1,250 dinar",2026-04-27,https://www.ilboursa.com/marches/city-cars-benefice-en-hausse-de-17-en-2025-et-dividende-maintenu-a-1-250-dinar_61329,True
+CITY,2026-04-28,1.5610083132207029,large_close_jump_with_nearby_action_news,"CITY CARS : Bénéfice en hausse de 17 % en 2025 et dividende maintenu à 1,250 dinar",2026-04-27,https://www.ilboursa.com/marches/city-cars-benefice-en-hausse-de-17-en-2025-et-dividende-maintenu-a-1-250-dinar_61329,True
+DH,2025-07-21,0.05882352941176472,reference_flag_nearby_action_news,Délice Holding annonce le split de la valeur nominale de son action à 5 dinars,2025-07-28,https://www.ilboursa.com/marches/delice-holding-annonce-le-split-de-la-valeur-nominale-de-son-action-a-5-dinars_54085,True
+GIF,2022-05-31,0.25531914893617014,large_close_jump_no_stored_action_news,,,,True
+GIF,2023-11-06,0.15384615384615374,large_close_jump_no_stored_action_news,,,,True
+HL,2022-06-22,0.18318318318318316,large_close_jump_no_stored_action_news,,,,True
+HL,2026-06-30,0.21176470588235308,large_close_jump_no_stored_action_news,,,,True
+LSTR,2023-11-16,-0.22222222222222232,large_close_jump_no_stored_action_news,,,,True
+LSTR,2024-03-12,0.21818181818181825,large_close_jump_no_stored_action_news,,,,True
+LSTR,2024-03-29,-0.16901408450704225,large_close_jump_no_stored_action_news,,,,True
+MIP,2022-03-24,0.25,large_close_jump_no_stored_action_news,,,,False
+MIP,2022-03-31,-0.16000000000000003,large_close_jump_no_stored_action_news,,,,False
+MIP,2022-04-29,0.23076923076923084,large_close_jump_no_stored_action_news,,,,False
+MIP,2022-05-20,0.30000000000000004,large_close_jump_no_stored_action_news,,,,False
+MIP,2022-06-01,0.2142857142857142,large_close_jump_no_stored_action_news,,,,False
+MPBS,2025-04-29,0.05998286203941716,reference_flag_nearby_action_news,"MPBS propose un dividende de 0,370 dinar par action et une opération de split",2025-04-28,https://www.ilboursa.com/marches/mpbs-propose-un-dividende-de-0-370-dinar-par-action-et-une-operation-de-split_52367,True
+MPBS,2025-04-30,0.059822150363783466,reference_flag_nearby_action_news,"MPBS propose un dividende de 0,370 dinar par action et une opération de split",2025-04-28,https://www.ilboursa.com/marches/mpbs-propose-un-dividende-de-0-370-dinar-par-action-et-une-operation-de-split_52367,True
+NBL,2025-06-11,-0.16521739130434776,large_close_jump_no_stored_action_news,,,,True
+PGH,2021-11-30,0.19766472060050044,large_close_jump_no_stored_action_news,,,,True
+PGH,2021-12-01,-0.17130919220055707,large_close_jump_no_stored_action_news,,,,True
+PLAST,2022-07-19,-0.17682926829268286,large_close_jump_no_stored_action_news,,,,True
+SAH,2023-06-19,-0.004065040650406471,reference_flag_nearby_action_news,"SAH Lilas propose de distribuer un dividende de 0,330 dinar par action",2023-06-12,https://www.ilboursa.com/marches/sah-lilas-propose-de-distribuer-un-dividende-de-0-330-dinar-par-action_41214,True
+SAM,2023-04-20,0.2019543973941369,large_close_jump_no_stored_action_news,,,,True
+SCB,2024-08-28,-0.20895522388059706,large_close_jump_no_stored_action_news,,,,True
+SCB,2025-05-20,-0.1724137931034483,large_close_jump_no_stored_action_news,,,,True
+SCB,2025-07-09,-0.21052631578947356,large_close_jump_no_stored_action_news,,,,True
+SCB,2026-04-16,-0.17045454545454553,large_close_jump_no_stored_action_news,,,,True
+SERVI,2022-04-15,0.08849557522123908,reference_flag_nearby_action_news,"Augmentation de capital, export… les axes stratégiques du business plan 2022-2026 de SERVICOM",2022-04-14,https://www.ilboursa.com/marches/augmentation-de-capital-export-les-axes-strategiques-du-business-plan-2022-2026-de-servicom_33983,True
+SERVI,2022-06-09,0.15555555555555567,large_close_jump_no_stored_action_news,,,,True
+SERVI,2022-10-05,-0.15909090909090906,large_close_jump_no_stored_action_news,,,,True
+SERVI,2023-08-25,-0.23333333333333328,large_close_jump_no_stored_action_news,,,,True
+SIPHA,2023-11-29,-0.16135084427767366,large_close_jump_no_stored_action_news,,,,True
+SIPHA,2024-12-18,-0.160377358490566,large_close_jump_no_stored_action_news,,,,True
+SIPHA,2025-07-03,-0.17391304347826086,large_close_jump_no_stored_action_news,,,,True
+SITS,2024-08-15,-0.15000000000000002,large_close_jump_no_stored_action_news,,,,True
+SITS,2025-10-01,-0.15492957746478864,large_close_jump_no_stored_action_news,,,,True
+SITS,2025-10-10,0.28333333333333344,large_close_jump_no_stored_action_news,,,,True
+SITS,2025-10-23,-0.21818181818181825,large_close_jump_no_stored_action_news,,,,True
+SITS,2025-10-28,0.21262458471760803,large_close_jump_no_stored_action_news,,,,True
+SITS,2026-06-26,0.2124999999999999,large_close_jump_no_stored_action_news,,,,True
+SMART,2024-11-01,0.05015479876161,reference_flag_nearby_action_news,SMART Tunisie : Augmentation de capital annoncée,2024-10-31,https://www.ilboursa.com/marches/smart-tunisie-augmentation-de-capital-annoncee_49080,True
+SMD,2024-09-12,0.16999999999999993,large_close_jump_no_stored_action_news,,,,False
+SMD,2025-04-21,0.2592592592592593,large_close_jump_no_stored_action_news,,,,True
+SMD,2025-12-19,-0.20895522388059706,large_close_jump_no_stored_action_news,,,,True
+SOMOC,2025-05-13,-0.21052631578947367,large_close_jump_no_stored_action_news,,,,True
+SOMOC,2026-04-15,-0.1875,large_close_jump_no_stored_action_news,,,,True
+SOTEM,2022-06-09,0.18076923076923057,large_close_jump_no_stored_action_news,,,,False
+SOTEM,2022-09-07,-0.16943521594684374,large_close_jump_no_stored_action_news,,,,False
+SOTEM,2022-09-14,0.256,large_close_jump_no_stored_action_news,,,,False
+SOTEM,2023-05-12,0.2648648648648648,large_close_jump_no_stored_action_news,,,,False
+SOTEM,2023-05-22,0.1507936507936507,large_close_jump_no_stored_action_news,,,,False
+SOTEM,2024-09-23,0.26262626262626254,large_close_jump_no_stored_action_news,,,,False
+SOTEM,2024-10-07,0.18518518518518512,large_close_jump_no_stored_action_news,,,,False
+SOTEM,2024-11-01,-0.15736040609137059,large_close_jump_no_stored_action_news,,,,False
+SOTEM,2024-11-13,0.20481927710843384,large_close_jump_no_stored_action_news,,,,False
+SOTET,2024-05-07,0.16945606694560666,large_close_jump_with_nearby_action_news,"Avec une rentabilité améliorée en 2023, la SOTETEL renoue avec le versement de dividendes",2024-05-02,https://www.ilboursa.com/marches/avec-une-rentabilite-amelioree-en-2023-la-sotetel-renoue-avec-le-versement-de-dividendes_46021,True
+SOTUV,2022-05-26,0.04166666666666674,reference_flag_nearby_action_news,"La SOTUVER propose un dividende de 0,400 dinar et augmente son capital de 6 millions de dinars",2022-05-25,https://www.ilboursa.com/marches/la-sotuver-propose-un-dividende-de-0-400-dinar-et-augmente-son-capital-de-6-millions-de-dinars_34791,True
+SPDIT,2026-02-24,0.059558823529411775,reference_flag_nearby_action_news,La SPDIT propose la distribution d'un dividende de 1 dinar par action au titre de 2025,2026-02-25,https://www.ilboursa.com/marches/la-spdit-propose-la-distribution-d-un-dividende-de-1-dinar-par-action-au-titre-de-2025_60052,True
+STAR,2025-03-12,0.12013046956735773,reference_flag_nearby_action_news,STAR Assurances augmente son dividende grâce à un bénéfice en hausse de 10% en 2024,2025-03-07,https://www.ilboursa.com/marches/star-assurances-augmente-son-dividende-grace-a-un-benefice-en-hausse-de-10-en-2024_51384,True
+STAR,2025-03-13,0.06455689247843543,reference_flag_nearby_action_news,STAR Assurances augmente son dividende grâce à un bénéfice en hausse de 10% en 2024,2025-03-07,https://www.ilboursa.com/marches/star-assurances-augmente-son-dividende-grace-a-un-benefice-en-hausse-de-10-en-2024_51384,True
+STIP,2021-11-12,-0.19354838709677413,large_close_jump_no_stored_action_news,,,,False
+STIP,2021-11-19,-0.15000000000000002,large_close_jump_no_stored_action_news,,,,False
+STIP,2022-04-08,0.18333333333333335,large_close_jump_no_stored_action_news,,,,False
+STIP,2022-05-23,-0.16388888888888897,large_close_jump_no_stored_action_news,,,,False
+STIP,2022-12-05,-0.16475095785440608,large_close_jump_no_stored_action_news,,,,True
+STIP,2023-05-10,-0.16500000000000004,large_close_jump_no_stored_action_news,,,,True
+STIP,2023-09-08,-0.15454545454545454,large_close_jump_no_stored_action_news,,,,False
+STIP,2024-06-18,0.1634349030470914,large_close_jump_no_stored_action_news,,,,True
+STIP,2025-10-02,0.1821086261980831,large_close_jump_no_stored_action_news,,,,True
+STIP,2026-03-13,0.2947558770343579,large_close_jump_no_stored_action_news,,,,True
+STIP,2026-04-02,0.2959459459459459,large_close_jump_no_stored_action_news,,,,True
+STIP,2026-04-15,0.18900000000000006,large_close_jump_no_stored_action_news,,,,False
+STPAP,2026-04-27,-0.15123456790123457,large_close_jump_no_stored_action_news,,,,True
+TINV,2025-10-22,0.2990886495443248,large_close_jump_no_stored_action_news,,,,True
+TJARI,2022-04-04,0.059935897435897445,reference_flag_nearby_action_news,"Attijari bank propose un dividende record de 3,150 dinars par action",2022-04-04,https://www.ilboursa.com/marches/attijari-bank-propose-un-dividende-record-de-3-150-dinars-par-action_33772,True
+TJARI,2022-04-07,-0.0015015015015014122,reference_flag_nearby_action_news,"Attijari bank propose un dividende record de 3,150 dinars par action",2022-04-04,https://www.ilboursa.com/marches/attijari-bank-propose-un-dividende-record-de-3-150-dinars-par-action_33772,True
+TJARI,2023-04-05,0.12236944660950888,reference_flag_nearby_action_news,Attijari bank va verser un dividende record de 4 dinars par action,2023-04-03,https://www.ilboursa.com/marches/attijari-bank-va-verser-un-dividende-record-de-4-dinars-par-action_40016,True
+TJARI,2025-03-12,0.05825667980727123,reference_flag_nearby_action_news,Attijari bank propose un dividende de 5 dinars par action et une augmentation de capital,2025-03-14,https://www.ilboursa.com/marches/attijari-bank-propose-un-dividende-de-5-dinars-par-action-et-une-augmentation-de-capital_51499,True
+TRE,2026-09-11,0.07499999999999996,reference_flag_nearby_action_news,Union Capital recommande de souscrire à l'augmentation de capital de Tunis Re,2026-09-14,https://www.ilboursa.com/marches/union-capital-recommande-de-souscrire-a-l-augmentation-de-capital-de-tunis-re_64236,True
+TRE,2026-09-15,-0.2811839323467231,large_close_jump_with_nearby_action_news,BNA Capitaux recommande de souscrire à l'augmentation de capital de Tunis Re,2026-09-15,https://www.ilboursa.com/marches/bna-capitaux-recommande-de-souscrire-a-l-augmentation-de-capital-de-tunis-re_64252,True
+UADH,2021-10-13,0.1875,large_close_jump_no_stored_action_news,,,,False
+UADH,2021-11-09,0.24,large_close_jump_no_stored_action_news,,,,False
+UADH,2023-09-28,-0.22222222222222232,large_close_jump_no_stored_action_news,,,,True
+UADH,2023-11-28,0.17142857142857149,large_close_jump_no_stored_action_news,,,,False
+UADH,2024-10-18,0.16666666666666674,large_close_jump_no_stored_action_news,,,,True
+UBCI,2023-04-19,0.09136137494346452,reference_flag_nearby_action_news,"L'UBCI propose de verser un dividende de 1,250 dinar par action au titre de 2022",2023-04-15,https://www.ilboursa.com/marches/l-ubci-propose-de-verser-un-dividende-de-1-250-dinar-par-action-au-titre-de-2022_40210,True

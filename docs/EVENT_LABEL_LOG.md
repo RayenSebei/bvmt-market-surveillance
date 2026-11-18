@@ -1,0 +1,67 @@
+# Event label audit log
+
+The linked article/notice date is the earliest **verified** public date for the stated milestone, not proof that no earlier disclosure exists. No detector hit was used to choose a date. `include_headline=false` removes ambiguous or uncovered cases from sourced positive recall. Trading coverage is calculated in `outputs/evaluation/events_table.csv`.
+
+| Event | Public date and source | Decision and rejected alternative |
+|---|---|---|
+| TINV-2025 (positive) | 2025-10-06; SOURCE_NEEDED | Date and original_label_date are preserved from labeled_events.csv; its type and source are ambiguous, and observed detector flags on 2025-10-13 and 2025-10-22 occur after it. |
+| UADH-2026 (positive) | 2026-03-25; https://www.bvmt.com.tn/sites/default/files/avis-decisions/uadh-tlyq-ltdwl.pdf | Cited BVMT PDF establishes suspension from March 25; it does not establish March 24 as the public date. Source-alignment correction under `PROTOCOL_AMENDMENTS.md`; no misconduct inference. |
+| TSI-2025-inquiry (positive) | 2025-04-23; https://www.cmf.tn/sites/default/files/pdfs/publications/bulletin-officiel/bo250423.pdf | CMF bulletin publicly reported inquiry on 2025-04-23; inquiry began January 9 but that was not the public date. TSI is an intermediary, not a listed ticker in stored trading data; non-evaluable. |
+| CGF-unknown (positive) | unknown; SOURCE_NEEDED | No row in labeled_events.csv and no event date or supporting source were found in the repository. |
+| UBCI-unknown (positive) | unknown; SOURCE_NEEDED | No row in labeled_events.csv and no specific event date or supporting source were found in the repository. |
+| GIF-2024-radiation (positive) | 2024-10-25; https://tunis-stockexchange.com/en/node/6451 | BVMT notice states suspension from October 25. November 12 delisting article is later context; trading data ends October 22. |
+| LSTR-2024-bankruptcy (positive) | 2024-07-23; https://managers.tn/2024/07/23/la-societe-electrostar-declaree-en-faillite/ | Managers published July 23 and reports the suspension that day; court ruling was July 15 but its public date before July 23 is not verified. Trading data ends July 22. |
+| SERVI-2024-bankruptcy (positive) | 2024-01-11; https://www.ilboursa.com/marches/suspension-de-la-cotation-du-titre-servicom_44316 | ilboursa published suspension January 11 at 10:21. March 27 bankruptcy article is later context. Trading data ends January 8. |
+| MIP-2024-exploratory (exploratory) | 2024-08-05; https://www.ilboursa.com/marches/vers-la-mise-en-faillite-directe-de-la-societe-mip_47579 | The linked possible-bankruptcy article on 2024-08-05 is the earliest stored public event; labeled_events.csv records the later 2024-09-10 delisting. Exploratory and excluded from headline recall. |
+| SOPAT-2023-buyout (negative) | 2023-09-19; https://www.ilboursa.com/marches/le-groupe-la-rose-blanche-retire-la-sopat-de-la-cote-de-la-bourse_42686 | The linked withdrawal article on 2023-09-19 is the earliest stored public event; labeled_events.csv records 2023-09-20. Benign buyout/withdrawal negative control, not counted as a positive event. |
+| OTH-2021-capital (negative) | 2021-10-29; https://www.ilboursa.com/marches/onetech-holding-augmentation-de-capital-approuvee_31068 | Approval article; earlier proposal is a different milestone. |
+| LNDOR-2021-capital (negative) | 2021-11-26; https://www.ilboursa.com/marches/land-or-l-augmentation-de-capital-approuvee-par-l-assemblee-generale-extraordinaire_31547 | Approval article; later execution is not substituted. |
+| ATB-2021-capital (negative) | 2021-11-26; https://www.ilboursa.com/marches/atb-l-age-approuve-l-augmentation-de-capital-de-28-millions-de-dinars-reservee-a-l-arab-bank_31564 | Approval article; routine financing control. |
+| ADWYA-2022-buyout (exploratory) | 2022-06-07; https://www.ilboursa.com/marches/suspension-de-la-cotation-des-titres-adwya_34995 | Suspension is dated, but the source explicitly withholds its reason. Excluded from both positive recall and negative-control counts. The event ID is retained for continuity; its old buyout description is withdrawn. |
+| CREAL-2022-opa (negative) | 2022-11-14; https://www.ilboursa.com/marches/cardinal-brands-nouvel-actionnaire-majoritaire-de-cerealis-lance-une-opa_37790 | November 15 suspension and later withdrawal are downstream of this November 14 public offer. |
+| WIFAK-2023-suspension (exploratory) | 2023-01-09; https://www.ilboursa.com/marches/suspension-de-la-cotation-des-titres-wifak-bank_38650 | Suspension is confirmed but the notice alone does not establish adverse conduct; same-day ownership article provides context. |
+| STPAP-2023-fire (positive) | 2023-09-28; https://www.ilboursa.com/marches/incendie-dans-l-usine-de-sotipapier-cotation-suspendue-a-la-bourse-de-tunis_42802 | First stored report of fire and suspension; operational shock is adverse, not evidence of misconduct. |
+| SPHAX-2023-bankruptcy (positive) | 2023-12-19; https://www.ilboursa.com/marches/mise-en-faillite-de-la-compagnie-aerienne-syphax-airlines_44054 | Public-announcement anchor is December 19; actual court ruling was 2023-12-11. Earlier public release not verified. Coverage is assessed separately. |
+| SMART-2024-capital (negative) | 2024-10-31; https://www.ilboursa.com/marches/smart-tunisie-augmentation-de-capital-annoncee_49080 | Announcement date, not later share issue. |
+| BIAT-2024-capital (negative) | 2024-11-27; https://www.ilboursa.com/marches/biat-augmentation-de-capital-annoncee_49512 | Announcement date, routine corporate action. |
+| SMD-2025-capital (negative) | 2025-03-13; https://www.ilboursa.com/marches/sanimed-lance-une-augmentation-de-capital-de-10-millions-de-dinars_51474 | Launch article; financing is a control, not an adverse verdict. |
+| TJARI-2025-dividend (negative) | 2025-03-14; https://www.ilboursa.com/marches/attijari-bank-propose-un-dividende-de-5-dinars-par-action-et-une-augmentation-de-capital_51499 | Proposal date, not approval or payment date. |
+| MPBS-2025-split (negative) | 2025-04-28; https://www.ilboursa.com/marches/mpbs-propose-un-dividende-de-0-370-dinar-par-action-et-une-operation-de-split_52367 | Proposal date, not split implementation date. |
+| DH-2025-split (negative) | 2025-07-28; https://www.ilboursa.com/marches/delice-holding-annonce-le-split-de-la-valeur-nominale-de-son-action-a-5-dinars_54085 | Announcement date, not effective split date. |
+| SIAME-2025-dividend (exploratory) | 2025-11-14; https://www.ilboursa.com/marches/la-siame-reporte-la-distribution-des-dividendes-au-titre-de-2024-sous-instruction-judiciaire_57655 | Judicial context is documented but legal finding and independent adverse label require review. |
+| PGH-2026-buyout (negative) | 2026-02-19; https://www.ilboursa.com/marches/le-cmf-demande-la-suspension-de-cotation-des-titres-poulina-et-land-or_59920 | Correlation group PGH-LNDOR-2026: one notice, two ticker windows; report separate and collapsed control counts. |
+| LNDOR-2026-buyout (negative) | 2026-02-19; https://www.ilboursa.com/marches/le-cmf-demande-la-suspension-de-cotation-des-titres-poulina-et-land-or_59920 | Correlation group PGH-LNDOR-2026: same underlying notice as PGH. |
+| ASSMA-2026-dividend (negative) | 2026-03-19; https://www.ilboursa.com/marches/assurances-maghrebia-dividende-de-2-900-dinars-et-attribution-d-actions-gratuites_60570 | Announcement date, routine corporate action. |
+
+## Additional URLs consulted and rejected as independent labels
+
+- https://www.ilboursa.com/marches/suspension-de-la-cotation-des-titres-cerealis-les-15-et-16-novembre-2022_37807 — November 15 suspension followed the November 14 takeover offer; not another independent event.
+- https://www.ilboursa.com/marches/adwya-l-offre-publique-de-retrait-sera-ouverte-le-30-novembre-a-5-950-dinars-l-action_38007 and https://www.ilboursa.com/marches/radiation-de-la-societe-adwya-du-marche-principal-de-la-cote-de-la-bourse_38617 — later ADWYA events; they do not establish the reason for the June suspension.
+- https://www.ilboursa.com/marches/groupe-hedi-ben-ayed-franchit-le-seuil-de-40-dans-le-capital-de-wifak-bank_38653 — ownership context on WIFAK suspension day; does not establish an adverse event.
+- https://www.ilboursa.com/marches/sotipapier-le-prix-de-l-offre-publique-d-achat-fixe-a-6-340-dinars-l-action_39231 — distinct February 2023 offer but omitted to avoid over-weighting the same symbol.
+- https://www.ilboursa.com/marches/sopat-l-offre-publique-de-retrait-sera-ouverte-le-11-octobre-a-un-prix-de-2-050-dinars-l-action_42984 — downstream of already registered SOPAT withdrawal.
+- https://www.ilboursa.com/marches/suspension-de-la-cotation-du-titre-mip_47609 — downstream of the registered August 5 MIP possible-bankruptcy report.
+- https://www.ilboursa.com/marches/suspension-de-la-cotation-du-titre-servicom_44316 — corroborates existing January 11 SERVI label.
+- https://www.tap.info.tn/en/Portal-Economy/19993826-bvmt-suspension-of — previously cited as March 24 reporting. The event anchor now follows the dated March 25 suspension in the cited BVMT PDF.
+- https://businessnews.com.tn/2025/12/02/tuninvest-une-envolee-boursiere-vertigineuse-un-cmf-paralyse-et-des-questions-qui-derangent/1376096/ — December 2 report cannot support original TINV October 6 public date; SOURCE_NEEDED retained.
+- https://www.cmf.tn/sites/default/files/pdfs/publications/bulletin-officiel/bo250430.pdf — later TSI referral; April 23 bulletin was already public.
+- https://businessnews.com.tn/2021/03/30/article-1177630/1177630/ — CGF public sanction was March 2021, outside protocol range; original undated claim remains SOURCE_NEEDED.
+- https://www.cmf.tn/sites/default/files/pdfs/emetteurs/communiques/com_170924_ubci_bourse.pdf — UBCI Bourse intermediary merger is not the unspecified UBCI issuer case; SOURCE_NEEDED retained.
+- https://www.ilboursa.com/marches/incident-technique-a-la-bourse-de-tunis_62591 and https://www.ilboursa.com/marches/interruption-temporaire-de-la-cotation-apres-une-chute-du-tunindex-de-plus-de-3-_63252?trk=public_post_comment-text — exchange-wide events, not independent stock labels.
+- https://www.ilboursa.com/marches/bourse-de-tunis-quel-bilan-tirer-de-2023-_44172 and https://www.ilboursa.com/marches/rendement-palmares-quel-bilan-pour-la-bourse-de-tunis-en-2024-_50076 and https://www.ilboursa.com/marches/palmares-capitalisation-capitaux-echanges-retrospective-boursiere-2025_58731 — retrospectives, insufficient to set earliest public dates.
+- https://www.cmf.tn/sites/default/files/pdfs/publications/bulletin-officiel/bo251001.pdf — sanction exists in bulletin but entity/date require case-level review; not assigned to UBCI.
+
+## Original-event source corrections (2026-11-17)
+
+- GIF-2024-radiation: replaced later retrospective https://www.ilboursa.com/marches/la-bourse-de-tunis-decide-la-radiation-de-la-societe-gif-filter_49247 with date-contemporaneous https://tunis-stockexchange.com/en/node/6451. Event date, role, and detector hits are unchanged.
+- LSTR-2024-bankruptcy: replaced later retrospective https://www.ilboursa.com/marches/en-cessation-de-paiement-le-tribunal-declare-la-faillite-de-la-societe-electrostar_47391 with date-contemporaneous https://managers.tn/2024/07/23/la-societe-electrostar-declaree-en-faillite/. Event date, role, and detector hits are unchanged.
+- SERVI-2024-bankruptcy: replaced later retrospective https://www.ilboursa.com/marches/le-tribunal-de-tunis-declare-la-faillite-de-la-societe-servicom_45451 with date-contemporaneous https://www.ilboursa.com/marches/suspension-de-la-cotation-du-titre-servicom_44316. Event date, role, and detector hits are unchanged.
+
+## Additional source review after the frozen comparison
+
+These were consulted only after the registry and development choice had been locked. They were not added to the scored event set or used to change a threshold.
+
+- https://www.cmf.tn/sites/default/files/pdfs/publications/bulletin-officiel/bo250925.pdf — CMF bulletin of 2025-09-25 records a disciplinary sanction against the TSI intermediary's chief executive. This is later action in the existing TSI matter and has no listed TSI price series; no second positive was scored.
+- https://www.ilboursa.com/marches/le-groupe-poulina-lance-une-opa-sur-le-promoteur-immobilier-sits_53214 — June 2025 SITS takeover/suspension candidate for a future negative-control registry, excluded from this frozen comparison.
+- https://www.ilboursa.com/marches/exclusif-fin-du-contentieux-douanier-pour-assad_63522 — August 2026 ASSAD suspension and settlement candidate for future review, excluded from this frozen comparison.
+- https://www.ilboursa.com/marches/la-bourse-de-tunis-decide-la-radiation-des-societes-electrostar-et-mip_48040 — September 2024 downstream delisting of already registered LSTR and MIP matters, not an independent event.
