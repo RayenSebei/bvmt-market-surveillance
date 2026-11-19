@@ -1,6 +1,6 @@
 # BVMT Surveillance Terminal v2
 
-The React application at `/terminal` now has seven lazy-loaded views: Overview, Anomaly Feed, Stock Detail, News, Watchlist, Pipeline and Evaluation. It uses the existing read-only Flask API. Statistical flags are prompts for human review, not findings of misconduct.
+The React application at `/` has seven lazy-loaded views: Overview, Anomaly Feed, Stock Detail, News, Watchlist, Pipeline and Evaluation. It uses the existing read-only Flask API. Statistical flags are prompts for human review, not findings of misconduct.
 
 ## V2 structure and tokens
 
@@ -44,7 +44,7 @@ cd frontend
 npm run build
 ```
 
-Flask serves the resulting `frontend/dist` at `/terminal`, including the bundled assets. No frontend development server is required to view the built application. The existing research dashboard stays at `/`. Without a frontend build, `/terminal` returns a clear unavailable response and the existing dashboard is unaffected.
+Flask serves the committed `frontend/dist` at `/`, including bundled assets, and returns its shell for client-side route refreshes. No frontend development server or Node installation is required to view the committed build. Without a frontend build, `/` returns a clear unavailable response.
 
 ## Checks
 

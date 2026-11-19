@@ -15,18 +15,16 @@ See the [Phase 2 results](docs/PHASE2_RESULTS.md). The watchlist is a review que
 - News cross-reference, rule-based classification, and watchlist refinement.
 - Optional Groq-assisted triage whose output is an **unvalidated draft opinion** for human review. It was not run in Phase 2.
 - A source-audited, case-study-level evaluation with a frozen protocol, fixed development and held-out splits, Wilson intervals, baselines, sensitivity reporting, and negative controls.
-- A seven-page, responsive Flask dashboard with native SVG charts and an offline pytest suite.
-- An optional React/TypeScript Market Command Center under `frontend/`, served at `/terminal` after an offline build and backed by the same read-only API.
+- A responsive React, TypeScript, and Tailwind Terminal served at `/` by the read-only Flask API, plus an offline pytest suite. Its production build is committed, so Node is not required to run it.
 
-## Dashboard
+## Terminal
 
-- Overview with labelled monthly activity, top-ticker counts, news-context split, and recent flags.
-- Full Anomaly Feed with server-side filters, sorting, pagination, CSV export, and contextual detail drawers.
-- Stock Search with price and volume axes, OHLCV hover tooltips, range controls, and clickable flag markers.
-- News Feed with ticker/category filters and links from matched headlines back to flag detail.
-- Watchlist with 16 current refined cases and a separate 16-row volume-decay view.
-- Help/glossary, keyboard-friendly drawers, loading/error states, responsive layouts, and an optional saved dark theme.
-- Ctrl+K page/ticker navigation, a clickable flag calendar, surveillance radar, candlesticks, z-score panel, drag zoom, and a detector playground.
+- Overview, Anomaly Feed, Stock Detail, News, Watchlist, Pipeline, and Evaluation are the seven views.
+- The Overview includes the Market Map: 83 company tiles sized by average traded value over 20 stored sessions, with grey for no trade on the snapshot date and an outline for recent flags. PX1 and TBIDX are index series and are excluded from company tiles.
+- The signal inspector connects a selected symbol to its stored market, flag, and news context. Navigation and tiles support keyboard access and reduced-motion preferences.
+- Data comes from stored files through the same read-only Flask API. Flags are prompts for review, not findings of misconduct.
+
+Final desktop and mobile captures are in [docs/images](docs/images/). The original template dashboard was an earlier version and has been removed from the served app.
 
 ## Install
 
@@ -72,9 +70,9 @@ Start the Flask dashboard:
 python app.py
 ```
 
-Then open `http://127.0.0.1:5000`. This legacy `templates/` + `static/` dashboard is deprecated. Keep it while the React terminal reaches feature parity and API tests cover its remaining uses; remove it in a separate reviewed change after redirects and screenshots are verified.
+Then open `http://127.0.0.1:5000/`. Flask serves the committed React build at `/` and returns its shell for client-side route refreshes.
 
-To build the optional React terminal:
+To rebuild the React Terminal after changing frontend source:
 
 ```bash
 cd frontend
@@ -83,8 +81,7 @@ npm run build
 cd ..
 ```
 
-The generated `frontend/dist/` directory is ignored by Git. After the build,
-Flask serves the terminal at `http://127.0.0.1:5000/terminal`.
+The generated `frontend/dist/` directory is committed. Node is needed for frontend development and rebuilding, but not to run the committed build with Flask.
 
 The dashboard is read-only by default, binds to loopback, and does not expose a
 pipeline trigger. If a controlled execution API is explicitly required, set
@@ -114,7 +111,7 @@ news/event cross-reference -> classification -> refined watchlist
         v
 optional Groq draft triage
         |
-        +----> dashboard
+        +----> React Terminal through Flask
         +----> case-study evaluation
 ```
 
@@ -138,10 +135,10 @@ src/validation/              context and watchlist stages
 src/triage/                  optional Groq-assisted draft triage
 src/evaluation/              metrics, baselines, and sensitivity tools
 outputs/evaluation/          generated tables, figures, and summary
-frontend/                    optional React/TypeScript terminal source
-templates/dashboard.html     semantic seven-page dashboard shell
-static/dashboard.css         offline responsive design system
-static/dashboard.js          API client, native SVG charts, filters, and drawers
+frontend/src/                React/TypeScript/Tailwind Terminal source
+frontend/dist/               committed production build served at /
+docs/images/                 final desktop and mobile Terminal captures
+report/                      original and updated internship reports
 tests/                       offline tests and minimal fixtures
 docs/REPORT.md               full project report
 ```
