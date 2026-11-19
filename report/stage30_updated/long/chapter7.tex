@@ -1,4 +1,31 @@
-\chapter{Conclusion and Skills Developed}
+\chapter{Verification, Conclusion, and Skills Developed}
+
+\section{Quality checks and verification}
+The derived quality pass found zero duplicate symbol/date rows and zero
+invalid dates, but 59 invalid numeric or OHLC rows and 349 gaps longer
+than 30 calendar days. It marked 140 new-scrape rows for review:
+134 with zero volume, five large jumps, and one OHLC inconsistency.
+The corporate-action suspect list contains 115 rows and tags 86
+reference flags. These are review prompts; no protected source CSV
+was edited. The 100-headline human-label sample remains unfilled, so
+no news-classifier accuracy or agreement is claimed.
+
+\TerminalShot[0.35\textheight]{../assets/screenshots/pipeline.jpg}{fig:pipeline}
+{Pipeline: source coverage and stored-series summary.}
+
+The final offline suite passes 117 tests. The React production build
+and Prettier format check pass. Playwright loaded the Terminal at 1280
+and 390 pixels with no console errors and checked SPA refresh. The
+committed frontend build is about 1.21 MB, allowing Flask to serve it
+without Node. Verification establishes internal reproducibility, not
+independent evidence of detector accuracy.
+
+The CSV loader caches by resolved path, modification time, and read options,
+and returns copies. A changed file receives a new cache key. The news cache
+uses the combined news file's modification time for parsed records and
+indexes. These mechanisms are tested for response equality and file-change
+reload. Earlier endpoint timing figures were removed because they were not
+remeasured on the final application.
 
 \section{Conclusion}
 The final project connects protected BVMT market and stored ilboursa news

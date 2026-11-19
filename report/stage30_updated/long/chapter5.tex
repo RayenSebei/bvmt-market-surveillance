@@ -15,10 +15,10 @@ filtered flags, stock history, source-linked news, a refined queue, output
 status, and method comparison.
 
 % A fixed half-page limit and in-flow placement avoid isolated float pages.
-\newcommand{\TerminalShot}[3]{%
+\newcommand{\TerminalShot}[4][0.44\textheight]{%
   \begin{center}\begin{minipage}{\linewidth}\centering
-  \includegraphics[width=\linewidth,height=0.35\textheight,keepaspectratio]{#1}
-  \captionof{figure}{#3}\label{#2}
+  \includegraphics[width=\linewidth,height=#1,keepaspectratio]{#2}
+  \captionof{figure}{#4}\label{#3}
   \end{minipage}\end{center}
 }
 \TerminalShot{../assets/screenshots/overview-market-map.jpg}{fig:overview}
@@ -49,23 +49,12 @@ not a verified explanation. Watchlist shows ten spike and six decay rows.
 \TerminalShot{../assets/screenshots/stock-detail.jpg}{fig:stocks}
 {Stock Detail: BIAT's stored price history and flag markers.}
 \TerminalShot{../assets/screenshots/news.jpg}{fig:news}
-{News: stored headlines and source links.}
+{News: a stored market headline with its source link.}
 \TerminalShot{../assets/screenshots/watchlist.jpg}{fig:watchlist}
-{Watchlist: ranked dates and instruments in the refined queue.}
+{Watchlist: sample ranked dates and instruments.}
 
 \section{Pipeline, evaluation, and caching}
 Pipeline reports local output files and the read-only evaluation manifest.
 Evaluation displays sourced-event coverage, Wilson intervals, method
 comparison, workload, and controls. The reference cannot be retuned in the
 interface.
-\TerminalShot{../assets/screenshots/pipeline.jpg}{fig:pipeline}
-{Pipeline: source coverage and stored-series summary.}
-\TerminalShot{../assets/screenshots/evaluation.jpg}{fig:evaluation}
-{Evaluation: reference and baseline hit comparisons.}
-
-The CSV loader caches by resolved path, modification time, and read options,
-and returns copies. A changed file receives a new cache key. The news cache
-uses the combined news file's modification time for parsed records and
-indexes. These mechanisms are tested for response equality and file-change
-reload. Earlier endpoint timing figures were removed because they were not
-remeasured on the final application.

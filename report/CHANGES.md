@@ -86,7 +86,7 @@ was added to the normal chapters, without assigning later work to those dates.
   Playwright at 135% browser zoom only after all market-tape prices loaded. Both updated
   report asset trees use these captures; the originals were untouched.
 - Replaced the long report's floating screenshot blocks with bounded in-flow
-  figures, each no taller than 35% of text height, to prevent sparse float pages.
+  figures, normally capped at 44% of text height (35% for Pipeline), to prevent sparse float pages.
 - Corrected the positive-source count: seven positive CSV rows have dated URLs.
   The evaluation metric counts six because it requires `include_headline=true`,
   excluding sourced but unlisted TSI. Five are primary-window eligible.
@@ -101,3 +101,15 @@ was added to the normal chapters, without assigning later work to those dates.
 Final layout check: the short PDF is 14 pages; the long PDF is 32 pages. The long report lost one page because cropped, in-flow figures and a shorter checklist removed the sparse figure page and orphan line; no substantive report section was cut in this revision. The Stock Detail figure shows the full chart axis, and the Market Map and inspector figures show legible detail crops. Both final LaTeX logs have no overfull boxes, broken references, or infinite-glue warnings.
 
 The final 100% render check prompted tighter crops of the Anomaly Feed, News, Watchlist, Pipeline, and Evaluation evidence panes. Captions now name exactly the visible fields; omitted columns remain documented in the report tables and prose.
+
+The final figure pass trimmed partial rows and a partial news item from the crop edges. Each caption describes only the visible detail.
+
+The Evaluation screenshot is placed beside Table 6.1 in Chapter 6, where its method comparison is explained. This avoids an isolated figure page at the end of Chapter 5.
+
+The cache paragraph moved into the verification section of the final chapter, avoiding an orphan paragraph page at the end of Chapter 5.
+
+The quality-and-verification section now opens the final chapter. It follows the method decision and keeps the conclusion and verification together, avoiding a mostly empty end-of-chapter page.
+
+The Pipeline source-coverage figure now accompanies the final quality checks instead of occupying a near-empty interface page.
+
+A 48%-height trial reached 33 pages but recreated a near-empty printed page 16. The final 32-page layout uses readable figures and no near-empty interface page.

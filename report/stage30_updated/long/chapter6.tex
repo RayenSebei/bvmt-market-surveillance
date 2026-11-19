@@ -99,6 +99,8 @@ The simple volume-spike baseline hits all five eligible positives, but
 its 16.87 and 24.38 flags per week are about four times the reference
 workload of 4.08 and 7.12, and it produces 27 and 10 negative-control
 flags versus the reference's 4 and 9; hit count alone is no advantage.
+\TerminalShot{../assets/screenshots/evaluation.jpg}{fig:evaluation}
+{Evaluation: reference and baseline hit comparisons.}
 The complete method table remains in the generated Phase 2 comparison
 output. The development-selected \code{robust_z3} hit zero of the one
 held-out positive. Adoption required at least ten held-out positives,
@@ -108,20 +110,3 @@ increase. The sample and comparative conditions fail. The decision is
 to retain \code{reference_v1}. Across all five eligible positives,
 the reference hits one in the primary window (Wilson 0.04--0.62) and two
 in the secondary. None of these case-study rates estimates accuracy.
-
-\section{Quality checks and verification}
-The derived quality pass found zero duplicate symbol/date rows and zero
-invalid dates, but 59 invalid numeric or OHLC rows and 349 gaps longer
-than 30 calendar days. It marked 140 new-scrape rows for review:
-134 with zero volume, five large jumps, and one OHLC inconsistency.
-The corporate-action suspect list contains 115 rows and tags 86
-reference flags. These are review prompts; no protected source CSV
-was edited. The 100-headline human-label sample remains unfilled, so
-no news-classifier accuracy or agreement is claimed.
-
-The final offline suite passes 117 tests. The React production build
-and Prettier format check pass. Playwright loaded the Terminal at 1280
-and 390 pixels with no console errors and checked SPA refresh. The
-committed frontend build is about 1.21 MB, allowing Flask to serve it
-without Node. Verification establishes internal reproducibility, not
-independent evidence of detector accuracy.
