@@ -47,7 +47,7 @@ These are descriptive case studies, not an accuracy estimate. The expanded set a
 
 ## Dashboard and reproducibility
 
-The React terminal displays the expanded method comparison and Wilson intervals. The seven-page Flask `templates/` + `static/` dashboard is deprecated but retained while remaining features are migrated and API coverage is checked. Remove it only in a separate reviewed change after parity, redirects, and screenshots are verified.
+The React terminal is served by Flask at `/` and displays the expanded method comparison and Wilson intervals. The earlier seven-page template dashboard and its dedicated static assets have been removed. Final desktop and mobile captures are in `docs/images/`.
 
 The generated manifest hashes text after canonical LF normalization, so freshness checks are portable across Windows, Linux, and macOS. Pipeline status logs require the explicitly enabled execution API and its bearer token. The default command reads source CSVs and regenerates evaluation outputs without network or AI calls.
 
