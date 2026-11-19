@@ -99,3 +99,5 @@ was added to the normal chapters, without assigning later work to those dates.
   register to avoid the longtable page-split glue warning. Final compile and visual verification are recorded separately.
 
 Final layout check: the short PDF is 14 pages; the long PDF is 32 pages. The long report lost one page because cropped, in-flow figures and a shorter checklist removed the sparse figure page and orphan line; no substantive report section was cut in this revision. The Stock Detail figure shows the full chart axis, and the Market Map and inspector figures show legible detail crops. Both final LaTeX logs have no overfull boxes, broken references, or infinite-glue warnings.
+
+The final 100% render check prompted tighter crops of the Anomaly Feed, News, Watchlist, Pipeline, and Evaluation evidence panes. Captions now name exactly the visible fields; omitted columns remain documented in the report tables and prose.

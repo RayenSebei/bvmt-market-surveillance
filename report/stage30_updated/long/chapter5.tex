@@ -45,13 +45,13 @@ watchlist. Stock Detail shows observations and markers for one instrument.
 News draws from the stored ilboursa collection; a local match is context,
 not a verified explanation. Watchlist shows ten spike and six decay rows.
 \TerminalShot{../assets/screenshots/anomaly-feed.jpg}{fig:anomalies}
-{Anomaly Feed: filters and the stored flag queue.}
+{Anomaly Feed: stored flag dates, symbols, signals, and scores.}
 \TerminalShot{../assets/screenshots/stock-detail.jpg}{fig:stocks}
 {Stock Detail: BIAT's stored price history and flag markers.}
 \TerminalShot{../assets/screenshots/news.jpg}{fig:news}
 {News: stored headlines and source links.}
 \TerminalShot{../assets/screenshots/watchlist.jpg}{fig:watchlist}
-{Watchlist: the refined review queue.}
+{Watchlist: ranked dates and instruments in the refined queue.}
 
 \section{Pipeline, evaluation, and caching}
 Pipeline reports local output files and the read-only evaluation manifest.
@@ -59,9 +59,9 @@ Evaluation displays sourced-event coverage, Wilson intervals, method
 comparison, workload, and controls. The reference cannot be retuned in the
 interface.
 \TerminalShot{../assets/screenshots/pipeline.jpg}{fig:pipeline}
-{Pipeline: source coverage and integrity checks.}
+{Pipeline: source coverage and stored-series summary.}
 \TerminalShot{../assets/screenshots/evaluation.jpg}{fig:evaluation}
-{Evaluation: method hits, workloads, and control flags.}
+{Evaluation: reference and baseline hit comparisons.}
 
 The CSV loader caches by resolved path, modification time, and read options,
 and returns copies. A changed file receives a new cache key. The news cache
