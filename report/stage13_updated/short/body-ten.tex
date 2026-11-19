@@ -23,7 +23,8 @@ to the company's data, API, and web-application activities. It used stored
 financial-market records and produced a complete analytical workflow, from
 data preparation and statistical calculations to review files and browser
 interfaces. This gave the assignment a clear place within CODELOGIC's software
-solutions activity.
+solutions activity. The original prototype's browser dashboard was
+later replaced by the React Terminal in the final project.
 
 \keybox{\textbf{Company supervisor:} Firas Jebari.}
 
@@ -275,8 +276,8 @@ recent flag. The map and navigation support keyboard use and reduced-motion
 preferences. The signal inspector opens the selected symbol's market and flag
 context without changing the underlying records.
 
-\reportfigure[0.37\textheight]{overview-market-map.jpg}{fig:short-overview}{Final Terminal Overview with the 83-company Market Map.}
-\reportfigure[0.37\textheight]{inspector-open.jpg}{fig:short-inspector}{Signal inspector open beside the stored market context.}
+\reportfigure[0.37\textheight]{overview-market-map.jpg}{fig:short-overview}{Overview: Market Map controls and sample tiles from 83 companies.}
+\reportfigure[0.37\textheight]{inspector-open.jpg}{fig:short-inspector}{BIAT signal inspector: detector scores and rule explanation.}
 }
 
 \ShortPage{8. Skills and lessons learned}{
@@ -321,11 +322,15 @@ projects.
 
 \ShortPage{9. Evaluation and limitations}{
 \small
-The frozen \code{reference_v1} still produces 1,414 flags and hits one of
+The frozen \code{reference_v1} still produces 1,414 flags: 1,399
+on company shares and 15 on PX1, with none on TBIDX. It hits one of
 the original three sourced events. The Phase 2 protocol was committed before
 candidate code and expanded-label hit tables. Its sourced registry gained 18
 rows; after the audit, these are 13 negative controls, three exploratory
-rows, and two positives. Four covered positives fall in development
+rows, and two positives. Seven positive rows have dated source URLs;
+the evaluation source metric excludes unlisted TSI through its headline-
+inclusion rule and counts six. Five have primary-window trading coverage.
+Four covered positives fall in development
 (before 2025-01-01) and one in the held-out period. The primary window is
 30 days before to five days after public disclosure; the secondary starts
 60 days before. These are screening case studies, not accuracy estimates.
@@ -336,8 +341,10 @@ The reference hits 1/4 development positives (95\% Wilson 0.05--0.70) and
 4.08 and 7.12 flags per observed calendar week in the two splits. The
 development-selected robust candidate hits 2/4 but 0/1 held out, produces
 10.83 and 21.94 flags per week, and fails the predeclared adoption rule.
-The simple volume-spike baseline hits 4/4 and 1/1 at much higher workload
-(16.87 and 24.38 flags per week). No candidate met the baseline and
+The simple volume-spike baseline hits 4/4 and 1/1, but at 16.87 and
+24.38 flags per week, about four times the reference workload; its 27 and
+10 control flags also exceed the reference's 4 and 9. Hit count alone is
+not an advantage. No candidate met the baseline and
 workload requirements. The decision remains to retain \code{reference_v1}.
 
 For $k$ hits in $n$ events, the implemented two-sided Wilson interval
@@ -371,7 +378,7 @@ rows for human review. The held-out positive count is one, labels are
 incomplete, and no human classifier-agreement result is available.
 
 \begin{center}
-\includegraphics[width=\linewidth,height=0.32\textheight,keepaspectratio]{evaluation.jpg}
+\includegraphics[width=\linewidth,height=0.36\textheight,keepaspectratio]{evaluation.jpg}
 \captionof{figure}{Final Terminal Evaluation view with Phase 2 comparison.}
 \label{fig:short-evaluation}
 \end{center}

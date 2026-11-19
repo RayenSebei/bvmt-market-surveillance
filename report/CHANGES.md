@@ -35,7 +35,7 @@ was added to the normal chapters, without assigning later work to those dates.
 - Updated the conclusion and references. No news-classifier agreement or
   accuracy is claimed.
 
-## Long report (33 pages; original 33)
+## Long report (32 pages; original 33)
 
 - Updated the abstract and introduction to distinguish the final project
   from the earlier dashboard, and corrected the old statement that only
@@ -78,3 +78,24 @@ was added to the normal chapters, without assigning later work to those dates.
 - The public-event register is small and not a representative sample;
   the held-out positive count is one. Performance claims remain limited
   to the defined screening case studies.
+
+## Readability and count corrections
+
+- Cropped each final Terminal figure to the relevant pane. The Stock Detail,
+  News, Watchlist, Pipeline, and Evaluation source captures were retaken in
+  Playwright at 135% browser zoom only after all market-tape prices loaded. Both updated
+  report asset trees use these captures; the originals were untouched.
+- Replaced the long report's floating screenshot blocks with bounded in-flow
+  figures, each no taller than 35% of text height, to prevent sparse float pages.
+- Corrected the positive-source count: seven positive CSV rows have dated URLs.
+  The evaluation metric counts six because it requires `include_headline=true`,
+  excluding sourced but unlisted TSI. Five are primary-window eligible.
+- Verified the 1,414 reference flag rows directly: 1,399 company shares, 15 PX1,
+  zero TBIDX. Added this distinction to abstracts and results text.
+- Added the simple volume-spike workload and control comparison after Table 6.1;
+  defined Phase 2, `reference_v1`, and `robust_z3` at first use; clarified the
+  prototype dashboard was later replaced.
+- Replaced the final event register longtable with a one-page tabular
+  register to avoid the longtable page-split glue warning. Final compile and visual verification are recorded separately.
+
+Final layout check: the short PDF is 14 pages; the long PDF is 32 pages. The long report lost one page because cropped, in-flow figures and a shorter checklist removed the sparse figure page and orphan line; no substantive report section was cut in this revision. The Stock Detail figure shows the full chart axis, and the Market Map and inspector figures show legible detail crops. Both final LaTeX logs have no overfull boxes, broken references, or infinite-glue warnings.

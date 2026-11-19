@@ -48,9 +48,11 @@ limitations.
 \section*{Abstract}
 The final project screens stored BVMT market observations, links available
 news context, and presents a human review workflow in a React Terminal.
-The frozen reference yields 1,414 flags and one hit among five eligible
-expanded events. The held-out set contains one positive; no candidate
-qualified for adoption. These are case studies, not accuracy estimates.
+The frozen prior-only detector, \code{reference_v1}, yields 1,414 flags:
+1,399 on company shares and 15 on PX1. It hits one of five eligible
+expanded events. Phase 2 is the predeclared expanded-label comparison. Its held-out set
+contains one positive; no candidate qualified for adoption. The selected
+\code{robust_z3} is a median/MAD robust z-score with cutoff 3. These are case studies, not accuracy estimates.
 \section*{Abbreviations}
 \small BVMT: Tunis Stock Exchange; API: application programming interface;
 OHLCV: open, high, low, close, volume; MAD: median absolute deviation;

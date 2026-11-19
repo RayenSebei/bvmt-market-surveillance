@@ -60,13 +60,14 @@ anomaly search, news, watchlist, and Phase 2 comparison.
 Pipeline execution requires explicit configuration and is disabled by
 default.
 
+\clearpage
 \section{Final event register}
 The table reproduces event roles and anchor dates from the final CSV.
 A dash means no supported public anchor. Inclusion in headline recall
 also requires source and trading-window coverage.
-\small
-\begin{longtable}{@{}p{43mm}p{23mm}p{32mm}p{44mm}@{}}
-\toprule Event ID & Public anchor & Date type & Role\\\midrule\endhead
+\par\small\noindent
+\begin{tabular}{@{}p{43mm}p{23mm}p{32mm}p{44mm}@{}}
+\toprule Event ID & Public anchor & Date type & Role\\\midrule
 TINV-2025 & 6 Oct 2025 & other & positive, excluded\\
 UADH-2026 & 25 Mar 2026 & suspension & positive, held out\\
 TSI-2025-inquiry & 23 Apr 2025 & announcement & positive, no series\\
@@ -96,7 +97,7 @@ PGH-2026-buyout & 19 Feb 2026 & suspension & negative; shared notice\\
 LNDOR-2026-buyout & 19 Feb 2026 & suspension & negative; shared notice\\
 ASSMA-2026-dividend & 19 Mar 2026 & announcement & negative control\\
 \bottomrule
-\end{longtable}
+\end{tabular}\par
 \normalsize
 Syphax's cited public report on 19 December records an 11 December
 court ruling in its notes, not as the anchor. UADH's cited notice
@@ -104,9 +105,7 @@ supports 25 March. ADWYA's cited item does not disclose a reason for
 the suspension.
 
 \section{Reproduction checklist}
-Preserve protected source CSVs; run \code{python run_all.py};
-confirm 1,414 reference flags and the 548/866 news split; run
-\code{python -m pytest -q} (117 passing tests in final verification);
-run \code{npm run build} and \code{npm run format:check} in
-\code{frontend/}; open the Terminal at 1280 and 390 pixels and
-inspect the stored source links and event register.
+Preserve source CSVs. Run \code{python run_all.py} and check
+1,414 flags and the 548/866 news split. Run \code{python -m pytest -q},
+\code{npm run build}, and \code{npm run format:check}; inspect the
+Terminal at 1280 and 390 pixels, source links, and event register.

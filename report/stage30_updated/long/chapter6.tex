@@ -2,7 +2,8 @@
 
 \section{Frozen reference output}
 The frozen \code{reference_v1} produces 1,414 union flags across 81 of the
-85 stored series. There are 198 high-volume flags, 1,237 return flags,
+85 stored series. The flag CSV has 1,399 company-share flags and
+15 PX1 index flags; TBIDX has none. There are 198 high-volume flags, 1,237 return flags,
 and 21 combined rows: $198+1,237-21=1,414$. Local news matches 548 flags;
 866 have no match in the stored ilboursa file. The refined review queue has
 ten spike rows and six decay rows. The original three sourced positives
@@ -17,9 +18,10 @@ the descriptive secondary window is $[-60,+5]$. A positive enters the
 denominator only if its source, public date, inclusion flag, and market-data
 coverage are valid. The expanded register added 18 sourced rows. After the
 source audit, those additions are 13 negative controls, three exploratory
-rows, and two positives. Six positive rows have sources, but only five have
-a trading observation in the primary window: four development and one
-held-out.
+rows, and two positives. Seven positive rows have dated source URLs. The evaluation source
+metric counts six because it requires the headline-inclusion flag, which
+is false for unlisted TSI. Of those six, five have a trading observation
+in the primary window: four development and one held-out.
 
 The audit aligned UADH with the 25 March 2026 suspension stated in its BVMT
 notice. Syphax's 19 December 2023 anchor is a public announcement; the
@@ -93,6 +95,10 @@ Simple volume spike & 4/4 (0.51--1.00) & 1/1 (0.21--1.00) & 16.87 & 24.38\\
 Robust z3 & 2/4 (0.15--0.85) & 0/1 (0.00--0.79) & 10.83 & 21.94\\
 \bottomrule\end{tabular}
 \end{table}
+The simple volume-spike baseline hits all five eligible positives, but
+its 16.87 and 24.38 flags per week are about four times the reference
+workload of 4.08 and 7.12, and it produces 27 and 10 negative-control
+flags versus the reference's 4 and 9; hit count alone is no advantage.
 The complete method table remains in the generated Phase 2 comparison
 output. The development-selected \code{robust_z3} hit zero of the one
 held-out positive. Adoption required at least ten held-out positives,

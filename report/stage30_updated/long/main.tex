@@ -36,12 +36,15 @@ reference detector, news-context matching, a refined review queue, and a
 React, TypeScript, and Tailwind Terminal served by the read-only Flask API.
 
 The market file contains 67,035 observations in 85 series: 83 company shares
-and two indices. The frozen reference produces 1,414 union flags, of which
+and two indices. The frozen prior-only reference detector, \code{reference_v1},
+produces 1,414 union flags: 1,399 on company shares and 15 on PX1. Of these,
 548 have local news context. The refined queue has 16 rows. Its original
 three-event result remains one hit; the expanded sourced evaluation has
 one hit among five eligible positives, with only one held-out positive.
 
-The Phase 2 protocol preceded candidate code. Six registered variants,
+Phase 2 is the predeclared expanded-label comparison; its protocol
+preceded candidate code. Six registered variants, including \code{robust_z3}
+(the median/MAD robust z-score with cutoff 3),
 baselines, Wilson intervals, random-placement tests, source audits, and
 data-quality checks were reported without retuning the reference.
 No candidate met the adoption rule, so \code{reference_v1} is retained.
