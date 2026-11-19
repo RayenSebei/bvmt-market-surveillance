@@ -61,13 +61,15 @@ def test_every_endpoint_smoke(client, method, path):
 
 
 def test_terminal_route_and_read_only_api_smoke(client):
-    page = client.get("/terminal")
+    page = client.get("/")
     data = client.get("/api/command-center?days=30")
 
     assert (dashboard.FRONTEND_DIR / "package.json").is_file()
-    assert page.status_code in {200, 503}
-    if page.status_code == 503:
-        assert "Terminal build unavailable" in page.get_json()["error"]
+    assert page.status_code == 200
+    assert b"BVMT" in page.data
+    assert client.get("/terminal").data == page.data
+    assert client.get("/stock/BIAT").data == page.data
+    assert client.get("/api/not-a-route").status_code == 404
     assert data.status_code == 200
     assert data.get_json()["metrics"]["flags"] == 1
 

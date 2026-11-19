@@ -8,6 +8,8 @@ pytest-cache-files-*/
 .mypy_cache/
 .ruff_cache/
 dist/
+!frontend/dist/
+!frontend/dist/**
 build/
 outputs/*
 !outputs/evaluation/
@@ -23,7 +25,14 @@ frontend/verification/
 bvmt-dashboard/
 deliverables/
 tmp/
-report/
+report/stage13_updated/short/*.aux
+report/stage13_updated/short/*.log
+report/stage13_updated/short/*.toc
+report/stage30_updated/long/*.aux
+report/stage30_updated/long/*.log
+report/stage30_updated/long/*.toc
+report/stage30_updated/long/*.lof
+report/stage30_updated/long/*.lot
 /*.pdf
 bvmt_data/watchlist_ai_assessed.csv
 

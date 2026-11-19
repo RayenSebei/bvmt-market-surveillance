@@ -18,7 +18,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 import pandas as pd
-from flask import Flask, jsonify, render_template, request, send_from_directory
+from flask import Flask, abort, jsonify, request, send_from_directory
 from flask_cors import CORS
 from flask.json.provider import DefaultJSONProvider
 from src.evaluation.provenance import MANIFEST_PATH, verify_manifest
@@ -412,12 +412,12 @@ def run_scraper_background(mode: str):
 
 @app.route("/")
 def index():
-    return render_template("dashboard.html")
+    return terminal()
 
 
 @app.route("/terminal")
 def terminal():
-    """Serve the optional built terminal without replacing the research dashboard."""
+    """Serve the committed React build without requiring Node at runtime."""
     dist = FRONTEND_DIR / "dist"
     if not (dist / "index.html").is_file():
         return jsonify({"error": "Terminal build unavailable; run npm ci and npm run build in frontend/"}), 503
@@ -1241,6 +1241,14 @@ def api_evaluation_phase2_verdict():
     if not path.is_file():
         return jsonify({"error": "Phase 2 verdict unavailable"}), 404
     return jsonify(json.loads(path.read_text(encoding="utf-8")))
+
+
+@app.route("/<path:spa_path>")
+def terminal_spa_fallback(spa_path):
+    """Return the React shell for client-side routes and browser refreshes."""
+    if spa_path.startswith(("api/", "assets/")) or "." in spa_path.rsplit("/", 1)[-1]:
+        abort(404)
+    return terminal()
 
 
 if __name__ == "__main__":
