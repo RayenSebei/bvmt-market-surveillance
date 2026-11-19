@@ -1,0 +1,121 @@
+\chapter{Results and Evaluation}
+
+\section{Frozen reference output}
+The frozen \code{reference_v1} produces 1,414 union flags across 81 of the
+85 stored series. There are 198 high-volume flags, 1,237 return flags,
+and 21 combined rows: $198+1,237-21=1,414$. Local news matches 548 flags;
+866 have no match in the stored ilboursa file. The refined review queue has
+ten spike rows and six decay rows. The original three sourced positives
+still yield one primary-window hit, GIF, and misses for LSTR and SERVI.
+
+\section{Protocol and event register}
+The Phase 2 evaluation protocol was committed before candidate detector code
+and expanded-label hit tables. It froze a development split before
+1 January 2025 and a held-out split on and after that date. The primary
+event window is $[-30,+5]$ calendar days around the sourced public date;
+the descriptive secondary window is $[-60,+5]$. A positive enters the
+denominator only if its source, public date, inclusion flag, and market-data
+coverage are valid. The expanded register added 18 sourced rows. After the
+source audit, those additions are 13 negative controls, three exploratory
+rows, and two positives. Six positive rows have sources, but only five have
+a trading observation in the primary window: four development and one
+held-out.
+
+The audit aligned UADH with the 25 March 2026 suspension stated in its BVMT
+notice. Syphax's 19 December 2023 anchor is a public announcement; the
+11 December court ruling is recorded only as context. ADWYA's source does
+not establish a takeover reason, so its suspension is exploratory and
+excluded from negative-control counts. PGH and LNDOR share a notice;
+control flags are reported with both separate and collapsed accounting.
+These corrections were governed by a source-alignment rule committed before
+results were recalculated, and no method's hit status changed.
+
+\section{Uncertainty and random-placement comparison}
+For $k$ hits out of $n$ covered events, let $\hat p=k/n$,
+$z=1.959963984540054$, and $D=1+z^2/n$. The implemented 95\% Wilson
+centre and half-width are
+\[
+ C=\frac{\hat p+z^2/(2n)}{D},\qquad
+ H=\frac{z\sqrt{\hat p(1-\hat p)/n+z^2/(4n^2)}}{D}.
+\]
+The reported bounds are $\max(0,C-H)$ and $\min(1,C+H)$. They display
+sampling uncertainty for this small case register; they do not make it
+representative.
+
+The one-sided permutation comparison preserves each method's flag count
+per ticker, places flags among that ticker's observed dates without
+replacement, and repeats this 1,000 times with seed 20261006. If $h_b$
+is the simulated number of event hits and $h_{\rm obs}$ is observed,
+\[
+ p_{\rm perm}=\frac{1+\sum_{b=1}^{1000}{\bf1}(h_b\geq h_{\rm obs})}{1001}.
+\]
+The reference development value is 0.687 and held-out value is 1.000.
+These values do not show a reliable advantage over random placement
+under the current labels.
+
+\section{Registered methods and baselines}
+The robust variants use the previous 60 valid observations only. For
+$M_t=\operatorname{median}(q_{<t})$ and
+$\operatorname{MAD}_t=\operatorname{median}(|q-M_t|)$ over that window,
+\[
+ z^{\rm robust}_t=\frac{q_t-M_t}{\max(1.4826\,\operatorname{MAD}_t,f_q)}.
+\]
+The implementation applies cutoffs 3 and 4 to high log-volume or
+absolute return scores. The floors are 0.10 for log-volume and 0.01
+for returns. Market-adjusted return is the stock return minus exact-date
+PX1 return, $r^{\rm excess}_{i,t}=r_{i,t}-r^{\rm PX1}_t$; its
+prior-only mean/std score has a 0.01 denominator floor and absolute
+cutoff 3.
+
+The other registered candidates filter reference flags for positive
+current volume, at least 20 active days and prior median volume at
+least 400 over 60 observations; require another flag for the same symbol
+within ten calendar days; or recompute the decay rule at month ends using
+only information then available. The decay comparison uses preceding and
+recent six-month windows, a prior mean volume of at least 1,000, a
+recent/prior ratio below 0.20 or at least 90 days since positive volume.
+The market-wide tag is context, not a seventh detector: it marked zero
+of 1,399 company-share reference flags under its threshold.
+
+Baselines are volume-only, absolute-return-only, market-adjusted
+return-only, a simple volume spike, top two flags per month, and
+same-count random placement. The latest-snapshot decay file was not
+treated as a historical prediction. No candidate threshold was retuned.
+
+\section{Development and held-out results}
+\begin{table}[htbp]\centering\small
+\caption{Selected primary-window comparisons; hits include 95\% Wilson intervals}
+\begin{tabular}{@{}lccrr@{}}\toprule
+Method & Development & Held out & Dev flags/week & Held flags/week\\\midrule
+Reference v1 & 1/4 (0.05--0.70) & 0/1 (0.00--0.79) & 4.08 & 7.12\\
+Return only & 1/4 (0.05--0.70) & 0/1 (0.00--0.79) & 3.54 & 6.30\\
+Simple volume spike & 4/4 (0.51--1.00) & 1/1 (0.21--1.00) & 16.87 & 24.38\\
+Robust z3 & 2/4 (0.15--0.85) & 0/1 (0.00--0.79) & 10.83 & 21.94\\
+\bottomrule\end{tabular}
+\end{table}
+The complete method table remains in the generated Phase 2 comparison
+output. The development-selected \code{robust_z3} hit zero of the one
+held-out positive. Adoption required at least ten held-out positives,
+a positive paired-bootstrap lower bound against both the reference and
+the preselected best nonrandom baseline, and no workload or control
+increase. The sample and comparative conditions fail. The decision is
+to retain \code{reference_v1}. Across all five eligible positives,
+the reference hits one in the primary window (Wilson 0.04--0.62) and two
+in the secondary. None of these case-study rates estimates accuracy.
+
+\section{Quality checks and verification}
+The derived quality pass found zero duplicate symbol/date rows and zero
+invalid dates, but 59 invalid numeric or OHLC rows and 349 gaps longer
+than 30 calendar days. It marked 140 new-scrape rows for review:
+134 with zero volume, five large jumps, and one OHLC inconsistency.
+The corporate-action suspect list contains 115 rows and tags 86
+reference flags. These are review prompts; no protected source CSV
+was edited. The 100-headline human-label sample remains unfilled, so
+no news-classifier accuracy or agreement is claimed.
+
+The final offline suite passes 117 tests. The React production build
+and Prettier format check pass. Playwright loaded the Terminal at 1280
+and 390 pixels with no console errors and checked SPA refresh. The
+committed frontend build is about 1.21 MB, allowing Flask to serve it
+without Node. Verification establishes internal reproducibility, not
+independent evidence of detector accuracy.

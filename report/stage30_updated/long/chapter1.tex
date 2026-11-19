@@ -1,0 +1,75 @@
+\chapter{Host Company}
+
+\section{Profile and services}
+
+CODELOGIC is a consulting firm specialized in software solutions [1]. It was
+founded in 2023. Its services include custom software development, database
+architecture, cloud solutions, security services, mobile development, and web
+applications. The company also works on cloud and DevOps activities involving
+continuous integration and delivery, scaling, and automation, as well as data
+and API services involving secure integrations and data pipelines.
+
+These activities cover several layers of software delivery. Custom software
+development begins from a defined need and produces a solution for that need.
+Database architecture organizes persistent information and the relationships
+through which applications retrieve it. Cloud solutions provide computing and
+storage resources. DevOps practices connect source control, automated checks,
+deployment, and operation. Security services concern the protection of
+software and information. Mobile and web applications provide interfaces for
+users. Data pipelines and APIs connect sources and services while controlling
+how information moves between them.
+
+My internship project was a Python and Flask data-analysis prototype connected
+to the company's data, API, and web-application activities. It read stored
+financial-market files, applied a sequence of analytical operations, generated
+review files, and presented the results through a browser dashboard. The
+assignment therefore combined software development with statistical analysis
+and data management.
+
+The project required a clear separation between source data, derived results,
+and presentation. Market and news records remained protected inputs. Python
+modules produced the statistical indicators and review tables. Flask endpoints
+then supplied the generated information to the dashboard. This organization
+made each result traceable and kept the analytical rules separate from the
+interface.
+
+Company supervisor: Firas Jebari.
+
+\clearpage
+
+\section{Internship setting and professional experience}
+
+My internship experience was organized around a complete technical assignment
+rather than an isolated programming exercise. I worked with a local codebase,
+stored financial records, generated analysis files, application endpoints, and
+a browser interface. This required me to understand the purpose of each layer
+and the way information moved from an input row to a result displayed for
+review.
+
+The work began with data preparation and validation. I checked the structure
+of market and news records, preserved the source files, and organized derived
+outputs so that each processing stage could be inspected. I then worked on the
+statistical calculations used to identify unusual price returns and trading
+volumes. These calculations required attention to chronological order,
+rolling references, missing values, and long gaps between observations.
+
+The next part of the assignment connected the statistical results with stored
+news context and a narrower watchlist. I had to keep the signal, its context,
+and the final selection rule separate. This distinction was important because
+an unusual market observation is not automatically explained by a nearby
+headline, and a headline does not prove the cause of a movement.
+
+I also worked on presenting the results through Flask endpoints and dashboard
+pages. The interface had to preserve the analytical details while remaining
+clear enough for review. A user could inspect a flagged row, its market
+history, its statistical scores, the available news context, and its watchlist
+status. Automated tests and repeated output checks were used to verify that the
+presentation remained consistent with the generated files.
+
+This experience strengthened my autonomy, documentation practice, and
+attention to traceability. I learned to record assumptions beside
+calculations, follow a displayed value back to its source fields, and
+investigate unexpected output before changing a rule. The project also
+improved my ability to connect data preparation, statistical reasoning,
+backend development, interface design, testing, and technical writing in one
+coherent deliverable.

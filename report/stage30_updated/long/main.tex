@@ -1,0 +1,90 @@
+\documentclass[12pt,a4paper]{report}
+\input{../common/facts.tex}
+\input{../common/preamble.tex}
+
+\newcommand{\LongPage}[2]{%
+  \section{#1}
+  #2
+}
+
+\begin{document}
+\makereportcover
+
+\pagenumbering{roman}
+\setcounter{page}{1}
+
+\chapter*{Acknowledgements}
+\addcontentsline{toc}{chapter}{Acknowledgements}
+I would like to thank Firas Jebari, company supervisor.
+
+I also thank the teaching staff of ESSAI and the Université de Carthage. The
+project drew directly on the statistical reasoning, data preparation,
+programming, and critical-analysis skills developed during my studies. I am
+grateful to my family and friends for their encouragement throughout the
+internship and the preparation of this report.
+
+Finally, I acknowledge the organizations that make market and public-news data
+available. This report remains my responsibility, including its interpretations
+and limitations.
+\clearpage
+
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+This report presents the final BVMT statistical market-surveillance project.
+Stored market and ilboursa news records pass through a frozen prior-only
+reference detector, news-context matching, a refined review queue, and a
+React, TypeScript, and Tailwind Terminal served by the read-only Flask API.
+
+The market file contains 67,035 observations in 85 series: 83 company shares
+and two indices. The frozen reference produces 1,414 union flags, of which
+548 have local news context. The refined queue has 16 rows. Its original
+three-event result remains one hit; the expanded sourced evaluation has
+one hit among five eligible positives, with only one held-out positive.
+
+The Phase 2 protocol preceded candidate code. Six registered variants,
+baselines, Wilson intervals, random-placement tests, source audits, and
+data-quality checks were reported without retuning the reference.
+No candidate met the adoption rule, so \code{reference_v1} is retained.
+These are screening case studies, not an accuracy estimate or a finding
+of misconduct.
+\clearpage
+
+\tableofcontents
+\clearpage
+\listoffigures
+\clearpage
+\listoftables
+\clearpage
+
+\chapter*{Abbreviations}
+\addcontentsline{toc}{chapter}{Abbreviations}
+\begin{tabular}{p{28mm}p{105mm}}
+AI & Artificial intelligence \\
+API & Application programming interface \\
+BVMT & Bourse des Valeurs Mobilières de Tunis \\
+CSV & Comma-separated values \\
+ESSAI & École Supérieure de la Statistique et de l'Analyse de l'Information \\
+OHLCV & Open, high, low, close, and volume \\
+PX1 & TUNINDEX symbol used in the local dataset \\
+TND & Tunisian dinar \\
+UI & User interface \\
+URL & Uniform resource locator \\
+\end{tabular}
+\clearpage
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+\input{chapter1.tex}
+\input{chapter2.tex}
+\input{chapter3.tex}
+\input{chapter4.tex}
+\input{chapter5.tex}
+\input{chapter6.tex}
+\input{chapter7.tex}
+\input{references.tex}
+\appendix
+\input{appendices.tex}
+
+\end{document}
+

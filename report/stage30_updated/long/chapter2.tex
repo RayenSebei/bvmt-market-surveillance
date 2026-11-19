@@ -1,0 +1,85 @@
+\chapter{Introduction and Problem Statement}
+
+\section{Project mission}
+
+The project is a statistical screening workflow for the Bourse des Valeurs
+Mobilières de Tunis (BVMT), the Tunis Stock Exchange. It processes OHLCV data,
+meaning open, high, low, close, and traded volume for each market observation.
+It also uses stored headlines from ilboursa, a Tunisian financial-news website,
+as contextual evidence.
+
+The mission was to organize a large history of market observations into a
+reviewable queue. A z-score is the observed value minus a reference mean,
+divided by the reference standard deviation. In this project, the reference is
+local to one symbol and uses earlier observations. Separate z-scores describe
+volume and close-to-close return. The system then records nearby news, applies
+a narrow watchlist rule, adds broad-market context, and presents the results in
+a browser dashboard.
+
+The central distinction is between a screening signal and an explanation. A
+large statistical score states that a stored observation differs from a
+symbol's earlier behavior. It does not identify the cause or establish intent.
+A nearby headline can help an analyst understand context, but proximity alone
+does not prove causation. A missing headline means only that the stored
+same-symbol news file contains no match inside the defined interval.
+
+\section{Why the problem is difficult}
+
+Market records contain legitimate extremes. Thin trading can produce a large
+return after a long interval. A block transaction can produce a volume spike.
+An earnings announcement, dividend, capital increase, suspension, governance
+decision, or broad-market movement can coincide with an abrupt change. One
+threshold therefore cannot turn an unusual observation into a legal or
+economic conclusion.
+
+Sparse series also create technical problems. A close-to-close percentage
+change calculated across a long interruption is not comparable with an
+ordinary session return. Stable series can have a standard deviation close to
+zero, which makes a ratio unstable. News can be missing, can arrive after a
+market movement, or can use language outside a keyword dictionary. A useful
+workflow has to record these cases explicitly rather than hide them.
+
+The workflow separates these concerns: market data produces the signal,
+quality checks record source issues, news adds context, and the watchlist
+reduces the queue without changing the detector. Evaluation uses simple
+baselines, while the dashboard exposes the stored evidence read-only.
+
+\section{Objectives and scope}
+
+The system provides the following functions:
+\begin{itemize}
+  \setlength{\itemsep}{0pt}
+  \setlength{\parskip}{0pt}
+  \item combine protected market files into an 85-series
+  analytical dataset;
+  \item calculate transparent prior-only volume and return scores;
+  \item detect sustained reductions in trading activity through a separate
+  decay rule;
+  \item attach same-symbol news and deterministic headline categories;
+  \item construct and refine a small review queue;
+  \item evaluate the reference detector on source-backed events without
+  changing its parameters;
+  \item serve the seven-view React Terminal through the read-only Flask API;
+  \item preserve generated outputs and evaluation hashes for verification.
+\end{itemize}
+
+The intended user is a human analyst. The interfaces support inspection of a
+flag, its market history, stored news context, broad-market context, and the
+rule that admitted or excluded it from the watchlist. Optional generative
+triage is separate from the evidence and is not required for the dashboard.
+
+\section{Responsible interpretation}
+
+The project uses statistical terms precisely. A \emph{flag} is a row that
+crosses the volume threshold, the return threshold, or both. A \emph{news
+match} is a same-symbol record within the configured interval. A
+\emph{watchlist row} satisfies the explicit screening rule or belongs to the
+unexplained decay route. A \emph{hit} is a flag inside a pre-defined event
+window. None of these terms is a finding of market abuse.
+
+The event register is small: six positive events have sources, but only five
+have primary-window trading coverage. One of those five is held out. TINV,
+CGF, and UBCI retain unsupported original claims or dates; TSI has a dated
+source but no listed trading series. The resulting counts describe defined
+examples and cannot estimate general accuracy. The report therefore values
+the screening, news-context, watchlist, and Terminal workflow for human review.

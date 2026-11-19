@@ -1,0 +1,104 @@
+\chapter{Data and Processing Pipeline}
+
+\section{Market and news data}
+
+The analytical market file contains 67,035 observations for 85 series: 83 company shares plus PX1 and TBIDX. Stored
+dates run from 17 June 2021 to 12 October 2026. Each row contains a company
+name, symbol, date, opening price, high, low, closing price, and volume. The
+per-symbol files remain protected inputs; the combined full-universe file is a
+derived analytical input.
+
+The combined news file contains 12,498 deduplicated records for 90 symbols,
+with valid dates from 29 February 2012 to 12 October 2026. Each row contains a
+symbol, date, time, headline, and source URL. The news and market universes are
+not identical because their collection processes include different sets of
+symbols.
+
+\begin{table}[htbp]
+\centering
+\caption{Stored analysis datasets}
+\begin{tabularx}{0.94\textwidth}{@{}lrrX@{}}
+\toprule
+Dataset & Rows & Symbols & Fields and date range \\
+\midrule
+Market & 67,035 & 85 & Name, symbol, date, OHLCV; 17 Jun 2021--12 Oct 2026 \\
+News & 12,498 & 90 & Symbol, date, time, headline, URL; 29 Feb 2012--12 Oct 2026 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Symbols provide the join key between the two sources. A market row can exist
+without a nearby headline, and a news symbol can exist without a usable market
+series. The classification stage therefore permits unmatched records and does
+not substitute one symbol for another.
+
+\section{Pipeline structure}
+
+The default runner performs analysis on local files. It does not scrape and it
+does not call an external generative service. The principal stages are shown
+in Figure~\ref{fig:long-pipeline}.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  node distance=6mm and 9mm,
+  box/.style={draw=blue,rounded corners,fill=softblue,align=center,
+    minimum width=33mm,minimum height=10mm,font=\small},
+  arrow/.style={-{Latex[length=2.4mm]},thick,color=blue}
+]
+\node[box] (raw) {Protected ticker\\and news files};
+\node[box,right=of raw] (combine) {Validated 85-series\\analysis file};
+\node[box,right=of combine] (detect) {Spike and decay\\detectors};
+\node[box,below=of detect] (classify) {News matching\\and categories};
+\node[box,left=of classify] (watch) {Watchlist and\\market refinement};
+\node[box,left=of watch] (eval) {Evaluation, manifest,\\and summaries};
+\node[box,below=of watch] (serve) {Flask APIs and\\React Terminal};
+\draw[arrow] (raw) -- (combine);
+\draw[arrow] (combine) -- (detect);
+\draw[arrow] (detect) -- (classify);
+\draw[arrow] (classify) -- (watch);
+\draw[arrow] (watch) -- (eval);
+\draw[arrow] (watch) -- (serve);
+\draw[arrow] (eval) |- (serve);
+\end{tikzpicture}
+\caption{File-based processing and presentation pipeline.}
+\label{fig:long-pipeline}
+\end{figure}
+
+The file-based design makes intermediate results inspectable. An analyst can
+compare a watchlist row with its classified flag and then with the originating
+market values. The evaluation manifest records normalized text hashes for the
+detector, evaluation configuration, event register, analytical inputs, and
+generated evaluation files.
+
+\section{Preprocessing and data quality}
+
+Dates are parsed and observations are sorted by symbol and date. TBIDX, an
+index series, and PLTU, a known incomplete ticker series, are excluded from the
+spike detector. The analytical input still retains these symbols for other
+uses. Percentage return is calculated from consecutive stored closes.
+
+A return is set to missing when the gap between consecutive observations is
+longer than ten calendar days. This rule prevents a multi-week or multi-month
+change from being treated as one daily movement. The return baseline then uses
+the most recent 60 valid prior returns, so one omitted gap return does not
+remove scores from the following 60 rows.
+
+Volume is transformed with $\log(1+V)$, which keeps zero volume defined and
+reduces the influence of very large raw values. Source open, high, low, close,
+and volume fields remain unchanged. Rows with invalid ranges, missing or
+negative values, or prices outside the recorded range are written to a
+separate quality file for review.
+
+\section{Derived outputs}
+
+The spike and decay detectors write separate outputs. Classification adds
+headline, timing, and category fields, while the watchlist joins unexplained
+combined-signal rows with decay cases that lack a news match. Refinement adds
+index movement, same-day co-flags, excess return, and a market-context tag.
+
+The evaluation directory stores event results, metrics, baselines, sensitivity
+and funnel counts, figures, a summary, and a manifest. The Terminal reads but
+does not rewrite these files. Each output can be regenerated, while protected
+inputs remain unchanged; dashboard values present the stored analysis rather
+than a second calculation.

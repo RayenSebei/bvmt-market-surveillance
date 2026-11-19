@@ -1,0 +1,71 @@
+\documentclass[12pt,a4paper]{article}
+\input{../common/facts.tex}
+\input{../common/preamble.tex}
+
+% False is the university submission format: roman front matter and a
+% ten-page Arabic-numbered body. True keeps the same content but numbers the
+% complete PDF continuously for an internal total-page check.
+\newif\iftotalpagecount
+\totalpagecountfalse
+
+\newcommand{\ShortPage}[2]{%
+  \section*{#1}
+  \addcontentsline{toc}{section}{#1}
+  #2
+}
+
+\begin{document}
+\iftotalpagecount
+  \pagenumbering{arabic}
+\else
+  \pagenumbering{roman}
+\fi
+\makereportcover
+
+\iftotalpagecount
+  \setcounter{page}{2}
+\else
+  \setcounter{page}{2}
+\fi
+
+\section*{Acknowledgements}
+\addcontentsline{toc}{section}{Acknowledgements}
+I would like to thank Firas Jebari, company supervisor. I also thank the
+teaching staff of ESSAI and the Université de Carthage for the statistical,
+programming, and analytical foundations that made this work possible.
+
+I am grateful to my family and friends for their encouragement throughout my
+studies and during the preparation of this report. Finally, I thank everyone
+who contributes to making financial-market information available for research
+and educational use.
+\vfill
+This report remains my responsibility, including its interpretations and
+limitations.
+\clearpage
+
+\tableofcontents
+\thispagestyle{plain}
+\section*{Abstract}
+The final project screens stored BVMT market observations, links available
+news context, and presents a human review workflow in a React Terminal.
+The frozen reference yields 1,414 flags and one hit among five eligible
+expanded events. The held-out set contains one positive; no candidate
+qualified for adoption. These are case studies, not accuracy estimates.
+\section*{Abbreviations}
+\small BVMT: Tunis Stock Exchange; API: application programming interface;
+OHLCV: open, high, low, close, volume; MAD: median absolute deviation;
+PX1: stored TUNINDEX series.\normalsize
+\listoffigures
+\listoftables
+\clearpage
+
+\iftotalpagecount
+  \setcounter{page}{4}
+\else
+  \pagenumbering{arabic}
+  \setcounter{page}{1}
+\fi
+\input{body-ten.tex}
+
+\end{document}
+

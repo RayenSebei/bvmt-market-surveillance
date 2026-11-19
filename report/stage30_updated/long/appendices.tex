@@ -1,0 +1,112 @@
+\chapter{Technical Registers}
+
+\section{Reference and Phase 2 parameters}
+\begin{longtable}{@{}p{48mm}p{34mm}p{65mm}@{}}
+\toprule Item & Value & Implemented meaning\\\midrule\endhead
+Reference window & 60 valid prior & Current row excluded\\
+Reference cutoff & $z=3.0$ & High volume or absolute return\\
+Log-volume floor & 0.10 & Score denominator minimum\\
+Return floor & 0.01 & Score denominator minimum\\
+Return gap & 10 calendar days & Longer-gap return omitted\\
+Spike news context & $\pm7$ days & Same-symbol stored headline\\
+Decay comparison & 6 plus 6 months & Recent/prior mean volume\\
+Decay ratio & below 0.20 & Prior mean at least 1,000\\
+Inactivity & 90 days & Days since positive volume\\
+Robust window & 60 prior valid & Median and MAD, cutoffs 3 and 4\\
+Activity filter & 20 active days & Prior median volume at least 400\\
+Persistence & 10 calendar days & Prior flag for same symbol\\
+Market comparator & PX1 same date & Stock minus index return\\
+Primary event window & $[-30,+5]$ days & Sourced public date\\
+Secondary window & $[-60,+5]$ days & Descriptive only\\
+Split & 1 Jan 2025 & Earlier development, later held out\\
+Random placements & 1,000 & Seed 20261006, per-symbol counts\\
+\bottomrule
+\end{longtable}
+
+\section{Generated output register}
+\begin{table}[htbp]\centering
+\begin{tabularx}{\textwidth}{@{}XrX@{}}\toprule
+Artifact & Rows & Purpose\\\midrule
+Market analysis file & 67,035 & 83 shares and two index series\\
+Combined news & 12,498 & Stored ilboursa context\\
+Anomaly flags & 1,414 & Frozen reference union\\
+Classified anomalies & 1,414 & News timing and categories\\
+Decay flags & 16 & Latest-snapshot decline cases\\
+Refined watchlist & 16 & Ten spike and six decay rows\\
+Event register & 28 & Positive, negative, exploratory rows\\
+Phase 2 comparison & 26 & Thirteen methods by two splits\\
+\bottomrule\end{tabularx}
+\end{table}
+The authoritative files are the combined market CSV, final event register,
+and generated Phase 2 comparison in the project repository.
+The evaluation manifest records file hashes for provenance.
+
+\section{Terminal pages and routes}
+\begin{table}[htbp]\centering
+\begin{tabularx}{\textwidth}{@{}lX@{}}\toprule
+Page & Main evidence\\\midrule
+Overview & Stored market overview and 83-company Market Map\\
+Anomaly Feed & Filtered union flag review\\
+Stock Detail & Instrument OHLCV, chart and flags\\
+News & Stored headlines and source URLs\\
+Watchlist & Refined spike and decay queue\\
+Pipeline & Output and manifest status\\
+Evaluation & Frozen reference and Phase 2 comparison\\
+\bottomrule\end{tabularx}
+\end{table}
+Flask serves the committed SPA at \code{/} and client-route refreshes.
+Read-only API routes serve the heatmap, command center, stock history,
+anomaly search, news, watchlist, and Phase 2 comparison.
+Pipeline execution requires explicit configuration and is disabled by
+default.
+
+\section{Final event register}
+The table reproduces event roles and anchor dates from the final CSV.
+A dash means no supported public anchor. Inclusion in headline recall
+also requires source and trading-window coverage.
+\small
+\begin{longtable}{@{}p{43mm}p{23mm}p{32mm}p{44mm}@{}}
+\toprule Event ID & Public anchor & Date type & Role\\\midrule\endhead
+TINV-2025 & 6 Oct 2025 & other & positive, excluded\\
+UADH-2026 & 25 Mar 2026 & suspension & positive, held out\\
+TSI-2025-inquiry & 23 Apr 2025 & announcement & positive, no series\\
+CGF-unknown & -- & other & positive, excluded\\
+UBCI-unknown & -- & other & positive, excluded\\
+GIF-2024-radiation & 25 Oct 2024 & suspension & positive, development\\
+LSTR-2024-bankruptcy & 23 Jul 2024 & suspension & positive, development\\
+SERVI-2024-bankruptcy & 11 Jan 2024 & suspension & positive, development\\
+MIP-2024-exploratory & 5 Aug 2024 & announcement & exploratory\\
+SOPAT-2023-buyout & 19 Sep 2023 & announcement & negative control\\
+OTH-2021-capital & 29 Oct 2021 & announcement & negative control\\
+LNDOR-2021-capital & 26 Nov 2021 & announcement & negative control\\
+ATB-2021-capital & 26 Nov 2021 & announcement & negative control\\
+ADWYA-2022-buyout & 7 Jun 2022 & suspension & exploratory; reason undisclosed\\
+CREAL-2022-opa & 14 Nov 2022 & announcement & negative control\\
+WIFAK-2023-suspension & 9 Jan 2023 & suspension & exploratory\\
+STPAP-2023-fire & 28 Sep 2023 & suspension & positive, development\\
+SPHAX-2023-bankruptcy & 19 Dec 2023 & announcement & positive; no primary coverage\\
+SMART-2024-capital & 31 Oct 2024 & announcement & negative control\\
+BIAT-2024-capital & 27 Nov 2024 & announcement & negative control\\
+SMD-2025-capital & 13 Mar 2025 & announcement & negative control\\
+TJARI-2025-dividend & 14 Mar 2025 & announcement & negative control\\
+MPBS-2025-split & 28 Apr 2025 & announcement & negative control\\
+DH-2025-split & 28 Jul 2025 & announcement & negative control\\
+SIAME-2025-dividend & 14 Nov 2025 & announcement & exploratory\\
+PGH-2026-buyout & 19 Feb 2026 & suspension & negative; shared notice\\
+LNDOR-2026-buyout & 19 Feb 2026 & suspension & negative; shared notice\\
+ASSMA-2026-dividend & 19 Mar 2026 & announcement & negative control\\
+\bottomrule
+\end{longtable}
+\normalsize
+Syphax's cited public report on 19 December records an 11 December
+court ruling in its notes, not as the anchor. UADH's cited notice
+supports 25 March. ADWYA's cited item does not disclose a reason for
+the suspension.
+
+\section{Reproduction checklist}
+Preserve protected source CSVs; run \code{python run_all.py};
+confirm 1,414 reference flags and the 548/866 news split; run
+\code{python -m pytest -q} (117 passing tests in final verification);
+run \code{npm run build} and \code{npm run format:check} in
+\code{frontend/}; open the Terminal at 1280 and 390 pixels and
+inspect the stored source links and event register.

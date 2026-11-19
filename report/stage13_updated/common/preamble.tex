@@ -1,0 +1,103 @@
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[english]{babel}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{color}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{caption}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric}
+
+\setlength{\oddsidemargin}{0mm}
+\setlength{\evensidemargin}{0mm}
+\setlength{\textwidth}{159mm}
+\setlength{\topmargin}{-8mm}
+\setlength{\headheight}{15pt}
+\setlength{\headsep}{8mm}
+\setlength{\textheight}{238mm}
+\setlength{\footskip}{12mm}
+
+\definecolor{navy}{rgb}{0.043,0.122,0.227}
+\definecolor{blue}{rgb}{0.114,0.361,0.588}
+\definecolor{teal}{rgb}{0.000,0.612,0.584}
+\definecolor{softblue}{rgb}{0.918,0.949,0.973}
+\definecolor{warmgray}{rgb}{0.373,0.420,0.463}
+
+\graphicspath{{../assets/logos/}{../assets/screenshots/}}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.55em}
+\makeatletter
+\def\ps@reportstyle{%
+  \def\@oddhead{\small BVMT Statistical Market Surveillance\hfil Internship Report}%
+  \let\@evenhead\@oddhead
+  \def\@oddfoot{\hfil\thepage\hfil}%
+  \let\@evenfoot\@oddfoot
+}
+\makeatother
+\pagestyle{reportstyle}
+
+\newcommand{\keybox}[1]{%
+  \begin{center}
+  \fcolorbox{blue}{softblue}{\parbox{0.90\linewidth}{#1}}
+  \end{center}
+}
+
+\newcommand{\code}[1]{\texttt{\detokenize{#1}}}
+
+\newcommand{\reportfigure}[4][0.36\textheight]{%
+  \begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\linewidth,height=#1,keepaspectratio]{#2}
+  \caption{#4}
+  \label{#3}
+  \end{figure}
+}
+
+\newcommand{\makereportcover}{%
+  \begin{titlepage}
+  \thispagestyle{empty}
+  \centering
+  \begin{minipage}[c]{0.30\textwidth}\centering
+    \includegraphics[height=19mm,keepaspectratio]{tunisian-emblem.png}
+  \end{minipage}%
+  \begin{minipage}[c]{0.38\textwidth}\centering
+    \includegraphics[height=24mm,keepaspectratio]{universite-carthage.png}
+  \end{minipage}%
+  \begin{minipage}[c]{0.30\textwidth}\centering
+    \includegraphics[height=20mm,keepaspectratio]{essai.png}
+  \end{minipage}
+
+  \vspace{0.7cm}
+  {\large\textbf{République Tunisienne}\par}
+  {\normalsize Ministère de l'Enseignement Supérieur et de la Recherche Scientifique\par}
+  {\normalsize Université de Carthage - ESSAI\par}
+
+  \vfill
+  {\color{teal}\rule{0.72\textwidth}{1.2pt}\par}
+  \vspace{0.55cm}
+  {\Large\textsc{Internship Report}\par}
+  \vspace{0.55cm}
+  {\huge\bfseries\color{navy}\ReportTitle\par}
+  \vspace{0.55cm}
+  {\color{teal}\rule{0.72\textwidth}{1.2pt}\par}
+
+  \vfill
+  {\large Prepared by \textbf{\ReportAuthor}\par}
+  {\normalsize Student at \ReportSchool, \ReportUniversity\par}
+
+  \vfill
+  \includegraphics[width=42mm,keepaspectratio]{codelogic.png}\par
+  \vspace{0.25cm}
+  {\normalsize Company supervisor: \CompanySupervisor\par}
+  {\normalsize Internship period: \InternshipPeriod\par}
+
+  \vfill
+  {\normalsize Academic year: \textbf{\AcademicYear}\par}
+  \end{titlepage}
+}
+
