@@ -28,11 +28,25 @@ tmp/
 report/stage13_updated/short/*.aux
 report/stage13_updated/short/*.log
 report/stage13_updated/short/*.toc
+report/stage13_updated/short/*.lof
+report/stage13_updated/short/*.lot
+report/stage13_updated/short/*.fls
+report/stage13_updated/short/*.fdb_latexmk
+report/stage13_updated/short/main.pdf
 report/stage30_updated/long/*.aux
 report/stage30_updated/long/*.log
 report/stage30_updated/long/*.toc
 report/stage30_updated/long/*.lof
 report/stage30_updated/long/*.lot
+report/stage30_updated/long/*.fls
+report/stage30_updated/long/*.fdb_latexmk
+report/stage30_updated/long/main.pdf
+report/stage13_updated/assets/screenshots/dashboard-*.png
+report/stage30_updated/assets/screenshots/dashboard-*.png
+report/short/
+report/long/
+report/common/
+report/assets/
 /*.pdf
 bvmt_data/watchlist_ai_assessed.csv
 
