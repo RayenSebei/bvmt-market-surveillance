@@ -4,7 +4,7 @@
     "minimum_valid_prior_observations": 60,
     "ohlc_policy": "raw"
   },
-  "generated_at_utc": "2026-10-14T17:49:15.696225+00:00",
+  "generated_at_utc": "2026-11-18T21:05:25.108422+00:00",
   "hash_mode": "sha256_text_lf_normalized",
   "inputs": {
     "bvmt_data/_all_tickers_full.csv": "723be5c8cab223860ef6e6484929a886de74ada07896138fdb29549d9af33dd7",
@@ -12,23 +12,36 @@
     "bvmt_data/anomaly_flags.csv": "85a64b8ddc28d0e5731b3745c18d145988f43e648de5b01dc4f3e7b772afeff2",
     "bvmt_data/watchlist.csv": "f4e132e8ba39403bc0f4408aaab415ff6dbed7020a6d17794db051352e770fa5",
     "bvmt_data/watchlist_refined.csv": "ae9c3c7e5c2e8e2b7dba08ed5a3ccdea3ba01f70b707894bf1003395a682cb15",
-    "data/evaluation/events.csv": "a1fff5754672099d97b1ce1d852354d56f22671abf16cebf4968d12c64139cd7",
+    "data/evaluation/events.csv": "7de3cb18acbe93ea89b0e01832f319c3e175435433b873049350400953502f47",
+    "docs/EVALUATION_PROTOCOL_v2.md": "2620e90c9aca938eab8cf082acc9c42f012a759e19d39142810c02313c31fb96",
+    "docs/EVENT_LABEL_LOG.md": "1d7244be8cde39559d9ed3828b1fc858e384fee4c64f53d9ff19178d2ae5344d",
     "src/detection/anomaly_detector.py": "c3fd526c8123362385e365b872e406c529c7e47924b083af5487c4a167e545a3",
+    "src/detection/candidates_v2.py": "a119049fd0ed7ac307e931d5b2b7ae8802117b3bf2745a5ca72232fedcb40aea",
     "src/evaluation/baselines.py": "59dcaf044340db5aa787703ffcf00439dfa9775a49ae2f4b7683b00bce97754c",
     "src/evaluation/config.json": "35df5d8d60da007f98c7301cd7e6fe445dba6049b5fc6e3f446ed6b24775de8d",
-    "src/evaluation/evaluate.py": "604dca52c56bc9718d6402c39847a7edb05078d6755c616dd8f6c62d87a03eea",
-    "src/evaluation/report.py": "d0d7388ad0d5cb0db1d334d08b4fe2aa3b8da4b501a2b19805bb2df191b7e085",
+    "src/evaluation/evaluate.py": "54f88d7dfc0bdc10f0b6a22549332adb75648422ca538eab6ba3e21aa5b67172",
+    "src/evaluation/phase2.py": "d3b5e3db08b0938b12f229b7ebbcb8eabca042b63d54b551c07d2a9f9c389860",
+    "src/evaluation/report.py": "285bef4e66cdbdce17273dc8f96ecf02bc519c7c1ee9823b12561aa908f4cb60",
     "src/evaluation/sensitivity.py": "8b84cfc93444ebccd1550631a6c922aba77474bc0264e7f8319f7a267d341ffb",
-    "src/evaluation/triage_stats.py": "326b5912e3679e78d1cb2a232ffe14cfed6aef7e8289d8b3e5461530f9c3a464"
+    "src/evaluation/triage_stats.py": "326b5912e3679e78d1cb2a232ffe14cfed6aef7e8289d8b3e5461530f9c3a464",
+    "src/validation/phase2_quality.py": "f3bc4d97dc28012c3bb6b7061bec828645bd3fcad343158ef434ca6a7bffb132"
   },
   "outputs": {
-    "outputs/evaluation/baseline_comparison.csv": "7fb4f4903b10eef493c9e795c41bb2d9c0254a4e0c217db8e21a8e5cad98493f",
-    "outputs/evaluation/events_table.csv": "97c876a6ca0846c944fb80f7ac914d142eaacc9a630461908a9817c29337a2ec",
-    "outputs/evaluation/metrics.csv": "b049e62f47ea32fd2655b8cd52e29ac163900fbefab049be08e913deeaad1b5a",
-    "outputs/evaluation/sensitivity.csv": "f317ffe198c22b08953454e3fb64e7625f8c5319217aa1ecc57207e298571d8d",
-    "outputs/evaluation/summary.md": "e98c78362e26210ff5747edbbf2cdf9a9bd3368958f64e33f6e156f6dcaa9a50",
-    "outputs/evaluation/triage_stats.csv": "86673745e15a7d5773213547bdf821cabef92d33a0aa8ea872eab84c6716c148",
-    "outputs/evaluation/watchlist_funnel.csv": "0bf3654070c92296ad55dd2f0f4c34c973df36cc9dc1218e92fbf53b2868b007"
+    "data/evaluation/news_label_sample.csv": "4254a22fa54ee7b734a1cedb22a4879c9f4ec66ae0fdfeca8ff1dc427fa31834",
+    "outputs/data_quality/corporate_action_suspects.csv": "4ee92d028ec017e02e065e0417676e15dc84b772814109d3d9dededf200bcbcc",
+    "outputs/data_quality/new_scrape_row_review.csv": "4389286c245285df11edd5a852b271cfd8a72f242f66e8960470045f886f3273",
+    "outputs/data_quality/report.md": "7f582cc0ae7550bcccc4599616afe7120ac922886b0f47a2c8a67d988909ac48",
+    "outputs/evaluation/baseline_comparison.csv": "eceeacfc1bd60954664f334f882d074eb96631a49ceab198ed199ac25fabedc6",
+    "outputs/evaluation/events_table.csv": "0a3bbc3aabaf99961b47da48eaed6d469a44efe58b90acf23c5c001b86ce0acc",
+    "outputs/evaluation/metrics.csv": "c8805270804fbd440505fc1909b62a60be90f6245fda5b5e90fc4b9ce3bb3516",
+    "outputs/evaluation/phase2_comparison.csv": "25702cdad27cefc9816d80be64c10512da4b11b7746041b7ef939d2d85e0f13d",
+    "outputs/evaluation/phase2_event_hits.csv": "44def8f4ef7c63a387d0d7c2c5987e99233cab913828d5f500c1e069f8564f69",
+    "outputs/evaluation/phase2_selection_lock.json": "cb4833c52c75654477f7ab24a36ab38407b2b462163c629594c6a2865732a7df",
+    "outputs/evaluation/phase2_verdict.json": "f2b7f9ce4ed25f67f4bb45b48d35d49c54f1c3d46a2baef135b382897b52766a",
+    "outputs/evaluation/sensitivity.csv": "8eeb43dd3f3d26cd007bf6a4b81837a343d28af8064dd0a098437fde0af1ce5f",
+    "outputs/evaluation/summary.md": "161153f88c95021b0a5956c3020c5c2fbd12c63ae7068788c82b96c265be1140",
+    "outputs/evaluation/triage_stats.csv": "b2a42c570ca71122053b2365743b51eaccabd4cf37269586f0a8996e0d7649fc",
+    "outputs/evaluation/watchlist_funnel.csv": "574d2c047b27288a4450d8038163f80b46194a08352192694d7f35db2e96a291"
   },
   "schema_version": 2
 }

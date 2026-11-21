@@ -52,9 +52,9 @@ def main(output_dir=OUTPUT_DIR, title="Evaluation Summary") -> int:
     baseline_lines = []
     for row in baselines.itertuples(index=False):
         negative = (
-            f"{row.negative_control_flags_30d:.3f} flags in 1 window on average"
+            f"{row.negative_control_flags_30d:.3f} flags near negative controls on average"
             if row.method.startswith("random_")
-            else f"{int(round(row.negative_control_flags_30d))} flags in 1 window"
+            else f"{int(round(row.negative_control_flags_30d))} flags near negative controls"
         )
         baseline_lines.append(
             f"| {row.method} | {int(round(row.flag_count))} | "
@@ -71,7 +71,7 @@ def main(output_dir=OUTPUT_DIR, title="Evaluation Summary") -> int:
         )
 
     precision_text = ", ".join(
-        f"{int(row.known_event_nearby_flags)} of {int(row.k)} flags"
+        f"{int(row.known_event_nearby_flags)} of {int(row.k)} flags (95% Wilson {row.wilson_low:.2f}–{row.wilson_high:.2f})"
         for row in precision.itertuples(index=False)
     )
     reference = sensitivity[
@@ -115,7 +115,7 @@ def main(output_dir=OUTPUT_DIR, title="Evaluation Summary") -> int:
         coverage_section = f"""
 ## Universe coverage audit
 
-The historical 60-symbol combined file omitted 25 symbols: **{missing}**. The refreshed 85-symbol file contains 67,035 source rows through 2026-10-12; the current detector excludes TBIDX and known-incomplete PLTU. The incremental refresh preserved every pre-snapshot source row.
+The historical 60-symbol combined file omitted 25 series: **{missing}**. The refreshed 85-series file contains 83 company-share symbols plus PX1 (TUNINDEX) and TBIDX (Tunisian Bond Index), with 67,035 source rows through 2026-10-12; the current detector excludes TBIDX and known-incomplete PLTU. The incremental refresh preserved every pre-snapshot source row.
 
 The archived 60-symbol evaluation used the earlier 20-observation warm-up and silent close clamping. It is retained only as historical provenance and is **not directly comparable** to the corrected 60-valid-observation, raw-OHLC reference reported here.
 """
@@ -157,7 +157,7 @@ These are descriptive pipeline counts, not performance measures.
 - **{int(triage_counts['anomaly_flags_in_refined_watchlist'])} of {int(triage_counts['total_flags'])}** anomaly flags survive into the **{int(triage_counts['refined_watchlist_rows'])}-row** refined watchlist.
 - **{int(triage_counts['evaluated_event_tickers_on_refined_watchlist'])} of {int(triage_counts['evaluated_event_tickers_total'])}** evaluated-event tickers appear on the refined watchlist.
 
-The mutually exclusive watchlist funnel excludes **{int(funnel_counts['single_signal_only'])}** flags for being single-signal only, **{int(funnel_counts['news_matched'])}** for having matched news only, and **{int(funnel_counts['both'])}** for both conditions. In the three evaluable primary windows, {event_window_text}.
+The mutually exclusive watchlist funnel excludes **{int(funnel_counts['single_signal_only'])}** flags for being single-signal only, **{int(funnel_counts['news_matched'])}** for having matched news only, and **{int(funnel_counts['both'])}** for both conditions. Across the evaluable primary windows, {event_window_text}. A missing ilboursa match alone is not suspicious.
 """
 
     text = f"""# {title}
@@ -169,7 +169,7 @@ This is a case-study-level evaluation, not a statistical performance estimate. T
 - Source-backed positive events: **{sourced}**.
 - Source-backed positive events with trading data in the primary window: **{denominator}**.
 - Source-backed positive events with trading data in the secondary window: **{denominator60}**.
-- Negative control: **SOPAT's benign buyout/withdrawal**.
+- Negative controls include benign buyouts and routine corporate actions; see the event audit.
 - `SOURCE_NEEDED` and excluded: **{source_needed}**.
 - TINV date problem: the label retains **2025-10-06** with date type **`other`**, not `public_announcement`, and has no supporting repository source. Detector flags on **2025-10-13** and **2025-10-22** occur after that date. The date was not moved and TINV is excluded from headline metrics.
 
@@ -181,11 +181,11 @@ This is a case-study-level evaluation, not a statistical performance estimate. T
 
 ## Reference results
 
-- Primary recall: **{ratio_text(metrics['recall_30d'], denominator)}**.
-- Secondary recall: **{ratio_text(metrics['recall_60d'], denominator60)}**.
+- Primary recall: **{ratio_text(metrics['recall_30d'], denominator)}** (95% Wilson {metrics['recall_30d_wilson_low']:.2f}–{metrics['recall_30d_wilson_high']:.2f}).
+- Secondary recall: **{ratio_text(metrics['recall_60d'], denominator60)}** (95% Wilson {metrics['recall_60d_wilson_low']:.2f}–{metrics['recall_60d_wilson_high']:.2f}).
 - Ranked known-event matches at k=10, 20, 50: **{precision_text}**, respectively. This underestimates real precision because most relevant events are not labeled.
 - Flag load: **{int(metrics['flag_count'])} flags**, or **{metrics['flags_per_ticker_year']:.3f} flags per ticker-year**.
-- Negative-control behavior: **{int(metrics['negative_control_flags_30d'])} flags in 1 SOPAT window**.
+- Negative-control behavior: **{int(metrics['negative_control_flags_30d'])} flags near registered negative controls**.
 - The fixed z=3.0, 60-day reference cell independently reports **{int(reference.flag_count)} flags** and **{ratio_text(reference.recall_30d, denominator)}**.
 
 ### Lead time for each hit
@@ -202,11 +202,11 @@ Precision@k ranks every reference flag by **`max(abs(volume_zscore), abs(return_
 |---:|---|---|---:|---|
 {chr(10).join(top20_lines)}
 
-The **0 of 20** result means none of these 20 highest-scoring flags falls inside the fixed -30/+5-day windows around the {denominator} source-backed positive events with primary-window coverage. It does not establish that the 20 flags are false positives: the repository event list is intentionally small and incomplete.
+The **{int(precision.loc[precision['k'].eq(20), 'known_event_nearby_flags'].iloc[0])} of 20** result counts highest-scoring flags inside the fixed -30/+5-day windows around the {denominator} source-backed positive events with primary-window coverage. The repository event list is intentionally small and incomplete.
 
 ## Baseline comparison
 
-| Method | Flags | Flags/ticker-year | Recall -30/+5 | Recall -60/+5 | Precision@20 | SOPAT-window flags |
+| Method | Flags | Flags/ticker-year | Recall -30/+5 | Recall -60/+5 | Known-event@20 | Negative-control flags |
 |---|---:|---:|---|---|---|---|
 {chr(10).join(baseline_lines)}
 
@@ -226,7 +226,7 @@ The reference detector does **not** beat the absolute-return-only baseline on re
 
 ## Limitations
 
-Only {sourced} positive events have repository sources, only {denominator} overlap the trading-data window, and no independent test set exists. Original parameters were hand chosen, labels are incomplete, delisted companies create coverage gaps, and survivorship bias is possible. Precision against this incomplete event list can undercount relevant flags. These results cannot support a general performance claim or model training. Exact binomial intervals would still be dominated by the tiny denominator.
+Only {sourced} positive events have repository sources, only {denominator} overlap the trading-data window, and the Phase 2 held-out set remains tiny. Original reference parameters were hand chosen, labels are incomplete, delisted companies create coverage gaps, and survivorship bias is possible. Known-event hit rates against this incomplete list can undercount relevant flags. These results cannot support a general performance claim or model training. Intervals are dominated by the tiny denominator.
 """
     (output_dir / "summary.md").write_text(text, encoding="utf-8")
     print(f"Saved {output_dir / 'summary.md'}")

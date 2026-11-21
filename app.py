@@ -5,6 +5,7 @@ No fake data. All endpoints serve real scraped files.
 """
 
 import os
+import json
 import hmac
 import math
 import re
@@ -17,7 +18,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 import pandas as pd
-from flask import Flask, jsonify, render_template, request, send_from_directory
+from flask import Flask, abort, jsonify, request, send_from_directory
 from flask_cors import CORS
 from flask.json.provider import DefaultJSONProvider
 from src.evaluation.provenance import MANIFEST_PATH, verify_manifest
@@ -411,12 +412,12 @@ def run_scraper_background(mode: str):
 
 @app.route("/")
 def index():
-    return render_template("dashboard.html")
+    return terminal()
 
 
 @app.route("/terminal")
 def terminal():
-    """Serve the optional built terminal without replacing the research dashboard."""
+    """Serve the committed React build without requiring Node at runtime."""
     dist = FRONTEND_DIR / "dist"
     if not (dist / "index.html").is_file():
         return jsonify({"error": "Terminal build unavailable; run npm ci and npm run build in frontend/"}), 503
@@ -444,6 +445,20 @@ def api_command_center():
         load_csv("_all_tickers_full.csv"), load_csv("anomaly_flags.csv"), int(days)
     )
     return jsonify(result), status
+
+
+@app.route("/api/heatmap")
+def api_heatmap():
+    """Stored market-map values; no live data or source writes."""
+    from src.heatmap import build_heatmap
+
+    timeframe = request.args.get("tf", "1D").upper()
+    if timeframe not in {"1D", "1W", "1M", "YTD"}:
+        return jsonify({"error": "tf must be 1D, 1W, 1M, or YTD"}), 400
+    response = build_heatmap(
+        load_csv("_all_tickers_full.csv"), load_csv("anomaly_flags.csv"), timeframe
+    )
+    return jsonify(response), (503 if "error" in response else 200)
 
 
 @app.route("/api/status")
@@ -1194,6 +1209,13 @@ def api_evaluation_baselines():
     return jsonify(df.fillna("").to_dict(orient="records"))
 
 
+@app.route("/api/evaluation/precision")
+def api_evaluation_precision():
+    """Read known-event-nearby top-k counts and Wilson intervals."""
+    df = load_evaluation_csv("precision_at_k.csv")
+    return jsonify(df.fillna("").to_dict(orient="records"))
+
+
 @app.route("/api/evaluation/sensitivity")
 def api_evaluation_sensitivity():
     df = load_evaluation_csv("sensitivity.csv")
@@ -1204,6 +1226,29 @@ def api_evaluation_sensitivity():
 def api_evaluation_events():
     df = load_evaluation_csv("events_table.csv")
     return jsonify(df.fillna("").to_dict(orient="records"))
+
+
+@app.route("/api/evaluation/phase2/comparison")
+def api_evaluation_phase2_comparison():
+    """Read the frozen-split comparison without recalculating detectors."""
+    df = load_evaluation_csv("phase2_comparison.csv")
+    return jsonify(df.fillna("").to_dict(orient="records"))
+
+
+@app.route("/api/evaluation/phase2/verdict")
+def api_evaluation_phase2_verdict():
+    path = EVALUATION_DIR / "phase2_verdict.json"
+    if not path.is_file():
+        return jsonify({"error": "Phase 2 verdict unavailable"}), 404
+    return jsonify(json.loads(path.read_text(encoding="utf-8")))
+
+
+@app.route("/<path:spa_path>")
+def terminal_spa_fallback(spa_path):
+    """Return the React shell for client-side routes and browser refreshes."""
+    if spa_path.startswith(("api/", "assets/")) or "." in spa_path.rsplit("/", 1)[-1]:
+        abort(404)
+    return terminal()
 
 
 if __name__ == "__main__":

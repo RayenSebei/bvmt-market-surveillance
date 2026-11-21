@@ -4,29 +4,27 @@ A reproducible statistical screening project for the Bourse de Valeurs Mobilièr
 
 > **Statistical screening tool for human review, not a fraud verdict.** This independent academic project is not affiliated with BVMT or CMF and is not investment or legal advice.
 
-**Key finding:** The detector recalls 1 of 3 source-backed events, while precision at k=10, 20, and 50 is 0. It does not beat the return-only baseline, and the evaluation is case-study-level only. The project's value is the screening, news-context, and watchlist workflow for a human analyst—not detection accuracy.
+**Key finding:** The frozen reference still produces 1,414 flags and hits 1 of the original 3 sourced positives. In the expanded Phase 2 registry it hits 1 of 5 evaluable positives; the held-out split has only 1 positive. Six registered candidate detectors were compared, and none meets the adoption rule. Keep `reference_v1` for market surveillance and anomaly screening.
 
-See the [evaluation summary](outputs/evaluation/summary.md). The watchlist is deliberately narrow: 10 of 1,414 flags reach it because admission requires volume and price anomalies together, with no local news match.
+See the [Phase 2 results](docs/PHASE2_RESULTS.md). The watchlist is a review queue. A missing match in the single stored ilboursa news source is not suspicious by itself.
 
 ## What is included
 
-- An 85-symbol analysis dataset with 67,035 source observations covering 17 June 2021 to 12 October 2026.
+- An 85-series analysis dataset with 67,035 source observations covering 17 June 2021 to 12 October 2026: 83 company-share symbols plus the PX1 (TUNINDEX) and TBIDX (Tunisian Bond Index) series.
 - A transparent rolling z-score detector for volume and returns.
 - News cross-reference, rule-based classification, and watchlist refinement.
-- Optional Groq-assisted triage whose output is a draft opinion for human review.
-- A source-audited, case-study-level evaluation with fixed event windows, simple baselines, sensitivity reporting, and a negative control.
-- A seven-page, responsive Flask dashboard with native SVG charts and an offline pytest suite.
-- An optional React/TypeScript Market Command Center under `frontend/`, served at `/terminal` after an offline build and backed by the same read-only API.
+- Optional Groq-assisted triage whose output is an **unvalidated draft opinion** for human review. It was not run in Phase 2.
+- A source-audited, case-study-level evaluation with a frozen protocol, fixed development and held-out splits, Wilson intervals, baselines, sensitivity reporting, and negative controls.
+- A responsive React, TypeScript, and Tailwind Terminal served at `/` by the read-only Flask API, plus an offline pytest suite. Its production build is committed, so Node is not required to run it.
 
-## Dashboard
+## Terminal
 
-- Overview with labelled monthly activity, top-ticker counts, news-context split, and recent flags.
-- Full Anomaly Feed with server-side filters, sorting, pagination, CSV export, and contextual detail drawers.
-- Stock Search with price and volume axes, OHLCV hover tooltips, range controls, and clickable flag markers.
-- News Feed with ticker/category filters and links from matched headlines back to flag detail.
-- Watchlist with 16 current refined cases and a separate 16-row volume-decay view.
-- Help/glossary, keyboard-friendly drawers, loading/error states, responsive layouts, and an optional saved dark theme.
-- Ctrl+K page/ticker navigation, a clickable flag calendar, surveillance radar, candlesticks, z-score panel, drag zoom, and a detector playground.
+- Overview, Anomaly Feed, Stock Detail, News, Watchlist, Pipeline, and Evaluation are the seven views.
+- The Overview includes the Market Map: 83 company tiles sized by average traded value over 20 stored sessions, with grey for no trade on the snapshot date and an outline for recent flags. PX1 and TBIDX are index series and are excluded from company tiles.
+- The signal inspector connects a selected symbol to its stored market, flag, and news context. Navigation and tiles support keyboard access and reduced-motion preferences.
+- Data comes from stored files through the same read-only Flask API. Flags are prompts for review, not findings of misconduct.
+
+Final desktop and mobile captures are in [docs/images](docs/images/). The original template dashboard was an earlier version and has been removed from the served app.
 
 ## Install
 
@@ -54,17 +52,17 @@ AI triage is optional. To enable it, copy `.env.example` to `.env`, set `GROQ_AP
 
 ## Run
 
-Run all analysis steps from the existing local data:
+Regenerate evaluation outputs from the stored local data:
 
 ```bash
 python run_all.py
 ```
 
-This default does not run a scraper or make AI calls. Use `--with-ai` only for a
+This default reads `bvmt_data/` CSVs without rewriting them and does not make network or AI calls. `--refresh-derived` explicitly rebuilds derived CSVs under `bvmt_data/`. Use `--with-ai` only for a
 deliberate Groq triage run. The `--with-scrape` option performs network collection
 and should be used only when a deliberate data refresh is required. Evaluation,
 baselines, sensitivity tables, the report summary, and a hash-based freshness
-manifest are regenerated by the default analysis pipeline.
+manifest are regenerated by the default evaluation pipeline.
 
 Start the Flask dashboard:
 
@@ -72,9 +70,9 @@ Start the Flask dashboard:
 python app.py
 ```
 
-Then open `http://127.0.0.1:5000`.
+Then open `http://127.0.0.1:5000/`. Flask serves the committed React build at `/` and returns its shell for client-side route refreshes.
 
-To build the optional React terminal:
+To rebuild the React Terminal after changing frontend source:
 
 ```bash
 cd frontend
@@ -83,8 +81,7 @@ npm run build
 cd ..
 ```
 
-The generated `frontend/dist/` directory is ignored by Git. After the build,
-Flask serves the terminal at `http://127.0.0.1:5000/terminal`.
+The generated `frontend/dist/` directory is committed. Node is needed for frontend development and rebuilding, but not to run the committed build with Flask.
 
 The dashboard is read-only by default, binds to loopback, and does not expose a
 pipeline trigger. If a controlled execution API is explicitly required, set
@@ -114,7 +111,7 @@ news/event cross-reference -> classification -> refined watchlist
         v
 optional Groq draft triage
         |
-        +----> dashboard
+        +----> React Terminal through Flask
         +----> case-study evaluation
 ```
 
@@ -131,17 +128,17 @@ The reference detector requires 60 valid prior observations and uses a z-score c
 ```text
 app.py                       Flask API and dashboard server
 run_all.py                   safe, analysis-first pipeline entry point
-bvmt_data/                   protected raw CSVs plus the derived 85-symbol analysis file
+bvmt_data/                   protected raw CSVs plus the derived 85-series analysis file (83 shares + 2 indices)
 data/evaluation/events.csv   audited evaluation events
 src/detection/               transparent statistical detectors
 src/validation/              context and watchlist stages
 src/triage/                  optional Groq-assisted draft triage
 src/evaluation/              metrics, baselines, and sensitivity tools
 outputs/evaluation/          generated tables, figures, and summary
-frontend/                    optional React/TypeScript terminal source
-templates/dashboard.html     semantic seven-page dashboard shell
-static/dashboard.css         offline responsive design system
-static/dashboard.js          API client, native SVG charts, filters, and drawers
+frontend/src/                React/TypeScript/Tailwind Terminal source
+frontend/dist/               committed production build served at /
+docs/images/                 final desktop and mobile Terminal captures
+report/                      original and updated internship reports
 tests/                       offline tests and minimal fixtures
 docs/REPORT.md               full project report
 ```
@@ -150,18 +147,17 @@ docs/REPORT.md               full project report
 
 The evaluation window was fixed before calculation: 30 calendar days before through 5 days after an event, with a secondary 60-day lookback. The evaluation date is the earliest public suspension, court ruling, or first announcement in the stored evidence; original labels and later dates remain visible.
 
-- 3 source-backed positive events; all 3 now have trading data in both evaluation windows.
-- Reference detector: 1 of 3 evaluable events in both the primary and secondary windows.
+- 6 source-backed positive events, 5 with trading observations in the primary window. The original three-case reference result remains 1 of 3.
+- Expanded reference result: 1 of 5 in the primary window (95% Wilson interval 0.04–0.62); the held-out split is 0 of 1 (0.00–0.79).
 - 1,414 flags, equal to 3.369 flags per observed ticker-year.
 - 16 refined-watchlist rows: 10 spike-detector rows and 6 decay-detector rows.
-- Precision at 10, 20, and 50: 0 of 10, 0 of 20, and 0 of 50 flags near a labeled event.
-- SOPAT negative control: 0 flags in the primary window.
-- The volume-only baseline matches 0 of 3 events; the return-only baseline matches 1 of 3.
+- The ranked known-event-nearby counts at 10, 20, and 50 and their Wilson intervals are in the generated evaluation summary. They are not estimates of true precision.
+- Expanded negative controls include buyouts and routine corporate actions; 13 reference flags fall in their primary windows.
+- The simple volume-spike baseline hits all 4 development positives and the single held-out positive, but at over three times the reference workload; its permutation comparison does not establish an improvement.
 - The GIF flag on 2024-10-22 is the single sourced-event hit, three days before suspension.
-- LSTR is a miss. SERVI is also a miss and is newly evaluable—not newly tuned—because the refresh downloaded SERVI observations through 2024-01-08, three days before its event.
-- The reference does not beat the return-only baseline on recall or precision and produces 177 more flags.
+- LSTR and SERVI remain misses in the original reference check. The candidate selected on development data, `robust_z3`, hits 0 of 1 held-out positive and raises more flags than v1. No candidate is adopted.
 
-These are case-study results, not a statistical performance estimate. See [outputs/evaluation/summary.md](outputs/evaluation/summary.md) and [docs/REPORT.md](docs/REPORT.md).
+These are case-study results, not a statistical performance estimate. See [the full Phase 2 table](docs/PHASE2_RESULTS.md), [the event source audit](docs/EVENT_LABEL_LOG.md), and [the pre-registered protocol](docs/EVALUATION_PROTOCOL_v2.md).
 
 The current combined news file contains 12,498 deduplicated records. The
 2026-10-12 price session contains 62 symbols, in line with the 57--62 symbols
@@ -171,18 +167,20 @@ violations, zero-volume rows, and greater-than-15% returns is available at
 
 ## Limitations
 
-- Only 3 positive events have repository sources; all are now evaluable, which is still far too small for a performance estimate.
-- TINV, UADH, TSI, CGF, and UBCI remain `SOURCE_NEEDED` and are excluded from headline metrics. CGF and TSI have no ticker files, are not in the dataset, and cannot be evaluated.
+- Only 5 sourced positives have primary-window coverage, and only 1 is held out. The intervals are wide.
+- TINV, CGF, and UBCI remain `SOURCE_NEEDED` for their original claimed dates. UADH now has a BVMT notice. TSI has a dated CMF notice but is an intermediary without a listed trading series.
 - Labels are incomplete, so the reported precision measure undercounts unknown relevant events.
-- There is no independent test set; reference parameters were chosen before this evaluation, and the sensitivity grid is reporting only.
+- Phase 2 has a predeclared date split, but its held-out positive set is too small for adoption. The sensitivity grid is reporting only.
 - Thin trading, missing news, delistings, and survivorship bias can affect results.
-- AI output is a draft assessment for a human reviewer, never a verdict.
+- AI output is an **unvalidated draft opinion** for a human reviewer, never a verdict. No AI triage was run for these results.
 - Precision ranks flags by the larger absolute volume or return z-score; 3 of the top 20 meet the documented bottom-quartile illiquidity definition.
 
 ## Documentation
 
 - [Project report](docs/REPORT.md)
 - [Evaluation summary](outputs/evaluation/summary.md)
+- [Phase 2 results](docs/PHASE2_RESULTS.md)
+- [Top 20 flag review](docs/TOP_FLAGS_REVIEW.md)
 
 ## License
 

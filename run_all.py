@@ -26,6 +26,8 @@ EVALUATION_STEPS = [
     "src/evaluation/sensitivity.py",
     "src/evaluation/triage_stats.py",
     "src/evaluation/report.py",
+    "src/evaluation/phase2.py",
+    "src/validation/phase2_quality.py",
     "src/evaluation/provenance.py",
 ]
 
@@ -43,17 +45,21 @@ def build_parser() -> argparse.ArgumentParser:
         help="explicitly enable optional live Groq-assisted triage",
     )
     parser.add_argument("--skip-ai", action="store_true", help=argparse.SUPPRESS)
+    parser.add_argument("--refresh-derived", action="store_true", help="rebuild derived files under bvmt_data before evaluation")
     return parser
 
 
 def selected_steps(
-    with_scrape: bool = False, with_ai: bool = False, skip_ai: bool = False
+    with_scrape: bool = False, with_ai: bool = False, skip_ai: bool = False,
+    refresh_derived: bool = False,
 ) -> list[str]:
-    steps = (
-        [*SCRAPE_STEPS, *BUILD_STEPS, *ANALYSIS_STEPS, *EVALUATION_STEPS]
-        if with_scrape else [*BUILD_STEPS, *ANALYSIS_STEPS, *EVALUATION_STEPS]
-    )
-    if skip_ai or not with_ai:
+    if with_scrape:
+        steps = [*SCRAPE_STEPS, *BUILD_STEPS, *ANALYSIS_STEPS, *EVALUATION_STEPS]
+    elif refresh_derived or with_ai:
+        steps = [*BUILD_STEPS, *ANALYSIS_STEPS, *EVALUATION_STEPS]
+    else:
+        steps = list(EVALUATION_STEPS)
+    if (skip_ai or not with_ai) and "src/triage/ai_triage_free.py" in steps:
         steps.remove("src/triage/ai_triage_free.py")
     return steps
 
@@ -78,8 +84,9 @@ def main(argv: list[str] | None = None) -> int:
         with_scrape=args.with_scrape,
         with_ai=args.with_ai,
         skip_ai=args.skip_ai,
+        refresh_derived=args.refresh_derived,
     )
-    mode = "scrape + analysis" if args.with_scrape else "analysis only (existing data)"
+    mode = "scrape + analysis" if args.with_scrape else ("derived rebuild + analysis" if args.refresh_derived or args.with_ai else "read-only source data evaluation")
     print("BVMT Market Surveillance Pipeline")
     print(f"Mode: {mode}")
     print(f"AI triage: {'explicitly enabled' if args.with_ai and not args.skip_ai else 'disabled'}")

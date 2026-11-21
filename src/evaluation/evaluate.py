@@ -42,7 +42,9 @@ def coverage_table(trading: pd.DataFrame, events: pd.DataFrame, lookback: int) -
         start = event_date - pd.Timedelta(int(lookback), unit="D") if pd.notna(event_date) else pd.NaT
         if event.ticker in bounds.index:
             first, last = bounds.loc[event.ticker, ["min", "max"]]
-            overlap = pd.notna(start) and last >= start and first <= event_date + pd.Timedelta(5, unit="D")
+            overlap = bool(pd.notna(start) and trading.loc[
+                trading["symbole"].eq(event.ticker), "date"
+            ].between(start, event_date + pd.Timedelta(5, unit="D")).any())
             gap = (event_date - last).days if pd.notna(event_date) else np.nan
         else:
             first = last = pd.NaT
@@ -141,8 +143,22 @@ def precision_at_k(
                 for _, event in events.iterrows()
             ):
                 matches += 1
-        rows.append({"k": k, "known_event_nearby_flags": matches, "precision_at_k": matches / len(top) if len(top) else np.nan})
+        low, high = wilson_interval(matches, len(top))
+        rows.append({"k": k, "known_event_nearby_flags": matches, "precision_at_k": matches / len(top) if len(top) else np.nan,
+                     "wilson_low": low, "wilson_high": high})
     return pd.DataFrame(rows)
+
+
+def wilson_interval(k: int, n: int) -> tuple[float, float]:
+    """Two-sided 95% Wilson interval for a descriptive binomial count."""
+    if n <= 0:
+        return np.nan, np.nan
+    z = 1.959963984540054
+    p = k / n
+    den = 1 + z * z / n
+    center = (p + z * z / (2 * n)) / den
+    radius = z * np.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / den
+    return max(0.0, center - radius), min(1.0, center + radius)
 
 
 def negative_control_count(flags: pd.DataFrame, events: pd.DataFrame, before: int, after: int) -> int:
@@ -216,6 +232,12 @@ def main(
         {"metric": "eligible_positive_events_60d", "value": len(positives60), "detail": "source-backed and trading-window coverage"},
         {"metric": "recall_30d", "value": hits30["hit"].mean() if len(hits30) else np.nan, "detail": f"window -{before}/+{after} calendar days"},
         {"metric": "recall_60d", "value": hits60["hit"].mean() if len(hits60) else np.nan, "detail": f"window -{secondary}/+{after} calendar days"},
+        {"metric": "recall_30d_hits", "value": int(hits30["hit"].sum()) if len(hits30) else 0, "detail": "k of n"},
+        {"metric": "recall_30d_wilson_low", "value": wilson_interval(int(hits30["hit"].sum()), len(hits30))[0], "detail": "95% Wilson lower bound"},
+        {"metric": "recall_30d_wilson_high", "value": wilson_interval(int(hits30["hit"].sum()), len(hits30))[1], "detail": "95% Wilson upper bound"},
+        {"metric": "recall_60d_hits", "value": int(hits60["hit"].sum()) if len(hits60) else 0, "detail": "k of n"},
+        {"metric": "recall_60d_wilson_low", "value": wilson_interval(int(hits60["hit"].sum()), len(hits60))[0], "detail": "95% Wilson lower bound"},
+        {"metric": "recall_60d_wilson_high", "value": wilson_interval(int(hits60["hit"].sum()), len(hits60))[1], "detail": "95% Wilson upper bound"},
         {"metric": "flag_count", "value": len(flags), "detail": "reference detector union"},
         {"metric": "flags_per_ticker_year", "value": flags_per_ticker_year(flags, trading), "detail": "all reference flags / observed ticker-years"},
         {"metric": "negative_control_flags_30d", "value": negative_control_count(flags, events, before, after), "detail": "SOPAT window"},
@@ -227,6 +249,7 @@ def main(
         "original_label_date", "secondary_date",
         "source", "confidence", "label_role", "include_headline",
         f"has_{before}d_window_coverage", "days_from_last_trade_to_event",
+        "first_trading_date", "last_trading_date",
     ]].copy()
     events_table["evaluable"] = (
         events_table["include_headline"]
@@ -244,8 +267,10 @@ def main(
             return "negative control, not a positive event"
         if row["label_role"] == "exploratory":
             return "exploratory case excluded from headline metrics"
+        if pd.isna(row["first_trading_date"]):
+            return "ticker has no stored trading observations"
         if not row[f"has_{before}d_window_coverage"]:
-            return "trading data ends before the evaluation window"
+            return "no trading observation in the primary window"
         return "source-backed positive event with window coverage"
     events_table["evaluable_reason"] = events_table.apply(reason, axis=1)
     events_table.to_csv(output_dir / "events_table.csv", index=False)

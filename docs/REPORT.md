@@ -4,9 +4,9 @@
 
 ## Executive summary
 
-The refreshed project covers **85 symbols and 67,035 price rows from 17 June 2021 through 12 October 2026**, plus **12,498 deduplicated news records**. With the fixed reference settings—60 valid prior observations and a z-score cutoff of 3.0—the pipeline produces **1,414 flags**, including **21 combined price-and-volume flags**, and a **16-row refined watchlist**.
+The refreshed project covers **85 stored series and 67,035 price rows from 17 June 2021 through 12 October 2026**: 83 company-share symbols plus PX1 (TUNINDEX) and TBIDX (Tunisian Bond Index). It also contains **12,498 deduplicated news records**. With the fixed reference settings—60 valid prior observations and a z-score cutoff of 3.0—the pipeline produces **1,414 flags**, including **21 combined price-and-volume flags**, and a **16-row refined watchlist**.
 
-The source-backed case study now has three evaluable positive events in both fixed windows. The detector hits **1 of 3**: GIF is a hit three days before suspension; LSTR is a miss; SERVI is a miss. SERVI was never evaluated in the earlier primary-window result. It became evaluable only because the October refresh newly downloaded SERVI trading data through **2024-01-08**, three days before its 2024-01-11 event. This denominator change is a data-coverage change, not tuning; thresholds, floors, windows, and event dates were unchanged.
+The original three sourced positives still reproduce **1 of 3** for `reference_v1`: GIF is a hit, LSTR and SERVI are misses. The expanded Phase 2 registry has **5 evaluable sourced positives**, with reference recall **1 of 5** (95% Wilson 0.04–0.62). Only one positive is held out, so no new method qualifies for adoption. The six registered candidate variants, all baselines, dates, and uncertainty intervals are in [PHASE2_RESULTS.md](PHASE2_RESULTS.md).
 
 ## Data refresh and integrity
 
@@ -24,15 +24,15 @@ Returns across gaps longer than 10 calendar days are excluded. The return baseli
 
 Source OHLC values remain raw. Quality issues are logged for human review rather than silently clamped. News classification preserves both the nearest headline available on or before a flag and the nearest later headline, so retrospective context cannot hide information available at the time.
 
-## Evaluation
+## Original three-case reference audit
 
-The primary window is 30 calendar days before through five days after each event. The secondary window begins 60 days before. The event registry has three sourced positives with coverage in both windows:
+The original reference cross-check has three sourced positives with coverage in both windows. The primary window is 30 calendar days before through five days after each event; the secondary starts 60 days before. These historical figures are preserved separately from the expanded Phase 2 comparison:
 
 - **GIF, 2024-10-25:** hit; first matching flag 2024-10-22, three days before the event.
 - **LSTR, 2024-07-23:** miss.
 - **SERVI, 2024-01-11:** miss; newly evaluable because newly downloaded observations extend through 2024-01-08.
 
-Current comparisons:
+Original three-case comparisons:
 
 | Method | Flags | Flags/ticker-year | Primary recall | Secondary recall | Precision at 20 |
 |---|---:|---:|---:|---:|---:|
@@ -41,23 +41,23 @@ Current comparisons:
 | Absolute return only | 1,237 | 2.948 | 1 of 3 | 1 of 3 | 0 of 20 |
 | Random, same count, 1,000-seed mean | 1,414 | 3.369 | 0.666 of 3 | 1.075 of 3 | 0.014 of 20 |
 
-The reference does not beat the return-only baseline on recall or precision and creates 177 more flags. The sensitivity grid ranges from 397 to 3,182 flags: 14 cells hit 1 of 3 events and two cells hit none. It is reporting only and was not used to change the reference detector. SOPAT remains the negative control with zero primary-window flags.
+The reference did not beat the return-only baseline in the original three-case comparison and created 177 more flags. The sensitivity grid is reporting only and was not used to change the reference detector. Expanded Phase 2 controls and results are reported separately.
 
-These results are descriptive case studies, not an accuracy estimate. Three positive events are far too few to support a general performance claim, and incomplete labels make precision conservative.
+These are descriptive case studies, not an accuracy estimate. The expanded set and its one-positive held-out split remain far too small to support a general performance claim.
 
 ## Dashboard and reproducibility
 
-The offline seven-page Flask dashboard exposes the complete review queue and adds a keyboard command palette, clickable flag calendar, volume/return surveillance radar, line/candlestick stock views, z-score panel, drag zoom, and a read-only detector playground. All visuals use native SVG and remain responsive at 380 px. The evaluation page reports the current three-event result, baseline comparison, negative control, and sensitivity grid.
+The React terminal is served by Flask at `/` and displays the expanded method comparison and Wilson intervals. The earlier seven-page template dashboard and its dedicated static assets have been removed. Final desktop and mobile captures are in `docs/images/`.
 
-The generated manifest hashes text after canonical LF normalization, so freshness checks are portable across Windows, Linux, and macOS. Pipeline status logs require the explicitly enabled execution API and its bearer token. The default command performs analysis only and makes neither network nor AI calls.
+The generated manifest hashes text after canonical LF normalization, so freshness checks are portable across Windows, Linux, and macOS. Pipeline status logs require the explicitly enabled execution API and its bearer token. The default command reads source CSVs and regenerates evaluation outputs without network or AI calls.
 
 ## Limitations
 
-- The sourced positive set contains only three evaluable events.
-- CGF and TSI remain unavailable and cannot be evaluated.
+- The expanded sourced positive set contains only five evaluable events, with one held-out event. Wilson and bootstrap intervals cannot rescue the small denominator.
+- TINV, CGF, and UBCI have unsupported original claims/dates. TSI has a CMF source but no listed trading series; UADH has a BVMT source.
 - Thin trading, zero-volume observations, delistings, incomplete news, and survivorship bias affect interpretation.
-- A nearby headline is context, not proof of cause; a missing headline is not evidence of misconduct.
-- AI triage, when explicitly enabled, is a draft opinion for a human reviewer.
+- ilboursa is the single stored news source. A nearby headline is context, not proof of cause; a missing local match is not suspicious by itself. The rule-based news sample has 100 empty human-label cells for review.
+- AI triage was not run. If explicitly enabled later, it produces an **unvalidated draft opinion**. To test it, sample cases before viewing AI output, collect two independent human priority labels, measure agreement (including chance-adjusted agreement), and review disagreements. Do not claim validation until that protocol is completed.
 
 ## Reproduce
 

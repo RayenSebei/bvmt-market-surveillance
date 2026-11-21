@@ -1,0 +1,60 @@
+\chapter{Implementation and Interfaces}
+
+\section{React Terminal and Flask API}
+The final application serves a React, TypeScript, and Tailwind Terminal at
+\code{/} from a committed production build. Flask continues to expose the
+same read-only JSON API. Client routes return the application shell on a
+browser refresh, and the build can run without Node installed. The earlier
+seven-page template and static dashboard was an intermediate version; its
+dedicated files were removed from the final branch.
+
+Seven views divide the review workflow: Overview, Anomaly Feed, Stock Detail,
+News, Watchlist, Pipeline, and Evaluation. Overview combines stored coverage,
+activity and flag summaries with the Market Map. The other views provide
+filtered flags, stock history, source-linked news, a refined queue, output
+status, and method comparison.
+
+% A fixed half-page limit and in-flow placement avoid isolated float pages.
+\newcommand{\TerminalShot}[4][0.44\textheight]{%
+  \begin{center}\begin{minipage}{\linewidth}\centering
+  \includegraphics[width=\linewidth,height=#1,keepaspectratio]{#2}
+  \captionof{figure}{#4}\label{#3}
+  \end{minipage}\end{center}
+}
+\TerminalShot{../assets/screenshots/overview-market-map.jpg}{fig:overview}
+{Market Map controls and a sample of company tiles in Overview.}
+
+\section{Market Map and signal inspector}
+The Market Map contains 83 company-share tiles. The 85-series analytical file
+also holds PX1 (TUNINDEX) and TBIDX (Tunisian Bond Index), which are not
+company tiles. Tile area is weighted by average traded value over the latest
+20 stored sessions, not market capitalization. A company with no trade on
+the aggregate as-of date is grey; an amber outline identifies recent flags.
+A mobile layout presents the symbols as a list.
+
+Selecting a tile or flag opens the signal inspector, which shows stored
+market and flag context and available news without assigning a cause.
+Navigation, tiles, and inspector controls support keyboard use. Motion is
+reduced when the operating-system preference requests it.
+\TerminalShot{../assets/screenshots/inspector-open.jpg}{fig:inspector}
+{BIAT signal inspector: detector scores and rule explanation.}
+
+\section{Review and evidence views}
+The Anomaly Feed keeps the union flag queue separate from the narrow
+watchlist. Stock Detail shows observations and markers for one instrument.
+News draws from the stored ilboursa collection; a local match is context,
+not a verified explanation. Watchlist shows ten spike and six decay rows.
+\TerminalShot{../assets/screenshots/anomaly-feed.jpg}{fig:anomalies}
+{Anomaly Feed: stored flag dates, symbols, signals, and scores.}
+\TerminalShot{../assets/screenshots/stock-detail.jpg}{fig:stocks}
+{Stock Detail: BIAT's stored price history and flag markers.}
+\TerminalShot{../assets/screenshots/news.jpg}{fig:news}
+{News: a stored market headline with its source link.}
+\TerminalShot{../assets/screenshots/watchlist.jpg}{fig:watchlist}
+{Watchlist: sample ranked dates and instruments.}
+
+\section{Pipeline, evaluation, and caching}
+Pipeline reports local output files and the read-only evaluation manifest.
+Evaluation displays sourced-event coverage, Wilson intervals, method
+comparison, workload, and controls. The reference cannot be retuned in the
+interface.

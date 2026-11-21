@@ -1,0 +1,263 @@
+.market-map {
+  background: var(--v-pane);
+  border: 1px solid var(--v-line);
+  padding: 18px;
+  min-width: 0;
+}
+.market-map-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.market-map-head h2 {
+  margin: 0 0 6px;
+  font-size: 18px;
+  letter-spacing: -0.03em;
+}
+.market-map-head strong {
+  display: block;
+  color: var(--v-teal);
+  font-size: 12px;
+  font-weight: 650;
+}
+.market-map-head span {
+  display: block;
+  color: var(--v-muted);
+  font-size: 11px;
+  margin-top: 5px;
+}
+.market-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.market-controls label {
+  display: grid;
+  gap: 4px;
+  color: var(--v-muted);
+  font-size: 10px;
+  min-width: 110px;
+}
+.market-controls select,
+.market-controls input {
+  height: 32px;
+  padding: 0 9px;
+  min-width: 0;
+  color: var(--v-text);
+  background: var(--v-bg);
+  border: 1px solid var(--v-line);
+  border-radius: 3px;
+}
+.market-controls input {
+  width: 130px;
+}
+.market-fullscreen {
+  height: 32px;
+  width: 36px;
+  display: grid;
+  place-items: center;
+  background: var(--v-bg);
+  border: 1px solid var(--v-line);
+  border-radius: 3px;
+}
+.market-legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  margin: 0 0 11px;
+  color: var(--v-muted);
+  font-size: 10px;
+}
+.market-legend i {
+  width: 54px;
+  height: 7px;
+  background: linear-gradient(90deg, #d77873, #34434b);
+  border-radius: 2px;
+}
+.market-legend i.positive {
+  background: linear-gradient(90deg, #34434b, #5dbfa7);
+}
+.market-legend small {
+  margin-left: auto;
+  font-size: 10px;
+  text-align: right;
+}
+.market-surface {
+  width: 100%;
+  min-width: 0;
+}
+.market-tiles {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background: var(--v-bg);
+}
+.market-tile {
+  position: absolute;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 6px;
+  color: #f0faf6;
+  border: 0;
+  outline-offset: -3px !important;
+  text-align: left;
+  min-width: 0;
+  min-height: 0;
+  transition:
+    opacity 180ms,
+    filter 180ms;
+}
+.market-tile b {
+  font-size: clamp(10px, 1vw, 16px);
+  line-height: 1.1;
+  text-shadow: 0 1px 2px #14232c;
+}
+.market-tile > span:not(.market-tooltip) {
+  font-size: 11px;
+  margin-top: 4px;
+}
+.market-tile.flagged {
+  box-shadow: inset 0 0 0 2px var(--v-amber);
+}
+.market-tile.intense.flagged {
+  animation: market-flag-pulse 3s ease-in-out infinite;
+}
+.market-tile.dimmed {
+  opacity: 0.22;
+  filter: grayscale(0.6);
+}
+.market-tile:focus-visible {
+  z-index: 5;
+  outline: 3px solid #fff !important;
+  outline-offset: -4px !important;
+}
+.market-tooltip {
+  display: none;
+  position: absolute;
+  z-index: 10;
+  left: 8px;
+  top: calc(100% + 3px);
+  width: 220px;
+  padding: 10px;
+  background: #0b151e;
+  border: 1px solid var(--v-amber);
+  color: #e7eef1;
+  font-size: 11px;
+  line-height: 1.6;
+  box-shadow: 0 8px 24px #0009;
+  pointer-events: none;
+}
+.market-tile:hover,
+.market-tile:focus-visible {
+  z-index: 6;
+}
+.market-tile:hover .market-tooltip,
+.market-tile:focus-visible .market-tooltip {
+  display: block;
+}
+.market-tile:nth-last-child(-n + 10) .market-tooltip {
+  top: auto;
+  bottom: calc(100% + 3px);
+}
+.market-note {
+  color: var(--v-muted);
+  font-size: 11px;
+  margin: 10px 0 0;
+}
+.market-list {
+  display: none;
+}
+.market-list button.dimmed {
+  opacity: 0.3;
+}
+.market-map.fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  overflow: auto;
+  background: var(--v-bg);
+  padding: 24px;
+}
+@keyframes market-flag-pulse {
+  50% {
+    box-shadow:
+      inset 0 0 0 3px var(--v-amber),
+      inset 0 0 14px #e8b96666;
+  }
+}
+@media (max-width: 600px) {
+  .market-map {
+    padding: 12px;
+  }
+  .market-map-head {
+    align-items: start;
+  }
+  .market-legend {
+    flex-wrap: wrap;
+  }
+  .market-legend small {
+    width: 100%;
+    margin: 2px 0 0;
+    text-align: left;
+  }
+  .market-tiles {
+    display: none;
+  }
+  .market-list {
+    display: grid;
+    max-height: 540px;
+    overflow: auto;
+    gap: 1px;
+    background: var(--v-line);
+  }
+  .market-list button {
+    display: grid;
+    grid-template-columns: 55px minmax(0, 1fr) 74px;
+    gap: 6px;
+    align-items: center;
+    min-height: 42px;
+    padding: 8px;
+    background: var(--v-bg);
+    border: 0;
+    text-align: left;
+    font-size: 11px;
+  }
+  .market-list button span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--v-muted);
+  }
+  .market-list button strong {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .market-list button em {
+    grid-column: 2/4;
+    color: var(--v-amber);
+    font-style: normal;
+    font-size: 10px;
+  }
+  .market-controls label {
+    min-width: calc(50% - 5px);
+  }
+  .market-controls input {
+    width: 100%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .market-tile.intense.flagged {
+    animation: none;
+  }
+  .market-tile {
+    transition: none;
+  }
+}

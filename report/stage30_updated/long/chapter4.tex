@@ -1,0 +1,160 @@
+\chapter{Methodology}
+
+\section{Prior-only statistical reference}
+
+For symbol $i$ and observation $t$, volume is transformed as
+\[
+  x_{i,t}=\log(1+V_{i,t}),
+\]
+and the close-to-close return is
+\[
+  r_{i,t}=\frac{P_{i,t}-P_{i,t-1}}{P_{i,t-1}}.
+\]
+For either series $q\in\{x,r\}$, the reference mean and sample standard
+deviation use the previous 60 valid observations:
+\[
+ \mu^q_{i,t}=\frac{1}{60}\sum_{j=1}^{60}q_{i,t-j},
+ \qquad
+ s^q_{i,t}=\sqrt{\frac{1}{59}\sum_{j=1}^{60}
+ \left(q_{i,t-j}-\mu^q_{i,t}\right)^2}.
+\]
+The score is
+\[
+ z^q_{i,t}=\frac{q_{i,t}-\mu^q_{i,t}}
+ {\max\left(s^q_{i,t},f_q\right)},
+ \qquad f_x=0.10,\quad f_r=0.01.
+\]
+
+The observed value at $t$ is not part of its own mean or standard deviation.
+The implementation achieves this through a one-observation shift. For volume,
+the previous 60 log-volume observations are used. For return, missing values
+created by the gap rule are removed before selecting the previous 60 valid
+returns.
+
+\section{Flag rules}
+
+A volume anomaly requires $z^V_{i,t}>3.0$. The condition is one-sided because
+the rule screens for unusually high volume. A price anomaly requires
+$|z^R_{i,t}|>3.0$, so both unusually positive and unusually negative returns
+can qualify. A combined anomaly requires both conditions on the same row. The
+broad anomaly table is the union of the two individual rules.
+
+\begin{table}[htbp]
+\centering
+\caption{Reference detector parameters}
+\begin{tabularx}{0.94\textwidth}{@{}l l X@{}}
+\toprule
+Parameter & Value & Interpretation \\
+\midrule
+Reference length & 60 & Prior valid observations; observed row excluded \\
+Volume threshold & $z^V>3.0$ & High-volume rule \\
+Return threshold & $|z^R|>3.0$ & Two-sided return rule \\
+Log-volume floor & 0.10 & Lower bound for the volume denominator \\
+Return floor & 0.01 & Lower bound for the return denominator \\
+Gap limit & 10 days & Longer-gap return omitted \\
+OHLC policy & Raw & Source values retained and issues logged \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The floors limit unstable ratios on nearly constant series. They do not make a
+z-score a probability. The threshold and reference length are fixed in the
+source. They were not adjusted using the event labels.
+
+\section{Worked flag examples}
+
+GIF on 22 October 2024 provides the event-window hit used in the evaluation.
+The stored close is 0.44 TND, volume is 14,344, and the daily return is 10.00\%.
+The volume z-score is 1.341 and the return z-score is 5.236. Therefore the row
+is a price anomaly but not a volume anomaly. The same-symbol news search finds
+no qualifying local match. The row remains outside the watchlist because the
+watchlist requires a combined signal.
+
+Carthage Cement (CC) on 30 October 2024 illustrates the combined route. The
+stored close is 2.24 TND, volume is 3,343,436, and the return is 5.660\%. The
+volume z-score is 4.069 and the return z-score is 4.558. Both signal fields are
+true and no local news match is found. The row therefore enters the spike
+watchlist route.
+
+These examples also show why the union flag count and the watchlist count serve
+different purposes. The union preserves every threshold crossing for review.
+The watchlist selects only one narrow conjunction. A price-only event hit can
+contribute to recall while remaining outside the watchlist.
+
+\section{Sustained activity decline}
+
+The decay detector compares total volume in a recent six-month interval with
+the six months immediately before it. A symbol is eligible for the ratio rule
+when baseline volume is at least 1,000 units. A decline case satisfies
+\[
+ \frac{\mathrm{recent\ volume}}{\mathrm{baseline\ volume}}<0.20.
+\]
+The detector also records symbols with at least 90 days since their last
+positive-volume observation. The union of the decline and inactivity rules is
+deduplicated by symbol.
+
+The decay rule answers a different question from a daily z-score. It describes
+a sustained change in trading activity rather than one extreme observation.
+Its result is not added to the 1,414 daily union flags. Sixteen decay cases are
+generated. Ten have a local news match and six do not. The six without a match
+join the watchlist.
+
+\section{News context and categories}
+
+Daily flags use a same-symbol news interval of seven calendar days before or
+after the flag. Decay cases use 60 days around the last active date. The
+classifier keeps both the nearest item available on or before the reference
+date and the nearest later item. This preserves the distinction between
+information available at the time and retrospective context.
+
+The status \code{NEWS_MATCH_FOUND} means that a qualifying stored item exists.
+The status \code{NO_LOCAL_MATCH} means that none exists in the interval. The
+matched-news categories are assigned through keyword rules. Their counts are
+311 other news, 200 earnings results, 18 dividends, 13 governance items, four
+capital increases, one buyout, and one suspension. The categories sum to 548,
+the number of union flags with a news match.
+
+\section{Watchlist and broad-market context}
+
+The spike watchlist condition is
+\[
+ \mathrm{combined\ anomaly}\;\land\;\mathrm{no\ local\ news\ match}.
+\]
+Ten daily flags satisfy this condition. Six decay cases without a news match
+are appended, so the direct and refined files each contain 16 rows.
+
+Refinement adds a PX1 index return and score, other-symbol co-flag count, and
+stock return minus index return. A dated row is tagged \code{MARKET_WIDE} when
+the absolute index score is at least 2.0 or at least three other symbols are
+flagged on the same date. Otherwise it is tagged \code{COMPANY_SPECIFIC}.
+Decay rows have no single event date and retain a not-applicable tag.
+
+The 16-row refined file contains four market-wide spike rows, six
+company-specific spike rows, and six undated decay rows. These tags change
+review order and context. They do not change the underlying detector result.
+
+\section{Descriptive funnel}
+
+The funnel assigns every union flag to one mutually exclusive outcome. A flag
+can fail the combined-signal condition, fail the no-news condition, fail both,
+or satisfy both admission conditions.
+
+\begin{table}[htbp]
+\centering
+\caption{Daily-flag watchlist funnel}
+\begin{tabularx}{0.88\textwidth}{@{}Xr@{}}
+\toprule
+Outcome & Flags \\
+\midrule
+Single signal only, without a news match & 856 \\
+Combined signal, but with a news match & 11 \\
+Single signal and a news match & 537 \\
+Combined signal, without a news match & 10 \\
+\midrule
+Total & 1,414 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The funnel is descriptive. It measures the effect of the triage rule and does
+not claim that excluded flags are false or that admitted rows are true events.
